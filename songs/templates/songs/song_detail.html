@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2 id="song-title">{{ song.title }}</h2>
+    <p id="lyrics-content">{{ song.lyrics|safe }}</p>
+    <button class="btn btn-sm btn-secondary my-1" id="edit-lyrics-btn">Edit Lyrics</button>
+
+    <!-- 🎵 MP3 Files Section -->
+    <h3>MP3 Files</h3>
+    <ul id="mp3-files">
+        {% for mp3 in mp3s %}
+            <li>
+                <span class="mp3-voice" data-mp3-id="{{ mp3.id }}">{{ mp3.voice_part }}</span>
+                <button class="btn btn-sm btn-primary my-1 edit-mp3-btn" data-mp3-id="{{ mp3.id }}">Edit</button>
+            </li>
+        {% endfor %}
+    </ul>
+    <input class="form-control my-1 form-control-file" type="file" id="new-mp3-file">
+    <input class="form-control my-1" type="text" id="new-mp3-voice" placeholder="Voice Part">
+    <button class="btn btn-sm btn-secondary my-1" id="add-mp3-btn">Add MP3</button>
+
+    <!-- 📝 Notes Section -->
+    <h3>Notes</h3>
+    <ul id="notes">
+        {% for note in notes %}
+            <li>
+                <strong>{{ note.section }}:</strong>
+                <span class="note-content" data-note-id="{{ note.id }}">{{ note.content }}</span>
+                <button class="btn btn-sm btn-primary my-1 edit-note-btn" data-note-id="{{ note.id }}">Edit</button>
+            </li>
+        {% endfor %}
+    </ul>
+    <input class="form-control my-1" type="text" id="new-note-section" placeholder="Section">
+    <input class="form-control my-1" type="text" id="new-note-content" placeholder="Content">
+    <button class="btn btn-sm btn-secondary my-1" id="add-note-btn">Add Note</button>
+
+    <!-- 🔗 References Section -->
+    <h3>References</h3>
+    <ul id="references">
+        {% for ref in references %}
+            <li>
+                <a href="{{ ref.link }}" class="reference-link" data-ref-id="{{ ref.id }}">{{ ref.link }}</a>
+                <button class="btn btn-sm btn-primary my-1 edit-reference-btn" data-ref-id="{{ ref.id }}">Edit</button>
+            </li>
+        {% endfor %}
+    </ul>
+    <input class="form-control my-1" type="text" id="new-reference-link" placeholder="Reference Link">
+    <button class="btn btn-sm btn-secondary my-1" id="add-reference-btn">Add Reference</button>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('edit-lyrics-btn').addEventListener('click', function() {
+        const lyricsContent = document.getElementById('lyrics-content');
+        if (lyricsContent.contentEditable === "true") {
+            lyricsContent.contentEditable = "false";
+            this.textContent = "Edit Lyrics";
+            saveLyrics(lyricsContent.innerHTML);
+        } else {
+            lyricsContent.contentEditable = "true";
+            this.textContent = "Save Lyrics";
+        }
+    });
+
+    function saveLyrics(newLyrics) {
+        fetch("{% url 'save_lyrics' song.id %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ lyrics: newLyrics })
+        }).then(response => response.json())
+        .then(data => alert(data.success ? "Lyrics updated!" : "Error updating lyrics."));
+    }
+
+    // 🎵 Edit & Add MP3
+    document.querySelectorAll('.edit-mp3-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const mp3Id = this.dataset.mp3Id;
+            const newVoicePart = prompt("Edit voice part:");
+            if (newVoicePart) saveMP3(mp3Id, newVoicePart);
+        });
+    });
+
+    document.getElementById('add-mp3-btn').addEventListener('click', function() {
+        const file = document.getElementById('new-mp3-file').files[0];
+        const voicePart = document.getElementById('new-mp3-voice').value;
+        if (file && voicePart) addMP3(file, voicePart);
+    });
+
+    function saveMP3(mp3Id, newVoicePart) {
+        fetch("{% url 'save_mp3' %}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: JSON.stringify({ mp3_id: mp3Id, voice_part: newVoicePart })
+        }).then(response => response.json())
+        .then(data => alert(data.success ? "MP3 updated!" : "Error updating MP3."));
+    }
+
+    function addMP3(file, voicePart) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('voice_part', voicePart);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'add_mp3' song.id %}", {
+            method: 'POST',
+            body: formData
+        }).then(response => response.json())
+        .then(data => alert(data.success ? "MP3 added!" : "Error adding MP3."));
+    }
+
+    // 📝 Edit & Add Notes
+    document.getElementById('add-note-btn').addEventListener('click', function() {
+        const section = document.getElementById('new-note-section').value;
+        const content = document.getElementById('new-note-content').value;
+        if (section && content) addNote(section, content);
+    });
+
+    function addNote(section, content) {
+        fetch("{% url 'add_note' song.id %}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: JSON.stringify({ section, content })
+        }).then(response => response.json())
+        .then(data => alert(data.success ? "Note added!" : "Error adding note."));
+    }
+
+    // 🔗 Edit & Add References
+    document.getElementById('add-reference-btn').addEventListener('click', function() {
+        const link = document.getElementById('new-reference-link').value;
+        if (link) addReference(link);
+    });
+
+    function addReference(link) {
+        fetch("{% url 'add_reference' song.id %}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: JSON.stringify({ link })
+        }).then(response => response.json())
+        .then(data => alert(data.success ? "Reference added!" : "Error adding reference."));
+    }
+</script>
+{% endblock %}

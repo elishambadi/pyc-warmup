@@ -1,0 +1,6 @@
+CREATE DATABASE pyc_warmup;
+CREATE USER pyc_user WITH PASSWORD 'securepassword';
+ALTER ROLE pyc_user SET client_encoding TO 'utf8';
+ALTER ROLE pyc_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE pyc_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE pyc_warmup TO pyc_user;

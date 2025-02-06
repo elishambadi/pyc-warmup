@@ -1,0 +1,4 @@
+{% for song in songs %}
+    <h2><a href="{% url 'song_detail' song.id %}">{{ song.title }}</a></h2>
+{% endfor %}
+<a href="{% url 'add_song' %}">Add Song</a>

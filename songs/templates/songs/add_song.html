@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Add a New Song</h1>
+    <form method="POST" enctype="multipart/form-data" action="{% url 'add_song' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_title" class="form-label">Song Title</label>
+            {{ song_form.title }}
+        </div>
+        <div class="mb-3">
+            <label for="id_lyrics" class="form-label">Lyrics</label>
+            {{ song_form.lyrics }}
+        </div>
+        <div class="mb-3">
+            <label for="id_composer" class="form-label">Composer</label>
+            {{ song_form.composer }}
+        </div>
+        <button type="submit" class="btn btn-success">Add Song</button>
+    </form>
+
+    <script>
+        CKEDITOR.replace('id_lyrics');
+    </script>
+{% endblock %}
