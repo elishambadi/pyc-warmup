@@ -34,7 +34,7 @@ services:
       GIN_MODE: release   # or debug depending on your environment
       SEED_DB: "false"    # Consistent environment variable
     ports:
-      - "8080:8080"      # Expose port 8080 for your app
+      - "8080:8083"      # Expose port 8080 for your app
     depends_on:
       postgres:
         condition: service_healthy  # Ensure PostgreSQL is ready before app starts
