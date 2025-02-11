@@ -1,0 +1,10 @@
+[
+  {
+    "type": "sqlite",
+    "path": "c:\\Users\\HP\\Documents\\PROJECT\\private\\pyc-warmup\\db.sqlite3"
+  },
+  {
+    "type": "sqlite",
+    "path": "c:\\Users\\HP\\Documents\\PROJECT\\private\\pyc-warmup\\pyc_warmpup.db"
+  }
+]

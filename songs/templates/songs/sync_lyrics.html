@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Sync Lyrics - {{ mp3_file.voice_part }}</h2>
+    <h3 class="text-muted mb-3">{{ song.title }}</h3>
+
+    <!-- Instructions Card -->
+    <div class="card bg-light p-3 mb-4">
+        <h4>🎵 Syncing Instructions</h4>
+        <ol>
+            <li>Click <strong>Play</strong> to start the audio</li>
+            <li>Click <strong>Set Timestamp</strong> when you hear each line</li>
+            <li>Use <strong>Delete</strong> to remove incorrect timestamps</li>
+        </ol>
+    </div>
+
+    <!-- Audio Player -->
+    <audio id="audio-player" controls class="w-100 mb-4" data-mp3-id="{{ mp3_file.id }}">
+        <source src="{{ mp3_file.file.url }}" type="audio/mpeg">
+    </audio>
+
+    <!-- Lyrics List -->
+    <div id="lyrics-container">
+        {% for lyric in lyrics %}
+            <p class="lyric-line" data-lyric-id="{{ lyric.id }}">
+                {{ lyric.text }} 
+                <button class="sync-btn btn btn-sm btn-primary">Set Timestamp</button>
+                <button class="delete-btn btn btn-sm btn-danger">Delete</button>
+                <span class="timestamp-display">
+                    {% if timestamps|get_item:lyric.id %}
+                        [{{ timestamps|get_item:lyric.id|floatformat:2 }}s]
+                    {% endif %}
+                </span>
+            </p>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'generate-lrc' mp3_file.id %}" class="btn btn-success">Download LRC</a>
+        <a href="{% url 'song_detail' song.id %}" class="btn btn-secondary">Back to Song</a>
+    </div>
+</div>
+
+<script src="{% static 'js/sync_lyrics.js' %}"></script>
+{% endblock %}

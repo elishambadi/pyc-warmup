@@ -1,0 +1,16 @@
+.lyric-line {
+    transition: all 0.3s ease;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.lyric-line.active {
+    background-color: #fff3cd;
+    font-weight: bold;
+    transform: scale(1.02);
+    border-left: 3px solid #ffc107;
+}
+
+.lyric-line.played {
+    color: #6c757d;
+}

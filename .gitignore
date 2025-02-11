@@ -1,2 +1,6 @@
 # Files to be ignored
 media
+.pyc-venv
+db.sqlite3
+pyc_warmup.db
+pycache

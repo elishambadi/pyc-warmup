@@ -1,0 +1,13 @@
+<!-- 🎧 Bottom Audio Player Bar -->
+<div id="audio-player-bar" class="fixed-bottom bg-dark text-white p-3 d-none">
+    <div class="container d-flex align-items-center justify-content-between">
+        <button id="prev-btn" class="btn btn-light">⏮</button>
+        <button id="play-pause-btn" class="btn btn-light">▶</button>
+        <button id="next-btn" class="btn btn-light">⏭</button>
+        <input type="range" id="seek-bar" class="form-range mx-2" value="0">
+        <span id="current-time">0:00</span> / <span id="total-time">0:00</span>
+        <audio id="audio-player" preload="metadata"></audio>
+    </div>
+</div>
+
+<script src="{% static 'js/player.js' %}"></script>
