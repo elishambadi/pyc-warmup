@@ -1,0 +1,35 @@
+<!-- Song Comment Section -->
+<div id="song-comments">
+    <h2>Comments</h2>
+    <form id="song-comment-form" method="POST" action="{% url 'add_song_comment' song.id %}">
+        {% csrf_token %}
+        <textarea name="comment_text" placeholder="Add your comment"></textarea>
+        <button type="submit">Post Comment</button>
+    </form>
+    
+    <div id="comments-list">
+        {% for comment in song.comments.all %}
+            <div class="comment" data-comment-id="{{ comment.id }}">
+                <p>{{ comment.text }}</p>
+                <div class="comment-actions">
+                    <button class="like-button" data-id="{{ comment.id }}" data-type="comment">Like ({{ comment.likes }})</button>
+                    <button class="dislike-button" data-id="{{ comment.id }}" data-type="comment">Dislike ({{ comment.dislikes }})</button>
+                    <button class="reply-button" data-id="{{ comment.id }}">Reply</button>
+                </div>
+                
+                <!-- Render Replies -->
+                <div class="replies">
+                    {% for reply in comment.replies.all %}
+                        <div class="reply" data-comment-id="{{ reply.id }}">
+                            <p>{{ reply.text }}</p>
+                            <div class="reply-actions">
+                                <button class="like-button" data-id="{{ reply.id }}" data-type="comment">Like ({{ reply.likes }})</button>
+                                <button class="dislike-button" data-id="{{ reply.id }}" data-type="comment">Dislike ({{ reply.dislikes }})</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>

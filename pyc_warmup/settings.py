@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'songs',
     'ckeditor',
     'ckeditor_uploader',
+    'pwa'
 ]
 
 MIDDLEWARE = [
@@ -104,7 +105,7 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.path.join(BASE_DIR, "pyc_warmup.db"),
+            "NAME": os.path.join(BASE_DIR, "pyc.db"),
         }
     }
 
@@ -160,3 +161,24 @@ STATICFILES_DIRS = [
 ]
 
 CKEDITOR_UPLOAD_PATH = '/assets/ckeditor/'
+
+# PWA configs
+PWA_APP_NAME = 'PYC Learn'
+PWA_APP_DESCRIPTION = "Song learning app for PYC"
+PWA_APP_THEME_COLOR = '#000000'
+PWA_APP_BACKGROUND_COLOR = '#ffffff'
+PWA_APP_ICON = '/static/images/icons/pyc-logo.jpg'
+PWA_APP_SPLASH_SCREEN = '/static/images/icons/pyc-logo.jpg'  # Splash screen image
+PWA_APP_DISPLAY = 'standalone'  # How the app behaves when launched
+PWA_APP_ORIENTATION = 'portrait'  # Lock orientation to portrait mode
+PWA_APP_SCOPE = '/'  # The scope of the app, usually the root of the site
+PWA_APP_START_URL = '/'  # Start page of the app when launched
+PWA_APP_ICONS = [
+    {
+        'src': '/static/images/icons/pyc-logo.jpg',
+        'sizes': '192x192'
+    }
+]
+PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'static/js', 'serviceworker.js')
+PWA_APP_DIR = 'ltr'
+PWA_APP_LANG = 'en-US' 

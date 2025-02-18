@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp
+from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment
 from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm
 from .utils import generate_lyric_lines
 from django.http import JsonResponse, HttpResponse
@@ -18,7 +18,21 @@ def song_detail(request, pk):
     song = Song.objects.get(pk=pk)
     mp3s = song.mp3_files.all()  # Get all MP3s related to this song
     notes = song.notes.all()  # Get all notes related to this song
+    lyric_lines = list(song.lyric_lines.all())  # Get all lyric lines related to this song
     references = song.references.all()  # Get all references related to this song
+
+    annotated_lines = []
+    current_section = None
+
+    for line in lyric_lines:
+        # Determine if this line starts a new section.
+        is_new_section = line.section != current_section
+        if is_new_section:
+            current_section = line.section
+        annotated_lines.append({
+            'line': line,
+            'is_new_section': is_new_section,
+        })
 
     mp3_timestamps = {}
     for line in song.lyric_lines.all():
@@ -34,13 +48,53 @@ def song_detail(request, pk):
         'notes': notes,
         'references': references,
         'mp3_timestamps': mp3_timestamps,
+        'annotated_lines': annotated_lines,
     })
 
 def add_song(request):
     if request.method == "POST":
         song_form = SongForm(request.POST)
         if song_form.is_valid():
-            song = song_form.save()
+            # Create the Song instance without committing to the database yet.
+            song = song_form.save(commit=False)
+            # Temporarily assign an empty string to lyrics; we will update after processing lyric lines.
+            song.lyrics = ""
+            song.save()  # Now song has a primary key so it can be referenced.
+
+            all_lyric_lines = []  # Will collect all lyric texts in order.
+            order = 1             # Order counter for lyric lines.
+            index = 1             # Index for sections: expecting keys like lyrics_title_0, lyrics_0, etc.
+
+            # Loop as long as the POST data contains a key for the section title.
+            while f"lyrics_title_{index}" in request.POST:
+                # Grab the section title and lyrics text.
+                print(f"Line {index}")
+                section_title = request.POST.get(f"lyrics_title_{index}", "").strip()
+                lyrics_text = request.POST.get(f"lyrics_{index}", "").strip()
+                
+                # Create a new Section for this part of the song.
+                section = Section.objects.create(song=song, name=section_title, position=index)
+
+                # Split the submitted lyrics text into individual lines.
+                lines = lyrics_text.splitlines()
+                for line in lines:
+                    line = line.strip()
+                    if line:  # Only create a LyricLine for nonempty lines.
+                        LyricLine.objects.create(
+                            song=song,
+                            section=section,
+                            text=line,
+                            order=order
+                        )
+                        all_lyric_lines.append(line)
+                        order += 1
+
+                index += 1
+
+            # After processing all sections, join all lyric lines with newline characters.
+            song.lyrics = "\n".join(all_lyric_lines)
+            song.save()  # Save the final lyrics string to the Song instance.
+            
             return redirect("song_list")
     else:
         song_form = SongForm()
@@ -155,19 +209,6 @@ def generate_lrc(request, song_id):
     response["Content-Disposition"] = f'attachment; filename="{song.voice_part}.lrc"'
     return response
 
-# Generate lyrics view
-
-def generate_lyrics_view(request, song_id):
-    song = get_object_or_404(Song, id=song_id)
-    count = generate_lyric_lines(song_id)
-
-    if count:
-        messages.success(request, f"Successfully generated {count} lyric lines.")
-    else:
-        messages.error(request, "Failed to generate lyric lines.")
-
-    return redirect('sync-lyrics', song_id=song.id)  # Redirect to sync page
-
 @require_http_methods(["DELETE"])
 def delete_lyric(request, lyric_id):
     try:
@@ -176,3 +217,63 @@ def delete_lyric(request, lyric_id):
         return JsonResponse({'status': 'success'})
     except LyricLine.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Lyric line not found'}, status=404)
+    
+def add_song_comment(request, song_id):
+    song = get_object_or_404(Song, pk=song_id)
+    
+    if request.method == 'POST':
+        text = request.POST.get('comment_text')
+        
+        if not text:
+            return JsonResponse({'error': 'Comment text is required'}, status=400)
+        
+        # Create the new comment for the song
+        comment = Comment.objects.create(
+            song=song,
+            text=text
+        )
+        
+        return JsonResponse({
+            'id': comment.id,
+            'text': comment.text,
+            'likes': comment.likes,
+            'dislikes': comment.dislikes
+        })
+    
+    # Return a page with the comment form (or a simple JSON response if needed)
+    return render(request, 'add_comment.html', {'song': song})
+
+
+# Like a comment
+def like_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    comment.likes += 1
+    comment.save()
+    
+    # You can return a JSON response or redirect as necessary
+    return JsonResponse({'likes': comment.likes})
+
+# Dislike a comment
+def dislike_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    comment.dislikes += 1
+    comment.save()
+    
+    return JsonResponse({'dislikes': comment.dislikes})
+
+# Reply to a comment
+def reply_comment(request, comment_id):
+    parent_comment = get_object_or_404(Comment, id=comment_id)
+    
+    if request.method == "POST":
+        text = request.POST.get('text')
+        if text:
+            reply = Comment.objects.create(
+                text=text,
+                parent=parent_comment,
+                song=parent_comment.song,
+                user=request.user  # Assuming you have a user model
+            )
+            return redirect('song_detail', song_id=parent_comment.song.id)
+    
+    return render(request, 'comments/reply_comment.html', {'parent_comment': parent_comment})

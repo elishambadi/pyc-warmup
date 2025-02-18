@@ -8,6 +8,7 @@
         transition: all 0.3s ease;
         padding: 5px;
         border-radius: 4px;
+        cursor: pointer;
     }
     
     .lyric-line.active {
@@ -20,25 +21,32 @@
     .lyric-line.played {
         color: #6c757d;
     }
+    
+    .lyric-line:hover {
+        background-color: #f8f9fa;
+    }
 </style>
 
 <h2 id="song-title">{{ song.title }}</h2>
 <div id="lyrics-content">
-    {% if song.lyric_lines.all|length > 0 %}
-        {% for line in song.lyric_lines.all %}
-            <p class="lyric-line" 
-               data-line-id="{{ line.id }}" 
-               data-timestamps="{{ mp3_timestamps|get_item:line.id|default:'{}' }}">
-                {{ line.text }}
+    {% if annotated_lines %}
+        {% for item in annotated_lines %}
+            {% if item.is_new_section %}
+                <p class="mt-3 small muted text-underline">
+                    {{ item.line.section.name }}
+                </p>
+            {% endif %}
+            <p class="lyric-line my-0" data-line-id="{{ item.line.id }}" 
+            data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
+                {{ item.line.text }}
             </p>
         {% endfor %}
     {% else %}
         {{ song.lyrics|safe }}
     {% endif %}
+
 </div>
-<button class="btn btn-sm btn-secondary my-1" id="edit-lyrics-btn">Edit Lyrics</button>
-<a href="{% url 'sync-lyrics' song.id %}" class="btn btn-warning">🎵 Sync Lyrics</a>
-<a href="{% url 'generate-lyrics' song.id %}" class="btn btn-info">🎶 Generate Lyric Lines</a>
+<button class="btn btn-sm btn-secondary my-1" disabled id="edit-lyrics-btn">Edit Lyrics</button>
 
 
 <!-- 🎵 MP3 Files Section -->
@@ -63,7 +71,7 @@
 <button class="btn btn-sm btn-secondary my-1" id="add-mp3-btn">Add MP3</button>
 
 <!-- 📝 Notes Section -->
-<h3>Notes</h3>
+<!-- <h3>Notes</h3>
 <ul id="notes">
     {% for note in notes %}
     <li>
@@ -75,10 +83,10 @@
 </ul>
 <input class="form-control my-1" type="text" id="new-note-section" placeholder="Section">
 <input class="form-control my-1" type="text" id="new-note-content" placeholder="Content">
-<button class="btn btn-sm btn-secondary my-1" id="add-note-btn">Add Note</button>
+<button class="btn btn-sm btn-secondary my-1" id="add-note-btn">Add Note</button> -->
 
 <!-- 🔗 References Section -->
-<h3>References</h3>
+<!-- <h3>References</h3>
 <ul id="references">
     {% for ref in references %}
     <li>
@@ -88,232 +96,14 @@
     {% endfor %}
 </ul>
 <input class="form-control my-1" type="text" id="new-reference-link" placeholder="Reference Link">
-<button class="btn btn-sm btn-secondary my-1" id="add-reference-btn">Add Reference</button>
+<button class="btn btn-sm btn-secondary my-1" id="add-reference-btn">Add Reference</button> -->
+
+    {# @include 'songs/partials/comments.html' #}
+
+    {% include 'songs/partials/player.html' %}
 
 {% endblock %}
 
-{% block player %}
-
-<!-- 🎧 Bottom Audio Player Bar -->
-<div id="audio-player-bar" class="fixed-bottom bg-dark text-white p-3 d-none">
-    <div class="container d-flex align-items-center justify-content-between">
-        <button id="prev-btn" class="btn btn-light">⏮</button>
-        <button id="play-pause-btn" class="btn btn-light">▶</button>
-        <button id="next-btn" class="btn btn-light">⏭</button>
-        <input type="range" id="seek-bar" class="form-range mx-2" value="0">
-        <span id="current-time">0:00</span> / <span id="total-time">0:00</span>
-        <audio id="audio-player" preload="metadata"></audio>
-    </div>
-</div>
-
-<script>
-    const audioPlayer = document.getElementById("audio-player");
-    const playPauseBtn = document.getElementById("play-pause-btn");
-    const prevBtn = document.getElementById("prev-btn");
-    const nextBtn = document.getElementById("next-btn");
-    const seekBar = document.getElementById("seek-bar");
-    const currentTimeDisplay = document.getElementById("current-time");
-    const totalTimeDisplay = document.getElementById("total-time");
-    const audioBar = document.getElementById("audio-player-bar");
-    const mp3List = document.querySelectorAll(".mp3-voice");
-
-    let playlist = [];
-    let currentTrackIndex = 0;
-
-    // Function to load and play track
-    function loadTrack(index) {
-        if (index < 0 || index >= playlist.length) return;
-        currentTrackIndex = index;
-        audioPlayer.src = playlist[currentTrackIndex];
-        audioPlayer.play();
-        updatePlayPauseButton();
-        audioBar.classList.remove("d-none"); // Show player when track starts
-    }
-
-    // Function to toggle play/pause
-    function togglePlayPause() {
-        if (audioPlayer.paused) {
-            audioPlayer.play();
-        } else {
-            audioPlayer.pause();
-        }
-        updatePlayPauseButton();
-    }
-
-    // Update play/pause button icon
-    function updatePlayPauseButton() {
-        playPauseBtn.textContent = audioPlayer.paused ? "▶" : "⏸";
-    }
-
-    // Play next track
-    function playNextTrack() {
-        if (currentTrackIndex < playlist.length - 1) {
-            loadTrack(currentTrackIndex + 1);
-        }
-    }
-
-    // Play previous track
-    function playPreviousTrack() {
-        if (currentTrackIndex > 0) {
-            loadTrack(currentTrackIndex - 1);
-        }
-    }
-
-    // Update seek bar and time
-    function updateSeekBar() {
-        seekBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-        currentTimeDisplay.textContent = formatTime(audioPlayer.currentTime);
-    }
-
-    // Seek to position
-    function seekAudio(event) {
-        const percent = event.target.value;
-        audioPlayer.currentTime = (percent / 100) * audioPlayer.duration;
-    }
-
-    // Format time helper function
-    function formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
-    }
-
-    // Event listener for clicking an MP3 file
-    mp3List.forEach((mp3Item, index) => {
-        mp3Item.addEventListener("click", function () {
-            const mp3Url = this.getAttribute("data-mp3-url");
-
-            // If the song is already in the playlist, just play it
-            if (playlist.includes(mp3Url)) {
-                currentTrackIndex = playlist.indexOf(mp3Url);
-            } else {
-                playlist.push(mp3Url);
-                currentTrackIndex = playlist.length - 1;
-            }
-
-            loadTrack(currentTrackIndex);
-        });
-    });
-
-    // Event listeners for controls
-    playPauseBtn.addEventListener("click", togglePlayPause);
-    prevBtn.addEventListener("click", playPreviousTrack);
-    nextBtn.addEventListener("click", playNextTrack);
-    audioPlayer.addEventListener("timeupdate", updateSeekBar);
-    audioPlayer.addEventListener("loadedmetadata", () => {
-        totalTimeDisplay.textContent = formatTime(audioPlayer.duration);
-    });
-    seekBar.addEventListener("input", seekAudio);
-    audioPlayer.addEventListener("ended", playNextTrack);
-</script>
-
-<!-- Highlight lyrics as song plays -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const audioPlayer = document.getElementById('audio-player');
-        const lyricLines = document.querySelectorAll('.lyric-line');
-        const mp3List = document.querySelectorAll('.mp3-voice');
-        let timestamps = {};
-        let currentLine = null;
-    
-        console.log("🎵 Script Loaded: Audio Player & Lyrics Initialized");
-    
-        // Process timestamps for current MP3
-        function processTimestamps(mp3Id) {
-            timestamps = {};
-            console.log(`🎶 Processing timestamps for MP3 ID: ${mp3Id}`);
-    
-            lyricLines.forEach(line => {
-                const lineId = line.dataset.lineId;
-                console.log(`🔹 Processing Lyric Line ID: ${lineId}`);
-    
-                const lineTimestamps = JSON.parse(line.dataset.timestamps);
-                console.log(`📌 Timestamps Data for Line ${lineId}: `, lineTimestamps);
-    
-                if (lineTimestamps[mp3Id]) {
-                    timestamps[lineTimestamps[mp3Id]] = lineId;
-                    console.log(`✅ Mapped Timestamp: ${lineTimestamps[mp3Id]}s -> Line ${lineId}`);
-                }
-            });
-    
-            console.log("🕒 Final Timestamps Map: ", timestamps);
-        }
-    
-        // Update lyrics display based on current time
-        function updateLyrics(currentTime) {
-            console.log(`⏳ Checking Lyrics at Time: ${currentTime}s`);
-            const times = Object.keys(timestamps).map(Number);
-            
-            if (times.length === 0) {
-                console.log("⚠️ No timestamps found, skipping update.");
-                return;
-            }
-    
-            const currentTimestamp = times.reduce((prev, curr) => {
-                return (Math.abs(curr - currentTime) < Math.abs(prev - currentTime) ? curr : prev);
-            }, times[0]);
-    
-            console.log(`🎯 Closest Timestamp: ${currentTimestamp}s`);
-    
-            if (timestamps[currentTimestamp] && 
-                (!currentLine || currentLine.dataset.lineId !== timestamps[currentTimestamp])) {
-                
-                if (currentLine) {
-                    console.log(`🔄 Removing active from Line ${currentLine.dataset.lineId}`);
-                    currentLine.classList.remove('active');
-                    currentLine.classList.add('played');
-                }
-    
-                currentLine = document.querySelector(`.lyric-line[data-line-id="${timestamps[currentTimestamp]}"]`);
-    
-                if (currentLine) {
-                    console.log(`✨ Highlighting Line ${currentLine.dataset.lineId}`);
-                    currentLine.classList.add('active');
-                    currentLine.classList.remove('played');
-    
-                    currentLine.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                }
-            }
-        }
-    
-        // Handle MP3 selection change
-        mp3List.forEach(mp3Item => {
-            mp3Item.addEventListener('click', function() {
-                const mp3Id = this.dataset.mp3Id;
-                console.log(`🎵 Selected MP3 ID: ${mp3Id}`);
-                processTimestamps(mp3Id);
-                
-                lyricLines.forEach(line => {
-                    line.classList.remove('active', 'played');
-                });
-                currentLine = null;
-            });
-        });
-    
-        // Update lyrics on timeupdate
-        audioPlayer.addEventListener('timeupdate', () => {
-            console.log(`🎼 Audio Time Update: ${audioPlayer.currentTime}s`);
-            updateLyrics(audioPlayer.currentTime);
-        });
-    
-        // Reset lyrics when audio ends
-        audioPlayer.addEventListener('ended', () => {
-            console.log("🏁 Audio Ended: Resetting Lyrics.");
-            if (currentLine) {
-                currentLine.classList.remove('active');
-            }
-            lyricLines.forEach(line => line.classList.remove('played'));
-            currentLine = null;
-        });
-    
-        console.log("🎬 Script Setup Complete!");
-    });
-    
-</script>
-{% endblock %}
 
 {% block extra_js %}
 <script>

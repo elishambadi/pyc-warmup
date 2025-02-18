@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', function() {
     mp3List.forEach(mp3Item => {
         mp3Item.addEventListener('click', function() {
             const mp3Id = this.dataset.mp3Id;
+            console.log(`🎵 Selected MP3 ID: ${mp3Id}`);
+            audioPlayer.dataset.currentMp3Id = mp3Id;  // Store current MP3 ID
             processTimestamps(mp3Id);
             
             // Reset lyric display
@@ -72,5 +74,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         lyricLines.forEach(line => line.classList.remove('played'));
         currentLine = null;
+    });
+
+    lyricLines.forEach(line => {
+        line.addEventListener('click', function() {
+            const lineId = this.dataset.lineId;
+            const lineTimestamps = JSON.parse(this.dataset.timestamps);
+            const currentMp3Id = audioPlayer.dataset.currentMp3Id;
+    
+            if (currentMp3Id && lineTimestamps[currentMp3Id]) {
+                console.log(`🎯 Seeking to timestamp: ${lineTimestamps[currentMp3Id]}s`);
+                audioPlayer.currentTime = lineTimestamps[currentMp3Id];
+            } else {
+                console.log('⚠️ No timestamp found for this line with current MP3');
+            }
+        });
     });
 });

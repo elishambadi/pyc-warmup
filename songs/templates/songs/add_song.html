@@ -9,17 +9,35 @@
             {{ song_form.title }}
         </div>
         <div class="mb-3">
-            <label for="id_lyrics" class="form-label">Lyrics</label>
-            {{ song_form.lyrics }}
-        </div>
-        <div class="mb-3">
             <label for="id_composer" class="form-label">Composer</label>
             {{ song_form.composer }}
         </div>
+        <div id="lyrics-sections">
+            <p class="fw-bold">Lyrics</p>
+            <div class="mb-3"></div>
+                <label for="id_lyrics_title_1" class="form-label">Section 1</label>
+                <input type="text" id="id_lyrics_title_1" name="lyrics_title_1" class="form-control my-1" placeholder="Section title">
+                <textarea id="id_lyrics_1" name="lyrics_1" class="form-control my-1" placeholder="Lyrics for the section"></textarea>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary my-1" onclick="addLyricsSection()">Add Section</button> <br>
         <button type="submit" class="btn btn-success">Add Song</button>
     </form>
 
     <script>
-        CKEDITOR.replace('id_lyrics');
+        let sectionCount = 1;
+
+        function addLyricsSection() {
+            sectionCount++;
+            const newSection = document.createElement('div');
+            newSection.classList.add('mb-3');
+            newSection.innerHTML = `
+                <label for="id_lyrics_title_${sectionCount}" class="form-label">Section ${sectionCount}</label>
+                <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" class="form-control my-1" placeholder="Section title">
+                <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" class="form-control my-1" placeholder="Lyrics for the section"></textarea>
+            `;
+            document.getElementById('lyrics-sections').appendChild(newSection);
+            // CKEDITOR.replace(`id_lyrics_${sectionCount}`);
+        }
     </script>
 {% endblock %}

@@ -6,6 +6,7 @@ class Song(models.Model):
     lyrics = models.TextField()
     composer = models.CharField(max_length=255, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    likes = models.IntegerField(default=0)  # new field for song likes
 
     def __str__(self):
         return self.title
@@ -39,6 +40,7 @@ class MP3File(models.Model):
 class Section(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="sections")
     name = models.CharField(max_length=100)
+    position = models.IntegerField(null=True, blank=True, default=None)
 
     def __str__(self):
         return self.name
@@ -47,6 +49,20 @@ class LyricLine(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="lyric_lines")
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="lyric_lines", null=True, blank=True)
     text = models.TextField()
+    VOICE_PART_CHOICES = [
+        ('soprano', 'Soprano'),
+        ('alto', 'Alto'),
+        ('tenor', 'Tenor'),
+        ('bass', 'Bass'),
+    ]
+
+    voice_part = models.CharField(
+        max_length=10,
+        choices=VOICE_PART_CHOICES,
+        null=True,
+        blank=True
+    )
+
     order = models.IntegerField()
 
     class Meta:
@@ -95,3 +111,19 @@ class ChoirMember(models.Model):
     
     def __str__(self):
         return f"{self.user.username} ({self.role})"
+
+
+class Comment(models.Model):
+    # A comment may be related to either a Song or a specific LyricLine.
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="comments", null=True, blank=True)
+    lyric_line = models.ForeignKey(LyricLine, on_delete=models.CASCADE, related_name="comments", null=True, blank=True)
+    # For replies, a comment may have a parent.
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name="replies", null=True, blank=True)
+    
+    text = models.TextField()
+    likes = models.IntegerField(default=0)
+    dislikes = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.text[:50]
