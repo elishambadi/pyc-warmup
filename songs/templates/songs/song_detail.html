@@ -27,18 +27,35 @@
     }
 </style>
 
-<h2 id="song-title">{{ song.title }}</h2>
+<h2 id="song-title" class="py-2">{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %}</h2>
+{% if song.youtube_link %}
+    <div style="text-align: center;">
+        <iframe width="560" height="315" 
+                src="{{ song.youtube_link|youtube_embed }}" 
+                frameborder="0" allowfullscreen 
+                class="my-3" allow="autoplay; encrypted-media">
+        </iframe>
+    </div>
+{% endif %}
+
+
+{% if song.slogan %}
+    <blockquote class="blockquote fs-6 py-2">{{ song.slogan|safe }}</blockquote>
+{% endif %}
+
 <div id="lyrics-content">
+    <h5>Lyrics</h5>
     {% if annotated_lines %}
         {% for item in annotated_lines %}
             {% if item.is_new_section %}
                 <p class="mt-3 small muted text-underline">
                     {{ item.line.section.name }}
+                    <span class="text-muted fst-italic">{{ item.line.section.instruction|default:'' }}</span>
                 </p>
             {% endif %}
             <p class="lyric-line my-0" data-line-id="{{ item.line.id }}" 
             data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
-                {{ item.line.text }}
+                <span class="text-muted fst-italic">{{ item.line.instruction|default:'' }}</span> {{ item.line.text }}
             </p>
         {% endfor %}
     {% else %}
@@ -50,7 +67,7 @@
 
 
 <!-- 🎵 MP3 Files Section -->
-<h3>MP3 Files</h3>
+<h3>Voicenotes & Audios</h3>
 <ul id="mp3-files">
     {% for mp3 in mp3s %}
     <li>

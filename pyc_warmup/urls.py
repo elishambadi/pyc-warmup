@@ -18,11 +18,14 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from songs.views import home
 import pwa
 
 urlpatterns = [
+    path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('serviceworker.js', TemplateView.as_view(template_name="serviceworker.js", content_type='application/javascript')),
+    path('offline/', TemplateView.as_view(template_name="offline.html"), name='offline'),
     path('', include('songs.urls')),
     path('', include('pwa.urls')),
 ]

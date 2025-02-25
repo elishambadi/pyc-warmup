@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 class Song(models.Model):
     title = models.CharField(max_length=255)
@@ -7,9 +8,14 @@ class Song(models.Model):
     composer = models.CharField(max_length=255, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.IntegerField(default=0)  # new field for song likes
+    youtube_link = models.URLField(null=True, blank=True)  # new field for YouTube link
+    slogan = models.CharField(max_length=1024, null=True, blank=True)  # new field for slogan
 
     def __str__(self):
         return self.title
+    
+    def get_absolute_url(self):
+        return reverse("song_detail", args=[str(self.id)])
 
 class MP3File(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="mp3_files")
@@ -39,8 +45,10 @@ class MP3File(models.Model):
     
 class Section(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="sections")
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, blank=True)
     position = models.IntegerField(null=True, blank=True, default=None)
+    instruction = models.CharField(max_length=50, null=True, blank=True)
+    passage = models.TextField(null=True, blank=True)  # new field for passage
 
     def __str__(self):
         return self.name
@@ -64,6 +72,7 @@ class LyricLine(models.Model):
     )
 
     order = models.IntegerField()
+    instruction = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         ordering = ["order"]

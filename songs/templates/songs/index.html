@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <h2>Welcome to PYC Learn</h2>
+        <h1>Latest Songs</h1>
+        <ul>
+            {% for song in latest_songs %}
+                <li>
+                    <a href="{% url 'song_detail' song.pk %}">{{ song.title }}</a>
+                </li>
+            {% empty %}
+                <p>No songs available.</p>
+            {% endfor %}
+        </ul>
+        
+        <a href="{% url 'song_list' %}">View All Songs</a>
+    </div>
+{% endblock %}
+

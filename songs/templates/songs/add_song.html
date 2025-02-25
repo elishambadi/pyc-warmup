@@ -2,6 +2,21 @@
 
 {% block content %}
     <h1>Add a New Song</h1>
+    <!-- Display Form Errors -->
+    {% if song_form.errors %}
+        <div class="alert alert-danger">
+            <strong>Oops! Please fix the following errors:</strong>
+            <ul>
+                {% for field in song_form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    <!-- Display Form -->
+     
     <form method="POST" enctype="multipart/form-data" action="{% url 'add_song' %}">
         {% csrf_token %}
         <div class="mb-3">
@@ -14,17 +29,33 @@
         </div>
         <div id="lyrics-sections">
             <p class="fw-bold">Lyrics</p>
-            <div class="mb-3"></div>
-                <label for="id_lyrics_title_1" class="form-label">Section 1</label>
+            <div class="mb-3">
+                <label for="id_lyrics_title_1" class="form-label">Section 1 (Add instructions inside brackets e.g. (softly, distant thoughtful wonder))</label>
                 <input type="text" id="id_lyrics_title_1" name="lyrics_title_1" class="form-control my-1" placeholder="Section title">
                 <textarea id="id_lyrics_1" name="lyrics_1" class="form-control my-1" placeholder="Lyrics for the section"></textarea>
             </div>
         </div>
+
         <button type="button" class="btn btn-secondary my-1" onclick="addLyricsSection()">Add Section</button> <br>
+
+        <div class="mb-3">
+            <label for="id_youtube_link" class="form-label">YouTube Link</label>
+            {{ song_form.youtube_link }}
+        </div>
+        <div class="mb-3">
+            <label for="id_slogan" class="form-label">Slogan (A verse or quote)</label>
+            {{ song_form.slogan }}
+        </div>
+
         <button type="submit" class="btn btn-success">Add Song</button>
     </form>
 
     <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            CKEDITOR.replace("slogan");
+        });
+
         let sectionCount = 1;
 
         function addLyricsSection() {
@@ -32,12 +63,30 @@
             const newSection = document.createElement('div');
             newSection.classList.add('mb-3');
             newSection.innerHTML = `
-                <label for="id_lyrics_title_${sectionCount}" class="form-label">Section ${sectionCount}</label>
-                <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" class="form-control my-1" placeholder="Section title">
-                <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" class="form-control my-1" placeholder="Lyrics for the section"></textarea>
+            <label for="id_lyrics_title_${sectionCount}" class="form-label">Section ${sectionCount}</label>
+            <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" class="form-control my-1" placeholder="Section title">
+            <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" class="form-control my-1" placeholder="Lyrics for the section"></textarea>
             `;
             document.getElementById('lyrics-sections').appendChild(newSection);
-            // CKEDITOR.replace(`id_lyrics_${sectionCount}`);
+        }
+
+        document.getElementById('id_lyrics_1').addEventListener('input', extractSections);
+
+        function extractSections() {
+            const lyrics = document.getElementById('id_lyrics_1').value;
+            const sections = lyrics.split(/\n\s*\n/);
+            document.getElementById('lyrics-sections').innerHTML = '';
+            sections.forEach((section, index) => {
+            sectionCount = index + 1;
+            const newSection = document.createElement('div');
+            newSection.classList.add('mb-3');
+            newSection.innerHTML = `
+                <label for="id_lyrics_title_${sectionCount}" class="form-label">Section ${sectionCount}</label>
+                <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" class="form-control my-1" placeholder="Section title">
+                <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" class="form-control my-1" placeholder="Lyrics for the section">${section}</textarea>
+            `;
+            document.getElementById('lyrics-sections').appendChild(newSection);
+            });
         }
     </script>
 {% endblock %}

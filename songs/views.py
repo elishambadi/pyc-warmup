@@ -10,9 +10,9 @@ import json
 
 from bs4 import BeautifulSoup
 
-def song_list(request):
-    songs = Song.objects.all()
-    return render(request, "songs/song_list.html", {"songs": songs})
+def home(request):
+    latest_songs = Song.objects.order_by('-created_at')[:5]  # Get 5 latest songs
+    return render(request, "songs/index.html", {"latest_songs": latest_songs})
 
 def song_detail(request, pk):
     song = Song.objects.get(pk=pk)
@@ -96,6 +96,8 @@ def add_song(request):
             song.save()  # Save the final lyrics string to the Song instance.
             
             return redirect("song_list")
+        else:
+            song_form = SongForm(request.POST)
     else:
         song_form = SongForm()
 

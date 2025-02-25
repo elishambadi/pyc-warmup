@@ -5,9 +5,11 @@ from ckeditor.widgets import CKEditorWidget
 class SongForm(forms.ModelForm):
     lyrics = forms.CharField(widget=CKEditorWidget(), required=False)
 
+    slogan = forms.CharField(widget=forms.Textarea, required=False)
+
     class Meta:
         model = Song
-        fields = ['title', 'lyrics', 'composer']
+        fields = ['title', 'lyrics', 'composer', 'youtube_link', 'slogan']
 
 class MP3FileForm(forms.ModelForm):
     class Meta:

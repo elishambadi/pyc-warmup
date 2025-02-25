@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>You're Offline</h2>
+    <p>Your saved songs and MP3s will still be available.</p>
+    <ul id="saved-songs"></ul>
+
+    <script>
+        if ('caches' in window) {
+            caches.open('djangopwa-v2').then(cache => {
+                return cache.keys();
+            }).then(keys => {
+                let savedSongs = document.getElementById('saved-songs');
+                keys.forEach(request => {
+                    if (request.url.includes('/songs/')) {
+                        let listItem = document.createElement('li');
+                        listItem.textContent = request.url;
+                        savedSongs.appendChild(listItem);
+                    }
+                });
+            });
+        }
+    </script>
+{% endblock %}
