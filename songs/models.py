@@ -110,17 +110,6 @@ class Reference(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="references")
     link = models.URLField()
 
-class ChoirMember(models.Model):
-    USER_ROLES = (
-        ("admin", "Admin"),
-        ("member", "Member"),
-    )
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=10, choices=USER_ROLES, default="member")
-    
-    def __str__(self):
-        return f"{self.user.username} ({self.role})"
-
 
 class Comment(models.Model):
     # A comment may be related to either a Song or a specific LyricLine.

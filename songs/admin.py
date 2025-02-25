@@ -1,5 +1,7 @@
 from django.contrib import admin
 from .models import Song, MP3File, Note, Reference
+from django.contrib.auth.models import Group, User
+
 
 class MP3FileInline(admin.TabularInline):
     model = MP3File

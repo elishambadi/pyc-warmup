@@ -103,6 +103,18 @@ def add_song(request):
 
     return render(request, "songs/add_song.html", {"song_form": song_form})
 
+# 🎵 Delete a Song
+@require_http_methods(["DELETE"])
+def delete_song(request, song_id):
+    try:
+        song = Song.objects.get(id=song_id)
+        # Delete all MP3 files related to the song
+        song.mp3_files.all().delete()
+        song.delete()
+        return JsonResponse({'status': 'success', 'success': True})
+    except Song.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Song not found', 'success': False}, status=404)
+
 # Edit functions via JS
 
 def save_lyrics(request, song_id):
@@ -133,6 +145,15 @@ def add_mp3(request, song_id):
         return JsonResponse({'success': True, 'mp3_id': mp3.id})
     
     return JsonResponse({'success': False}, status=400)
+
+@require_http_methods(["DELETE"])
+def delete_mp3(request, mp3_id):
+    try:
+        mp3_file = MP3File.objects.get(id=mp3_id)
+        mp3_file.delete()
+        return JsonResponse({'status': 'success',  'success': True})
+    except MP3File.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'MP3 file not found', 'success': False}, status=404)
 
 # 📝 Add a Note (🔗 Requires song_id)
 def add_note(request, song_id):

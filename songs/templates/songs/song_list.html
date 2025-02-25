@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    {% if request.GET.next == "/" %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            Logged out successfully.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+
     <div class="row">
         {% for song in songs %}
         <div class="col-sm-12 col-md-6 col-lg-4 mb-4">

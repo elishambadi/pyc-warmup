@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'songs',
+    'users',
     'ckeditor',
     'ckeditor_uploader',
     'pwa'
@@ -64,7 +65,7 @@ ROOT_URLCONF = 'pyc_warmup.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['/songs', '/users', '/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -182,3 +183,7 @@ PWA_APP_ICONS = [
 PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'static/js', 'serviceworker.js')
 PWA_APP_DIR = 'ltr'
 PWA_APP_LANG = 'en-US' 
+
+LOGOUT_REDIRECT_URL = "home"
+
+LOGIN_REDIRECT_URL = "/"  # Redirect to homepage (change if needed)

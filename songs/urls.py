@@ -24,4 +24,7 @@ urlpatterns = [
     path('comments/<int:comment_id>/dislike/', views.dislike_comment, name='dislike_comment'),
     path('comments/<int:comment_id>/reply/', views.reply_comment, name='reply_comment'),
     path('add_song_comment/<int:song_id>/', views.add_song_comment, name='add_song_comment'),
+
+    path('delete-song/<int:song_id>/', views.delete_song, name='delete-song'),
+    path('delete-mp3/<int:mp3_id>/', views.delete_mp3, name='delete-mp3'),
 ]

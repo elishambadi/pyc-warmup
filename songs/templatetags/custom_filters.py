@@ -14,3 +14,7 @@ def youtube_embed(value):
     if isinstance(value, str) and "watch?v=" in value:
         return value.replace("watch?v=", "embed/")
     return value
+
+@register.filter(name="is_admin")
+def is_admin(user):
+    return user.is_authenticated and (user.is_staff or user.is_superuser)

@@ -27,9 +27,13 @@
     }
 </style>
 
-<h2 id="song-title" class="py-2">{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %}</h2>
+{% if user|is_admin %}
+<button class="btn btn-sm btn-danger my-1" id="delete-song-btn">Delete Song</button>
+{% endif %}
+
+<h2 id="song-title" class="py-2">{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %}</h2> 
 {% if song.youtube_link %}
-    <div style="text-align: center;">
+    <div style="text-align: center;" class="container-fluid">
         <iframe width="560" height="315" 
                 src="{{ song.youtube_link|youtube_embed }}" 
                 frameborder="0" allowfullscreen 
@@ -79,7 +83,10 @@
                 🎵 Sync Lyrics
             {% endif %}
         </a>
-        <button class="btn btn-sm btn-primary my-1 edit-mp3-btn" data-mp3-id="{{ mp3.id }}">Edit</button>
+        {% if user|is_admin %}
+            <button class="btn btn-sm btn-primary my-1 edit-mp3-btn" data-mp3-id="{{ mp3.id }}">Edit</button>
+            <button class="btn btn-sm btn-danger my-1 delete-mp3-btn" data-mp3-id="{{ mp3.id }}">Delete</button>
+        {% endif %}
     </li>
     {% endfor %}
 </ul>
@@ -216,5 +223,54 @@
             .then(data => alert(data.success ? "Reference added!" : "Error adding reference."));
     }
 
+</script>
+
+<script>
+    // Delete song code
+    document.getElementById('delete-song-btn').addEventListener('click', function () {
+        if (confirm("Are you sure you want to delete this song?")) {
+            fetch("{% url 'delete-song' song.id %}", {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Song deleted!");
+                        window.location.href = "{% url 'song_list' %}";
+                    } else {
+                        alert("Error deleting song.");
+                    }
+                });
+        }
+    });
+
+    // Delete MP3 code
+    document.querySelectorAll('.delete-mp3-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const mp3Id = this.dataset.mp3Id;
+            if (confirm("Are you sure you want to delete this MP3?")) {
+                const url = `/delete-mp3/${mp3Id}/`;
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ mp3_id: mp3Id })
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("MP3 deleted!");
+                            location.reload();
+                        } else {
+                            alert("Error deleting MP3.");
+                        }
+                    });
+            }
+        });
+    });
 </script>
 {% endblock %}

@@ -38,6 +38,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy  # Ensure PostgreSQL is ready before app starts
+    volumes:
+      - ./media:/app/media
     networks:
       - app-network
     logging:
