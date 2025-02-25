@@ -59,7 +59,7 @@
             {% endif %}
             <p class="lyric-line my-0" data-line-id="{{ item.line.id }}" 
             data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
-                <span class="text-muted fst-italic">{{ item.line.instruction|default:'' }}</span> {{ item.line.text }}
+                {{ item.line.text }} <span class="text-muted fst-italic small">{{ item.line.instruction|default:'' }}</span> 
             </p>
         {% endfor %}
     {% else %}

@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     path('songs/', home, name="song_list"),
-    path('songs/<int:pk>/', song_detail, name="song_detail"),
+    path('songs/<slug:slug>/', song_detail, name="song_detail"),
     path('add-song/', add_song, name="add_song"),
 
     path('song/<int:song_id>/save-lyrics/', save_lyrics, name='save_lyrics'),

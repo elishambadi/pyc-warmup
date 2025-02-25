@@ -6,7 +6,7 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 
-import json
+import json, re
 
 from bs4 import BeautifulSoup
 
@@ -14,8 +14,8 @@ def home(request):
     latest_songs = Song.objects.order_by('-created_at')[:5]  # Get 5 latest songs
     return render(request, "songs/index.html", {"latest_songs": latest_songs})
 
-def song_detail(request, pk):
-    song = Song.objects.get(pk=pk)
+def song_detail(request, slug):
+    song = get_object_or_404(Song, slug=slug)
     mp3s = song.mp3_files.all()  # Get all MP3s related to this song
     notes = song.notes.all()  # Get all notes related to this song
     lyric_lines = list(song.lyric_lines.all())  # Get all lyric lines related to this song
@@ -72,18 +72,31 @@ def add_song(request):
                 section_title = request.POST.get(f"lyrics_title_{index}", "").strip()
                 lyrics_text = request.POST.get(f"lyrics_{index}", "").strip()
                 
-                # Create a new Section for this part of the song.
-                section = Section.objects.create(song=song, name=section_title, position=index)
+                matches = re.findall(r"\((.*?)\)", section_title)
+                instruction = " ".join(matches) if matches else None
+                clean_section_title = re.sub(r"\s*\(.*?\)", "", section_title).strip()
+
+                section = Section.objects.create(
+                    song=song, 
+                    name=clean_section_title,  # Save the cleaned section title
+                    instruction=instruction,   # Save extracted instruction
+                    position=index
+                )
+
 
                 # Split the submitted lyrics text into individual lines.
                 lines = lyrics_text.splitlines()
                 for line in lines:
-                    line = line.strip()
+                    matches = re.findall(r"\((.*?)\)", line)
+                    instruction = " ".join(matches) if matches else None
+                    line = re.sub(r"\s*\(.*?\)", "", line).strip()
+
                     if line:  # Only create a LyricLine for nonempty lines.
                         LyricLine.objects.create(
                             song=song,
                             section=section,
                             text=line,
+                            instruction=instruction,
                             order=order
                         )
                         all_lyric_lines.append(line)

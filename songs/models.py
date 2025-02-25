@@ -1,11 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.text import slugify
 from django.urls import reverse
 
 class Song(models.Model):
     title = models.CharField(max_length=255)
     lyrics = models.TextField()
     composer = models.CharField(max_length=255, null=True)
+    slug = models.SlugField(unique=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.IntegerField(default=0)  # new field for song likes
     youtube_link = models.URLField(null=True, blank=True)  # new field for YouTube link
@@ -15,7 +17,23 @@ class Song(models.Model):
         return self.title
     
     def get_absolute_url(self):
-        return reverse("song_detail", args=[str(self.id)])
+        return reverse("song_detail", args=[self.slug])
+
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:  # Generate slug only if it's empty
+            base_slug = slugify(f"{self.title} {self.composer or ''}")
+            unique_slug = base_slug
+            counter = 1
+
+            # Ensure uniqueness
+            while Song.objects.filter(slug=unique_slug).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+
+            self.slug = unique_slug
+
+        super().save(*args, **kwargs)
 
 class MP3File(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="mp3_files")

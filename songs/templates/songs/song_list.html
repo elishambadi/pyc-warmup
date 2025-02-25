@@ -16,7 +16,7 @@
                     <div class="card-body">
                         <h5 class="card-title"> <span><i class="fas fa-music me-2"></i></span> {{ song.title }}</h5>
                         <p class="card-text">{{ song.description }}</p>
-                        <a href="{% url 'song_detail' song.id %}" class="btn btn-primary">View Details</a>
+                        <a href="{% url 'song_detail' song.slug %}" class="btn btn-primary">View Details</a>
                     </div>
                 </div>
             </div>
