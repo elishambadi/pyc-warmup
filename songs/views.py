@@ -108,6 +108,8 @@ def add_song(request):
 def delete_song(request, song_id):
     try:
         song = Song.objects.get(id=song_id)
+        # Delete all LyricTimestamps related to the song
+        LyricTimestamp.objects.filter(lyric_line__song=song).delete()
         # Delete all MP3 files related to the song
         song.mp3_files.all().delete()
         song.delete()
@@ -150,6 +152,7 @@ def add_mp3(request, song_id):
 def delete_mp3(request, mp3_id):
     try:
         mp3_file = MP3File.objects.get(id=mp3_id)
+        LyricTimestamp.objects.filter(mp3_file=mp3_file).delete()
         mp3_file.delete()
         return JsonResponse({'status': 'success',  'success': True})
     except MP3File.DoesNotExist:
