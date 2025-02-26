@@ -27,12 +27,14 @@
     const mp3List = document.querySelectorAll(".mp3-voice");
 
     let playlist = [];
+    let mp3Names = [];
     let currentTrackIndex = 0;
 
     // Function to load and play track
     function loadTrack(index) {
         if (index < 0 || index >= playlist.length) return;
         currentTrackIndex = index;
+        mp3VoiceTitle.textContent = mp3Names[currentTrackIndex];
         audioPlayer.src = playlist[currentTrackIndex];
         audioPlayer.play();
         updatePlayPauseButton();
@@ -91,12 +93,14 @@
     mp3List.forEach((mp3Item, index) => {
         mp3Item.addEventListener("click", function () {
             const mp3Url = this.getAttribute("data-mp3-url");
+            const mp3VoicePart = this.getAttribute("data-mp3-voice-part");
 
             // If the song is already in the playlist, just play it
             if (playlist.includes(mp3Url)) {
                 currentTrackIndex = playlist.indexOf(mp3Url);
             } else {
                 playlist.push(mp3Url);
+                mp3Names.push(mp3VoicePart)
                 currentTrackIndex = playlist.length - 1;
             }
 
@@ -154,7 +158,7 @@
             const times = Object.keys(timestamps).map(Number);
             
             if (times.length === 0) {
-                console.log("⚠️ No timestamps found, skipping update.");
+                <!-- console.log("⚠️ No timestamps found, skipping update."); -->
                 return;
             }
     
@@ -207,7 +211,7 @@
         mp3List.forEach(mp3Item => {
             mp3Item.addEventListener('click', function() {
                 const mp3Id = this.dataset.mp3Id;
-                console.log(`🎵 Selected MP3 ID: ${mp3Id}`);
+                // console.log(`🎵 Selected MP3 ID: ${mp3Id}`);
                 audioPlayer.dataset.currentMp3Id = mp3Id;
                 processTimestamps(mp3Id);
                 
@@ -226,7 +230,7 @@
     
         // Reset lyrics when audio ends
         audioPlayer.addEventListener('ended', () => {
-            console.log("🏁 Audio Ended: Resetting Lyrics.");
+            // console.log("🏁 Audio Ended: Resetting Lyrics.");
             if (currentLine) {
                 currentLine.classList.remove('active');
             }
@@ -234,7 +238,7 @@
             currentLine = null;
         });
     
-        console.log("🎬 Script Setup Complete!");
+        // console.log("🎬 Script Setup Complete!");
     });
     
 </script>

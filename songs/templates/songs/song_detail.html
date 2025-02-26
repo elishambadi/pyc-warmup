@@ -75,7 +75,7 @@
 <ul id="mp3-files">
     {% for mp3 in mp3s %}
     <li>
-        <span class="mp3-voice text-primary" data-mp3-url="{{ mp3.file.url }}" data-mp3-id="{{ mp3.id }}">{{ mp3.voice_part }}</span>
+        <span class="mp3-voice text-primary" data-mp3-url="{{ mp3.file.url }}" data-mp3-id="{{ mp3.id }}" data-mp3-voice-part="{{ mp3.voice_part }}">{{ mp3.voice_part }}</span>
         <a href="{% url 'sync-mp3' mp3.id %}" class="btn btn-sm btn-warning">
             {% if mp3.is_fully_synced %}
                 ✓ Edit Sync
