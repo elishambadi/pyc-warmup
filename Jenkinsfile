@@ -23,11 +23,5 @@ pipeline {
                 sh 'docker compose up -d --build'
             }
         }
-
-        stage('Notify Slack') {
-            steps {
-                slackSend channel: '#deployments', message: "Deployment successful for ${env.JOB_NAME} - ${env.BUILD_NUMBER}"
-            }
-        }
     }
 }
