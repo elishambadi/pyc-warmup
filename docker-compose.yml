@@ -6,6 +6,7 @@ services:
   postgres:
     image: postgres:latest
     container_name: pyc-warmup-db
+    restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -38,6 +39,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy  # Ensure PostgreSQL is ready before app starts
+    restart: always
     volumes:
       - ./media:/app/media
     networks:
