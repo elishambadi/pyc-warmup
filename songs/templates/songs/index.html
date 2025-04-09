@@ -8,20 +8,21 @@
         </div>
     {% endif %}
 
+    {% if latest_voicenote_request %}
+        <a href="{% url 'upload_voicenotes_for_request' %}" class="btn btn-warning mb-2">
+            Submit VNs for {{ latest_voicenote_request.title }} ministry
+        </a>
+    {% else %}
+        <!-- Button to create a new VoiceNoteRequest if none exist -->
+        {% if is_trainer %}
+        <a href="{% url 'add_voicenote_request' %}" class="btn btn-success mb-2">
+            Request VNs for upcoming ministry
+        </a>
+        {% endif %}
+    {% endif %}
+
     <div class="row">
         <!-- Button to the latest VoiceNoteRequest -->
-        {% if latest_voicenote_request %}
-            <a href="{% url 'upload_voicenotes_for_request' %}" class="btn btn-warning mb-2">
-                Submit VNs for {{ latest_voicenote_request.title }} ministry
-            </a>
-        {% else %}
-            <!-- Button to create a new VoiceNoteRequest if none exist -->
-            {% if is_trainer %}
-            <a href="{% url 'add_voicenote_request' %}" class="btn btn-success mb-2">
-                Request VNs for upcoming ministry
-            </a>
-            {% endif %}
-        {% endif %}
 
         {% for song in latest_songs %}
             <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
