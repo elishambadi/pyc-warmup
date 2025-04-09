@@ -9,34 +9,37 @@
     {% endif %}
 
     <div class="row">
+        <!-- Button to the latest VoiceNoteRequest -->
+        {% if latest_voicenote_request %}
+            <a href="{% url 'upload_voicenotes_for_request' %}" class="btn btn-warning mb-2">
+                Submit VNs for {{ latest_voicenote_request.title }} ministry
+            </a>
+        {% else %}
+            <!-- Button to create a new VoiceNoteRequest if none exist -->
+            {% if is_trainer %}
+            <a href="{% url 'add_voicenote_request' %}" class="btn btn-success mb-2">
+                Request VNs for upcoming ministry
+            </a>
+            {% endif %}
+        {% endif %}
+
         {% for song in latest_songs %}
-        <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+            <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
                 <div class="card">
-                    <!-- <img src="{{ song.image_url|default:'https://via.placeholder.com/150' }}" class="card-img-top" alt="{{ song.title }}"> -->
                     <div class="card-body">
-                        <h5 class="card-title"> <span><i class="fas fa-music me-2"></i></span> {{ song.title }}</h5>
-                        <p class="card-text">{{ song.description }}</p>
-                        <a href="{% url 'song_detail' song.slug %}" class="btn btn-primary">View Details</a>
+                        <h5 class="card-title">{{ song.title }}</h5>
+                        <p class="card-text">{{ song.description|truncatewords:20 }}</p>
+                        <a href="{% url 'song_detail' song.slug %}" class="btn btn-primary">View Song</a>
+    
+                        {% if is_trainer %}
+                        <a href="{% url 'upload_voicenote' song.slug %}" class="btn btn-secondary">Voice Notes</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-        {% empty %}
-            <p>No songs available.</p>
         {% endfor %}
     </div>
 {% endblock %}
 
-<div class="row">
-    {% for song in latest_songs %}
-        <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
-            <div class="card">
-                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Song Image">
-                <div class="card-body">
-                    <h5 class="card-title">{{ song.title }}</h5>
-                    <p class="card-text">{{ song.description|truncatewords:20 }}</p>
-                    <a href="#" class="btn btn-primary">View Song</a>
-                </div>
-            </div>
-        </div>
-    {% endfor %}
-</div>
+
+

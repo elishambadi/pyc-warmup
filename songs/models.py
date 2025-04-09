@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 from django.urls import reverse
+from django.contrib.auth.models import Group
 
 class Song(models.Model):
     title = models.CharField(max_length=255)
@@ -143,3 +144,48 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text[:50]
+
+
+class VoiceNoteRequest(models.Model):
+    title = models.CharField(max_length=255)
+    songs = models.ManyToManyField('Song')  # assuming you already have a Song model
+    deadline = models.DateField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} (Deadline: {self.deadline})"
+
+
+
+class VoiceNote(models.Model):
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='voice_notes')  # Multiple voice notes per song
+    file = models.FileField(upload_to='voice_notes/')
+    uploader = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_voice_notes')
+    voice_part = models.CharField(max_length=50, choices=[  # Specify the voice part
+        ('Soprano', 'Soprano'),
+        ('Alto', 'Alto'),
+        ('Tenor', 'Tenor'),
+        ('Bass', 'Bass'),
+        ('Other', 'Other'),
+    ])
+    approved = models.BooleanField(default=False)
+    comment = models.TextField(blank=True, null=True)  # Comment field to specify voice type
+    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=255, default="")  # Add unique name field
+
+    voicenote_request = models.ForeignKey(
+        VoiceNoteRequest,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="voicenotes"
+    )
+
+    def __str__(self):
+        return f"{self.song.title} - {self.voice_part} ({self.uploader.username})"
+
+
+
+# Create Trainer role using Django's Group
+trainer_group, created = Group.objects.get_or_create(name='Trainers')

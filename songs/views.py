@@ -1,10 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment
-from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm
+from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment, VoiceNote, VoiceNoteRequest
+from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm
 from .utils import generate_lyric_lines
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+from django.utils import timezone
+from django.urls import reverse
 
 import json, re
 
@@ -12,7 +16,17 @@ from bs4 import BeautifulSoup
 
 def home(request):
     latest_songs = Song.objects.order_by('-created_at')[:5]  # Get 5 latest songs
-    return render(request, "songs/index.html", {"latest_songs": latest_songs})
+    latest_voicenote_request = VoiceNoteRequest.objects.filter(deadline__gt=timezone.now()).order_by('-deadline').first()
+
+    is_trainer = request.user.groups.filter(name="Trainers").exists() if request.user.is_authenticated else False
+
+    print(f"Latest request {latest_voicenote_request}")
+    
+    return render(request, "songs/index.html", {
+        'latest_songs': latest_songs,
+        'latest_voicenote_request': latest_voicenote_request,
+        'is_trainer': is_trainer
+    })
 
 def song_detail(request, slug):
     song = get_object_or_404(Song, slug=slug)
@@ -117,6 +131,7 @@ def add_song(request):
     return render(request, "songs/add_song.html", {"song_form": song_form})
 
 # 🎵 Delete a Song
+@login_required
 @require_http_methods(["DELETE"])
 def delete_song(request, song_id):
     try:
@@ -316,3 +331,139 @@ def reply_comment(request, comment_id):
             return redirect('song_detail', song_id=parent_comment.song.id)
     
     return render(request, 'comments/reply_comment.html', {'parent_comment': parent_comment})
+
+@login_required
+def upload_voicenote(request, song_slug):
+
+    song = Song.objects.get(slug=song_slug)
+
+    latest_request = VoiceNoteRequest.objects.order_by('-created_at').first()
+
+    # Check if there's no active request
+    if not latest_request:
+        messages.warning(request, "No upcoming ministries found.")
+        return redirect('home')
+
+    # Retrieve voice notes uploaded by the current user for the latest request
+    user_voice_notes = VoiceNote.objects.filter(
+        voicenote_request=latest_request,
+        uploader=request.user
+    )
+
+    voicenotes_present = len(user_voice_notes) > 1
+
+    # Filter the voice notes by voice part
+    voice_notes_by_part = {
+        'Soprano': user_voice_notes.filter(voice_part='Soprano'),
+        'Alto': user_voice_notes.filter(voice_part='Alto'),
+        'Tenor': user_voice_notes.filter(voice_part='Tenor'),
+        'Bass': user_voice_notes.filter(voice_part='Bass'),
+        'Other': user_voice_notes.filter(voice_part='Other'),
+    }
+
+    is_trainer = request.user.groups.filter(name="Trainers").exists() if request.user.is_authenticated else False
+
+    if request.method == 'POST':
+        form = VoiceNoteForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Ensure that only one voice note per voice part can be uploaded
+            existing_voicenote = song.voice_notes.filter(uploader=request.user).first()
+            
+            if existing_voicenote:
+                messages.info(request, "You've already uploaded a voicenote for this song.")
+                # If there's already a voice note for that voice part, redirect with an error
+                return render(request, "songs/upload_voicenote.html", {'form': form, 'song': song, 'is_trainer': is_trainer, 'voice_notes_by_part': voice_notes_by_part})
+
+            voice_note = form.save(commit=False)
+            voice_note.song = song
+            voice_note.uploader = request.user
+            voice_note.save()
+            return render(request, "songs/upload_voicenote.html", {'form': form, 'song': song, 'is_trainer': is_trainer, 'voice_notes_by_part': voice_notes_by_part})
+    else:
+        form = VoiceNoteForm()
+
+    shareable_url = request.build_absolute_uri(reverse('upload_voicenotes_for_request'))  # Generate the absolute URL
+
+    return render(request, "songs/upload_voicenote.html", {'form': form, 'song': song, 'is_trainer': is_trainer, 'voice_notes_by_part': voice_notes_by_part, 'latest_request': latest_request, 'voicenotes_present': voicenotes_present, 'shareable_url': shareable_url})
+
+
+@login_required
+def delete_voicenote(request, song_slug, voicenote_id):
+    song = Song.objects.get(slug=song_slug)
+    voice_note = song.voice_notes.get(id=voicenote_id)
+    
+    if voice_note.uploader == request.user or request.user.groups.filter(name="Trainers").exists():
+        voice_note.delete()
+        return redirect(upload_voicenotes_for_request)
+    else:
+        # Show an error or permission denied
+        return redirect(upload_voicenotes_for_request)
+
+
+# Ensure only Trainers can access
+@user_passes_test(lambda u: u.groups.filter(name='Trainers').exists())
+def approve_voicenote(request, song_slug, voicenote_id):
+    song = get_object_or_404(Song, slug=song_slug)  # Get the Song based on slug
+    voice_note = song.voice_notes.filter(id=voicenote_id).first()  # Filter by ID and get the first match
+
+    if not voice_note:
+        return redirect('song_detail', slug=song_slug)
+    
+    # If you found the voice note, approve it
+    voice_note.approved = True
+    voice_note.save()
+
+    messages.success(request, f"{voice_note.name}'s Voice note for '{voice_note.voice_part}' approved successfully!")
+
+    # Redirect back to the song detail page
+    return redirect('upload_voicenote', song_slug=song_slug)
+
+@login_required
+def add_voicenote_request(request):
+    if request.method == 'POST':
+        form = VoiceNoteRequestForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('home')  # create this later
+    else:
+        form = VoiceNoteRequestForm()
+    return render(request, 'voicenotes/add_voicenote_request.html', {'form': form})
+
+@login_required
+def upload_voicenotes_for_request(request):
+    latest_request = VoiceNoteRequest.objects.order_by('-created_at').first()
+
+    if not latest_request:
+        messages.warning(request, "No upcoming ministries found.")
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = VoiceNoteForm(request.POST, request.FILES)
+        song_id = request.POST.get('song_id')
+        song = Song.objects.get(id=song_id)
+
+        if form.is_valid():
+            voicenote = form.save(commit=False)
+            voicenote.song = song
+            voicenote.uploader = request.user
+            voicenote.voicenote_request = latest_request
+            voicenote.save()
+            messages.success(request, f"Voice Note for '{song.title}' uploaded.")
+            return redirect('upload_voicenotes_for_request')
+
+    else:
+        form = VoiceNoteForm()
+
+    # Get the user's voicenotes for the latest request
+    user_voicenotes = VoiceNote.objects.filter(
+        voicenote_request=latest_request,
+        uploader=request.user
+    )
+
+    songs = latest_request.songs.all()
+    return render(request, 'voicenotes/upload_vn_for_request.html', {
+        'form': form,
+        'songs': songs,
+        'latest_request': latest_request,
+        'user_voicenotes': user_voicenotes
+    })

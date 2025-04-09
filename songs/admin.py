@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure
+from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure, VoiceNote, VoiceNoteRequest
 from django.contrib.auth.models import Group, User
 
 
@@ -35,3 +35,21 @@ class SongAdmin(admin.ModelAdmin):
 class MP3Admin(admin.ModelAdmin):
     inlines = [LyricTimetampInline]
 
+@admin.register(VoiceNote)
+class VoiceNoteAdmin(admin.ModelAdmin):
+    list_display = ('song', 'voice_part', 'uploader', 'created_at')
+
+@admin.register(VoiceNoteRequest)
+class VoiceNoteRequestAdmin(admin.ModelAdmin):
+    list_display = ('title', 'deadline', 'created_at', 'song_count')
+    search_fields = ('title',)
+    list_filter = ('created_at', 'deadline')
+
+    def song_count(self, obj):
+        return obj.songs.count()
+    song_count.admin_order_field = 'songs'  # Allow ordering by song count
+
+    def save_model(self, request, obj, form, change):
+        if not obj.created_at:
+            obj.created_at = timezone.now()  # Set created_at only when it's a new entry
+        obj.save()

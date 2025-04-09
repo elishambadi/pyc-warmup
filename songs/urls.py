@@ -13,6 +13,10 @@ urlpatterns = [
     path('song/<int:song_id>/add-note/', add_note, name='add_note'),
     path('song/<int:song_id>/add-reference/', add_reference, name='add_reference'),
 
+    path('song/<slug:song_slug>/upload-voicenote/', views.upload_voicenote, name='upload_voicenote'),
+    path('song/<slug:song_slug>/delete-voicenote/<int:voicenote_id>/', views.delete_voicenote, name='delete_voicenote'),
+    path('song/<slug:song_slug>/approve-voicenote/<int:voicenote_id>/', views.approve_voicenote, name='approve_voicenote'),
+
     # Lyrics Syncing
     path("sync/<int:song_id>/", sync_lyrics, name="sync-lyrics"),
     path("save-timestamp/", save_timestamp, name="save-timestamp"),
@@ -27,4 +31,9 @@ urlpatterns = [
 
     path('delete-song/<int:song_id>/', views.delete_song, name='delete-song'),
     path('delete-mp3/<int:mp3_id>/', views.delete_mp3, name='delete-mp3'),
+
+    # VoiceNote requests
+    path('voicenote-request/new/', views.add_voicenote_request, name='add_voicenote_request'),
+    path('upload/request-voicenotes/', views.upload_voicenotes_for_request, name='upload_voicenotes_for_request'),
+
 ]

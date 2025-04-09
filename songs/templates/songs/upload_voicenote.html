@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* General styling for voice notes */
+    .voicenote-info {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        /* Adds space between items */
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+
+    .voicenote-info span {
+        font-size: 14px;
+        color: #333;
+    }
+
+    .voicenote-info audio {
+        max-width: 100%;
+        /* Ensures audio player is responsive */
+        margin-top: 10px;
+    }
+
+    /* Add some padding and background to badges */
+    .badge {
+        padding: 5px 10px;
+        font-size: 14px;
+        border-radius: 5px;
+    }
+
+    .bg-danger {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    .bg-success {
+        background-color: #2ecc71;
+        color: white;
+    }
+
+    /* Responsive Styles for Mobile */
+    @media (max-width: 768px) {
+        .voicenote-info {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .voicenote-info span {
+            font-size: 16px;
+        }
+
+        .voicenote-info audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .badge {
+            font-size: 14px;
+        }
+    }
+
+    /* Mobile-friendly Design for Voice Notes List */
+    @media (max-width: 480px) {
+        .voicenote-info {
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .voicenote-info span {
+            font-size: 16px;
+        }
+    }
+
+    .form-compact {
+        background-color: #f0f0f0;
+        /* Light grey background */
+        padding: 20px;
+        /* Padding inside the form */
+        border-radius: 8px;
+        /* Rounded corners */
+        width: 100%;
+        /* Full width form */
+        max-width: 500px;
+        /* Limit the maximum width */
+        margin: 0 auto;
+        /* Center the form */
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+        /* Space between input fields */
+    }
+
+    .form-control {
+        width: 100%;
+        /* Full width input fields */
+        padding: 8px;
+        /* Padding for inputs */
+        font-size: 14px;
+        /* Smaller font size */
+        border-radius: 4px;
+        /* Rounded corners */
+        border: 1px solid #ccc;
+        /* Light border */
+    }
+
+    button {
+        width: 100%;
+        /* Make the button full width */
+        padding: 10px;
+        /* Padding for the button */
+        font-size: 16px;
+        /* Font size for the button */
+        border-radius: 4px;
+        /* Rounded corners for the button */
+    }
+
+    .bg-grey {
+        background-color: #f0f0f0;
+        /* Light grey background color */
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, #28a745, #218838);
+        border: none;
+        color: white;
+        font-weight: 500;
+        transition: background 0.3s ease-in-out;
+    }
+
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #218838, #1e7e34);
+    }
+</style>
+
+<!-- song_detail.html -->
+<h5>{{ song.title }} Voice Notes for {{ latest_request.title }}</h5>
+
+{% if voicenotes_present  %}
+
+    <!-- Button to trigger modal -->
+    <!-- <div class="text-center text-lg-start mb-3">
+        <button type="button" class="btn btn-sm btn-light text-primary fw-bold" data-bs-toggle="modal"
+            data-bs-target="#uploadVoiceNoteModal">
+            <i class="fas fa-plus"></i> Upload a New Voice Note
+        </button>
+    </div> -->
+
+
+<div class="voice-note-container">
+    {% for voice_part, voicenotes in voice_notes_by_part.items %}
+    {% if voicenotes %}
+    <h5 class="text-muted">{{ voice_part }}</h5> <!-- Display the voice part title only if there are voicenotes -->
+    <ul>
+        {% for voicenote in voicenotes %}
+        <li class="voicenote-info card">
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+
+                <!-- Name and Comment -->
+                <div class="d-flex align-items-center gap-1 flex-wrap">
+                    <span class="fw-bold">{{ voicenote.uploader.username }}</span>
+                    <span class="text-muted">- {{ voicenote.comment }}</span>
+                </div>
+        
+                <!-- Status or Actions -->
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+        
+                    {% if voicenote.approved %}
+                        <span class="text-success fw-semibold">
+                            <i class="fas fa-thumbs-up"></i>
+                        </span>
+                    {% else %}
+                        {% if user == voicenote.uploader or is_trainer %}
+                            <a class="badge bg-danger text-decoration-none"
+                               href="{% url 'delete_voicenote' song.slug voicenote.id %}">
+                                Delete
+                            </a>
+                        {% endif %}
+                        {% if is_trainer %}
+                            <a class="badge bg-success text-decoration-none"
+                               href="{% url 'approve_voicenote' song.slug voicenote.id %}">
+                                Approve
+                            </a>
+                        {% endif %}
+                    {% endif %}
+        
+                </div>
+            </div>
+
+            <audio controls>
+                <source src="{{ voicenote.file.url }}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endfor %}
+</div>
+
+{% else %}
+    <p>No voice notes uploaded yet.</p>
+
+    <!-- Shareable URL section -->
+    <div class="mb-3">
+        <label for="shareableLink" class="form-label">Share the link to fellow voicemates:</label>
+        <div class="input-group">
+            <input type="text" class="form-control" id="shareableLink" value="{{ shareable_url }}" readonly>
+            <button class="btn btn-primary" type="button" id="copyButton" onclick="copyToClipboard()">Copy</button>
+        </div>
+    </div>
+{% endif %}
+
+
+
+<!-- Modal Structure -->
+<div class="modal fade" id="uploadVoiceNoteModal" tabindex="-1" aria-labelledby="uploadVoiceNoteModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadVoiceNoteModalLabel">Your VN for {{song.title}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" enctype="multipart/form-data" class="form-compact bg-grey p-4">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <!-- <div class="form-group">
+                        <label for="id_comment">Voice 1 or 2? e.g Alto 1 or 2</label>
+                        <input type="text" name="comment" id="id_comment" class="form-control"
+                            placeholder="Leave empty if none">
+                    </div> -->
+                    <button type="submit" class="btn btn-gradient rounded-pill shadow-sm px-4 py-2">
+                        Upload Voice Note
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<a class="btn btn-secondary" href="{% url 'song_detail' song.slug %}">Back to Song</a>
+
+<script>
+    // Function to copy the URL to clipboard
+    function copyToClipboard() {
+        var copyText = document.getElementById("shareableLink");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // For mobile devices
+
+        document.execCommand("copy");
+
+        // Optionally, you can show a tooltip or feedback when the link is copied
+        alert("Link copied to clipboard: " + copyText.value);
+    }
+</script>
+{% endblock %}
