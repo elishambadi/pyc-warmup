@@ -184,8 +184,3 @@ class VoiceNote(models.Model):
 
     def __str__(self):
         return f"{self.song.title} - {self.voice_part} ({self.uploader.username})"
-
-
-
-# Create Trainer role using Django's Group
-trainer_group, created = Group.objects.get_or_create(name='Trainers')
