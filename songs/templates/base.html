@@ -1,13 +1,29 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-  {% load custom_filters %}
+{% load custom_filters %}
 {% load pwa %}
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PYC WarmUp App</title>
+  <!-- SEO Meta Tags -->
+  <title>{% block title %}PYC WarmUp App{% endblock %}</title>
+  <meta name="description"
+    content="{% block description %}The PYC WarmUp app helps you prepare for PYC events by managing voice notes, songs, and training materials.{% endblock %}">
+  <meta name="keywords"
+    content="choir, warm-up, voice notes, music, training, song practice, {{ latest_request.title }}">
+  <meta property="og:title" content="{% block og_title %}PYC WarmUp App{% endblock %}">
+  <meta property="og:description"
+    content="{% block og_description %}Manage and upload voice notes for choir rehearsals and events on the PYC WarmUp App.{% endblock %}">
+  <meta property="og:image" content="{% static 'images/your-image.jpg' %}"> <!-- Replace with a relevant image -->
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block twitter_title %}PYC WarmUp App{% endblock %}">
+  <meta name="twitter:description"
+    content="{% block twitter_description %}Upload and manage your voice notes for choir events and training with PYC WarmUp App.{% endblock %}">
+  <meta name="twitter:image" content="{% static 'images/your-image.jpg' %}"> <!-- Replace with a relevant image -->
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.ckeditor.com/4.20.0/standard/ckeditor.js"></script>
@@ -15,19 +31,21 @@
   {% progressive_web_app_meta %}
 
   <style>
-    html, body {
+    html,
+    body {
       height: 100%;
       margin: 0;
       display: flex;
       flex-direction: column;
     }
+
     /* Sticky navbar */
     nav {
-        position: sticky;
-        top: 0;
-        z-index: 1000; /* Ensures navbar stays above content */
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      /* Ensures navbar stays above content */
     }
-
   </style>
 </head>
 
@@ -79,22 +97,22 @@
   <div class="container mt-4 content">
     {% if messages %}
     <div class="alert-container">
-            {% for message in messages %}
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
+      {% for message in messages %}
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
     {% endif %}
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // Make the alert fade out after 5 seconds
-            setTimeout(function() {
-                $(".alert").fadeOut("slow");
-            }, 2000); // 5000ms = 5 seconds
-        });
+      $(document).ready(function () {
+        // Make the alert fade out after 5 seconds
+        setTimeout(function () {
+          $(".alert").fadeOut("slow");
+        }, 2000); // 5000ms = 5 seconds
+      });
     </script>
 
 

@@ -2,6 +2,12 @@
 {% load static %}
 {% load custom_filters %}
 
+{% block title %}Submit VNs for {{ latest_request.title }}{% endblock %}
+{% block description %}Rehearse & upload your voice notes for {{ latest_request.title }}. The deadline for submission is {{ latest_request.deadline }}. {% endblock %}
+{% block og_title %}Upload Voice Notes for {{ latest_request.title }}{% endblock %}
+{% block og_description %}Upload your voice notes for the song {{ latest_request.title }} before the deadline on {{ latest_request.deadline }}. Don't miss out on this opportunity!{% endblock %}
+{% block twitter_title %}Upload Voice Notes for {{ latest_request.title }}{% endblock %}
+{% block twitter_description %}The deadline for uploading your voice notes for {{ latest_request.title }} is approaching. Submit before {{ latest_request.deadline }}!{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
