@@ -15,7 +15,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 RUN pip install gunicorn
 
 # Collect static files
-RUN python manage.py collectstatic --noinput
+# RUN python manage.py collectstatic --noinput
 
 # Expose port
 EXPOSE 8000

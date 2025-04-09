@@ -14,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - pyc-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 10s
@@ -43,7 +43,7 @@ services:
     volumes:
       - ./media:/app/media
     networks:
-      - app-network
+      - pyc-network
     logging:
       driver: json-file
       options:
@@ -55,5 +55,5 @@ volumes:
     name: pyc_warmup_postgres_data
 
 networks:
-  app-network:
+  pyc-network:
     driver: bridge
