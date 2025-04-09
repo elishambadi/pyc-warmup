@@ -7,8 +7,10 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Install dependencies
+# Install wheel
 RUN pip install wheel
+
+# Install dependencies
 RUN pip install --upgrade pip && pip install -r requirements.txt
 RUN pip install gunicorn
 
