@@ -34,6 +34,6 @@ urlpatterns = [
 
     # VoiceNote requests
     path('voicenote-request/new/', views.add_voicenote_request, name='add_voicenote_request'),
-    path('upload/request-voicenotes/', views.upload_voicenotes_for_request, name='upload_voicenotes_for_request'),
+    path('submit-voicenotes/', views.upload_voicenotes_for_request, name='upload_voicenotes_for_request'),
 
 ]
