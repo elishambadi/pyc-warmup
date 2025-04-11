@@ -25,6 +25,22 @@
     .lyric-line:hover {
         background-color: #f8f9fa;
     }
+    /* Default iframe styles */
+    .responsive-iframe {
+        width: 100%; /* Make it full width on large screens */
+        height: 315px; /* Set fixed height */
+        max-width: 560px; /* Limit the maximum width */
+    }
+
+    /* Media query for small screens */
+    @media (max-width: 767px) {
+        .responsive-iframe {
+            width: 100%; /* Take full width on small screens */
+            height: 315px; /* Keep the height fixed */
+            max-width: none; /* Remove the max-width limitation */
+        }
+    }
+
 </style>
 
 {% if user|is_admin %}
@@ -37,7 +53,7 @@
         <iframe width="560" height="315" 
                 src="{{ song.youtube_link|youtube_embed }}" 
                 frameborder="0" allowfullscreen 
-                class="my-3" allow="autoplay; encrypted-media">
+                class="my-3 responsive-iframe" allow="autoplay; encrypted-media">
         </iframe>
     </div>
 {% endif %}
