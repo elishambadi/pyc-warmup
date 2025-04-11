@@ -15,7 +15,7 @@ import json, re
 from bs4 import BeautifulSoup
 
 def home(request):
-    latest_songs = Song.objects.order_by('-created_at')[:5]  # Get 5 latest songs
+    latest_songs = Song.objects.order_by('-created_at')  # Get 5 latest songs
     latest_voicenote_request = VoiceNoteRequest.objects.filter(deadline__gt=timezone.now()).order_by('-deadline').first()
 
     is_trainer = request.user.groups.filter(name="Trainers").exists() if request.user.is_authenticated else False
