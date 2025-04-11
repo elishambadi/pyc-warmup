@@ -8,7 +8,7 @@ class Song(models.Model):
     title = models.CharField(max_length=255)
     lyrics = models.TextField()
     composer = models.CharField(max_length=255, null=True)
-    slug = models.SlugField(unique=True, null=True)
+    slug = models.SlugField(max_length=255, unique=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.IntegerField(default=0)  # new field for song likes
     youtube_link = models.URLField(null=True, blank=True)  # new field for YouTube link
