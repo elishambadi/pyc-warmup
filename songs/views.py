@@ -346,8 +346,7 @@ def upload_voicenote(request, song_slug):
 
     # Retrieve voice notes uploaded by the current user for the latest request
     user_voice_notes = VoiceNote.objects.filter(
-        voicenote_request=latest_request,
-        uploader=request.user
+        voicenote_request=latest_request
     )
 
     voicenotes_present = len(user_voice_notes) > 1
