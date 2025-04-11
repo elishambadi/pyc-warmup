@@ -39,7 +39,7 @@ class Song(models.Model):
 class MP3File(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="mp3_files")
     file = models.FileField(upload_to='mp3/')
-    voice_part = models.CharField(max_length=50, choices=[
+    voice_part = models.CharField(max_length=200, choices=[
         ('Soprano 1', 'Soprano 1'), ('Soprano 2', 'Soprano 2'),
         ('Alto 1', 'Alto 1'), ('Alto 2', 'Alto 2'),
         ('Tenor 1', 'Tenor 1'), ('Tenor 2', 'Tenor 2'),
@@ -66,7 +66,7 @@ class Section(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="sections")
     name = models.CharField(max_length=100, blank=True)
     position = models.IntegerField(null=True, blank=True, default=None)
-    instruction = models.CharField(max_length=50, null=True, blank=True)
+    instruction = models.CharField(max_length=200, null=True, blank=True)
     passage = models.TextField(null=True, blank=True)  # new field for passage
 
     def __str__(self):
@@ -91,7 +91,7 @@ class LyricLine(models.Model):
     )
 
     order = models.IntegerField()
-    instruction = models.CharField(max_length=50, null=True, blank=True)
+    instruction = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta:
         ordering = ["order"]
@@ -162,7 +162,7 @@ class VoiceNote(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='voice_notes')  # Multiple voice notes per song
     file = models.FileField(upload_to='voice_notes/')
     uploader = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_voice_notes')
-    voice_part = models.CharField(max_length=50, choices=[  # Specify the voice part
+    voice_part = models.CharField(max_length=200, choices=[  # Specify the voice part
         ('Soprano', 'Soprano'),
         ('Alto', 'Alto'),
         ('Tenor', 'Tenor'),
