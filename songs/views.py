@@ -389,10 +389,11 @@ def upload_voicenote(request, song_slug):
 @login_required
 def delete_voicenote(request, song_slug, voicenote_id):
     song = Song.objects.get(slug=song_slug)
-    voice_note = song.voice_notes.get(id=voicenote_id)
+    voice_note = get_object_or_404(VoiceNote, id=voicenote_id)
     
     if voice_note.uploader == request.user or request.user.groups.filter(name="Trainers").exists():
         voice_note.delete()
+        messages.success(request, "Deleted voicenote.")
         return redirect(upload_voicenotes_for_request)
     else:
         # Show an error or permission denied
@@ -402,17 +403,19 @@ def delete_voicenote(request, song_slug, voicenote_id):
 # Ensure only Trainers can access
 @user_passes_test(lambda u: u.groups.filter(name='Trainers').exists())
 def approve_voicenote(request, song_slug, voicenote_id):
+    print(f"Voice note ID: {voicenote_id}")
     song = get_object_or_404(Song, slug=song_slug)  # Get the Song based on slug
-    voice_note = song.voice_notes.filter(id=voicenote_id).first()  # Filter by ID and get the first match
+    voice_note = get_object_or_404(VoiceNote, id=voicenote_id)
 
     if not voice_note:
-        return redirect('song_detail', slug=song_slug)
+        messages.warning(request, "Voicenote not found")
+        return redirect('upload_voicenote', song_slug=song_slug)
     
     # If you found the voice note, approve it
     voice_note.approved = True
     voice_note.save()
 
-    messages.success(request, f"{voice_note.name}'s Voice note for '{voice_note.voice_part}' approved successfully!")
+    messages.success(request, f"{voice_note.uploader.username}'s Voice note for '{song.title}' approved successfully!")
 
     # Redirect back to the song detail page
     return redirect('upload_voicenote', song_slug=song_slug)

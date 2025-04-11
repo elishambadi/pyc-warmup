@@ -1,6 +1,25 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 
+{% block title %}{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %} | PYC WarmUp App{% endblock %}
+
+{% block description %}
+    Discover "{{ song.title }}"{% if song.composer %} by {{ song.composer }}{% endif %}, a featured warm-up song on the PYC WarmUp App. Practice with synced lyrics, voice parts, and embedded video/audio training.
+{% endblock %}
+
+{% block og_title %}{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %} | PYC WarmUp App{% endblock %}
+
+{% block og_description %}
+    Access "{{ song.title }}" with synced lyrics, training audio files, and video resources. Part of your choir preparation on the PYC WarmUp App.
+{% endblock %}
+
+{% block twitter_title %}{{ song.title }} | PYC WarmUp{% endblock %}
+
+{% block twitter_description %}
+    Enhance your choir practice with "{{ song.title }}". Get synced audio/lyrics and training resources on the PYC WarmUp App.
+{% endblock %}
+
+
 {% block content %}
 
 <style>

@@ -37,7 +37,12 @@ class MP3Admin(admin.ModelAdmin):
 
 @admin.register(VoiceNote)
 class VoiceNoteAdmin(admin.ModelAdmin):
-    list_display = ('song', 'voice_part', 'uploader', 'created_at')
+    list_display = ('song', 'voice_part', 'uploader', 'created_at', 'voicenote_request_title')
+
+    def voicenote_request_title(self, obj):
+        return obj.voicenote_request.title if obj.voicenote_request else "—"
+    voicenote_request_title.short_description = "The Ministry"
+
 
 @admin.register(VoiceNoteRequest)
 class VoiceNoteRequestAdmin(admin.ModelAdmin):
