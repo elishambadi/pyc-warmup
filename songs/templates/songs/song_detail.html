@@ -27,100 +27,109 @@
     }
 </style>
 
-{% if user|is_admin %}
-<button class="btn btn-sm btn-danger my-1" id="delete-song-btn">Delete Song</button>
-{% endif %}
+<div style="padding-bottom: 100px;">
 
-<h2 id="song-title" class="py-2">{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %}</h2> 
-{% if song.youtube_link %}
-    <div style="text-align: center;" class="container-fluid">
-        <iframe width="560" height="315" 
-                src="{{ song.youtube_link|youtube_embed }}" 
-                frameborder="0" allowfullscreen 
-                class="my-3" allow="autoplay; encrypted-media">
-        </iframe>
-    </div>
-{% endif %}
-
-
-{% if song.slogan %}
-    <blockquote class="blockquote fs-6 py-2">{{ song.slogan|safe }}</blockquote>
-{% endif %}
-
-<div id="lyrics-content">
-    <h5>Lyrics</h5>
-    {% if annotated_lines %}
-        {% for item in annotated_lines %}
-            {% if item.is_new_section %}
-                <p class="mt-3 small muted text-underline">
-                    {{ item.line.section.name }}
-                    <span class="text-muted fst-italic">{{ item.line.section.instruction|default:'' }}</span>
-                </p>
-            {% endif %}
-            <p class="lyric-line my-0" data-line-id="{{ item.line.id }}" 
-            data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
-                {{ item.line.text }} <span class="text-muted fst-italic small">{{ item.line.instruction|default:'' }}</span> 
-            </p>
-        {% endfor %}
-    {% else %}
-        {{ song.lyrics|safe }}
+    {% if user|is_admin %}
+    <button class="btn btn-sm btn-danger my-1" id="delete-song-btn">Delete Song</button>
     {% endif %}
 
-</div>
-<button class="btn btn-sm btn-secondary my-1" disabled id="edit-lyrics-btn">Edit Lyrics</button>
+    <h2 id="song-title" class="py-2">{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %}</h2> 
+    {% if song.youtube_link %}
+        <div style="text-align: center;" class="container-fluid">
+            <iframe width="560" height="315" 
+                    src="{{ song.youtube_link|youtube_embed }}" 
+                    frameborder="0" allowfullscreen 
+                    class="my-3" allow="autoplay; encrypted-media">
+            </iframe>
+        </div>
+    {% endif %}
 
 
-<!-- 🎵 MP3 Files Section -->
-<h3>Voicenotes & Audios</h3>
-<ul id="mp3-files">
-    {% for mp3 in mp3s %}
-    <li>
-        <span class="mp3-voice text-primary" data-mp3-url="{{ mp3.file.url }}" data-mp3-id="{{ mp3.id }}" data-mp3-voice-part="{{ mp3.voice_part }}">{{ mp3.voice_part }}</span>
-        <a href="{% url 'sync-mp3' mp3.id %}" class="btn btn-sm btn-warning">
-            {% if mp3.is_fully_synced %}
-                ✓ Edit Sync
-            {% else %}
-                🎵 Sync Lyrics
-            {% endif %}
-        </a>
-        {% if user|is_admin %}
-            <button class="btn btn-sm btn-primary my-1 edit-mp3-btn" data-mp3-id="{{ mp3.id }}">Edit</button>
-            <button class="btn btn-sm btn-danger my-1 delete-mp3-btn" data-mp3-id="{{ mp3.id }}">Delete</button>
+    {% if song.slogan %}
+        <blockquote class="blockquote fs-6 py-2">{{ song.slogan|safe }}</blockquote>
+    {% endif %}
+
+    <!-- 🎵 MP3 Files Section -->
+    <h5>Voicenotes & Audios</h5>
+    <ul id="mp3-files">
+        {% if mp3s.count == 0 %}
+        <li>No audio files available.</li>
+        {% else %}
+            {% for mp3 in mp3s %}
+            <li>
+                <span class="mp3-voice text-primary" style="cursor: pointer;" data-mp3-url="{{ mp3.file.url }}" data-mp3-id="{{ mp3.id }}" data-mp3-voice-part="{{ mp3.voice_part }}">Play {{ mp3.voice_part }} Audio</span>
+                {% if user|is_admin %}
+                    <a href="{% url 'sync-mp3' mp3.id %}" class="btn btn-sm btn-warning">
+                        {% if mp3.is_fully_synced %}
+                            ✓ Edit Sync
+                        {% else %}
+                            🎵 Sync Lyrics
+                        {% endif %}
+                    </a>
+                    <button class="btn btn-sm btn-primary my-1 edit-mp3-btn" data-mp3-id="{{ mp3.id }}">Edit</button>
+                    <button class="btn btn-sm btn-danger my-1 delete-mp3-btn" data-mp3-id="{{ mp3.id }}">Delete</button>
+                {% endif %}
+            </li>
+            {% endfor %}
         {% endif %}
-    </li>
-    {% endfor %}
-</ul>
-<input class="form-control my-1 form-control-file" type="file" id="new-mp3-file">
-<input class="form-control my-1" type="text" id="new-mp3-voice" placeholder="Voice Part">
-<button class="btn btn-sm btn-secondary my-1" id="add-mp3-btn">Add MP3</button>
+    </ul>
+    {% if user|is_admin %}
+    <input class="form-control my-1 form-control-file" type="file" id="new-mp3-file">
+    <input class="form-control my-1" type="text" id="new-mp3-voice" placeholder="Voice Part">
+    <button class="btn btn-sm btn-secondary my-1" id="add-mp3-btn">Add MP3</button>
+    {% endif %}
 
-<!-- 📝 Notes Section -->
-<!-- <h3>Notes</h3>
-<ul id="notes">
-    {% for note in notes %}
-    <li>
-        <strong>{{ note.section }}:</strong>
-        <span class="note-content" data-note-id="{{ note.id }}">{{ note.content }}</span>
-        <button class="btn btn-sm btn-primary my-1 edit-note-btn" data-note-id="{{ note.id }}">Edit</button>
-    </li>
-    {% endfor %}
-</ul>
-<input class="form-control my-1" type="text" id="new-note-section" placeholder="Section">
-<input class="form-control my-1" type="text" id="new-note-content" placeholder="Content">
-<button class="btn btn-sm btn-secondary my-1" id="add-note-btn">Add Note</button> -->
+    <div id="lyrics-content">
+        <h5>Lyrics</h5>
+        {% if annotated_lines %}
+            {% for item in annotated_lines %}
+                {% if item.is_new_section %}
+                    <p class="mt-3 small muted text-underline">
+                        {{ item.line.section.name }}
+                        <span class="text-muted fst-italic">{{ item.line.section.instruction|default:'' }}</span>
+                    </p>
+                {% endif %}
+                <p class="lyric-line my-0" data-line-id="{{ item.line.id }}" 
+                data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
+                    {{ item.line.text }} <span class="text-muted fst-italic small">{{ item.line.instruction|default:'' }}</span> 
+                </p>
+            {% endfor %}
+        {% else %}
+            {{ song.lyrics|safe }}
+        {% endif %}
 
-<!-- 🔗 References Section -->
-<!-- <h3>References</h3>
-<ul id="references">
-    {% for ref in references %}
-    <li>
-        <a href="{{ ref.link }}" class="reference-link" data-ref-id="{{ ref.id }}">{{ ref.link }}</a>
-        <button class="btn btn-sm btn-primary my-1 edit-reference-btn" data-ref-id="{{ ref.id }}">Edit</button>
-    </li>
-    {% endfor %}
-</ul>
-<input class="form-control my-1" type="text" id="new-reference-link" placeholder="Reference Link">
-<button class="btn btn-sm btn-secondary my-1" id="add-reference-btn">Add Reference</button> -->
+    </div>
+    <button class="btn btn-sm btn-secondary my-1" disabled id="edit-lyrics-btn">Edit Lyrics</button>
+
+
+    <!-- 📝 Notes Section -->
+    <!-- <h3>Notes</h3>
+    <ul id="notes">
+        {% for note in notes %}
+        <li>
+            <strong>{{ note.section }}:</strong>
+            <span class="note-content" data-note-id="{{ note.id }}">{{ note.content }}</span>
+            <button class="btn btn-sm btn-primary my-1 edit-note-btn" data-note-id="{{ note.id }}">Edit</button>
+        </li>
+        {% endfor %}
+    </ul>
+    <input class="form-control my-1" type="text" id="new-note-section" placeholder="Section">
+    <input class="form-control my-1" type="text" id="new-note-content" placeholder="Content">
+    <button class="btn btn-sm btn-secondary my-1" id="add-note-btn">Add Note</button> -->
+
+    <!-- 🔗 References Section -->
+    <!-- <h3>References</h3>
+    <ul id="references">
+        {% for ref in references %}
+        <li>
+            <a href="{{ ref.link }}" class="reference-link" data-ref-id="{{ ref.id }}">{{ ref.link }}</a>
+            <button class="btn btn-sm btn-primary my-1 edit-reference-btn" data-ref-id="{{ ref.id }}">Edit</button>
+        </li>
+        {% endfor %}
+    </ul>
+    <input class="form-control my-1" type="text" id="new-reference-link" placeholder="Reference Link">
+    <button class="btn btn-sm btn-secondary my-1" id="add-reference-btn">Add Reference</button> -->
+</div>
 
     {# @include 'songs/partials/comments.html' #}
 

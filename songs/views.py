@@ -1,3 +1,4 @@
+from urllib import request
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment, VoiceNote, VoiceNoteRequest
 from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm
@@ -246,6 +247,29 @@ def save_timestamp(request):
         return JsonResponse({'success': True})
     except (LyricLine.DoesNotExist, MP3File.DoesNotExist):
         return JsonResponse({'success': False}, status=404)
+    
+
+@require_http_methods(["DELETE"])
+def delete_timestamp(request):
+    data = json.loads(request.body)
+    lyric_id = data.get('lyric_id')
+    mp3_id = data.get('mp3_id')
+    try:
+        lyric_line = LyricLine.objects.get(id=lyric_id)
+        mp3_file = MP3File.objects.get(id=mp3_id)
+        
+        timestamp_obj = LyricTimestamp.objects.filter(
+            lyric_line=lyric_line,
+            mp3_file=mp3_file
+        ).first()
+        
+        if timestamp_obj:
+            timestamp_obj.delete()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'message': 'Timestamp not found'}, status=404)
+    except (LyricLine.DoesNotExist, MP3File.DoesNotExist):
+        return JsonResponse({'success': False, 'message': 'Lyric or MP3 not found'}, status=404)
 
 def generate_lrc(request, song_id):
     """Generate and download an LRC file"""

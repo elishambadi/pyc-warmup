@@ -1,17 +1,58 @@
 
 <!-- 🎧 Bottom Audio Player Bar -->
-<div id="audio-player-bar" class="fixed-bottom bg-dark text-white p-3 d-none">
-    <div id="mp3-voice-part" class="d-flex align-items-center mb-2">
-        <span id="mp3-voice-title" class="me-2">Play something</span>
+<!-- Audio Player Bar -->
+<div
+  id="audio-player-bar"
+  class="fixed-bottom bg-dark text-white py-2 shadow-lg border-top border-secondary d-none"
+  style="backdrop-filter: blur(10px);"
+>
+  <div class="container-fluid px-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap">
+
+      <!-- Left section -->
+      <div id="mp3-voice-part" class="d-flex align-items-center mb-2 mb-md-0">
+        <i class="fa-solid fa-music fa-lg text-info me-2"></i>
+        <span id="mp3-voice-title" class="fw-semibold">Play something</span>
+      </div>
+
+      <!-- Center controls -->
+      <div class="d-flex align-items-center justify-content-center gap-3" style="margin-left: 10px;">
+        <!-- Previous (optional) -->
+        <button id="prev-btn" class="btn btn-outline-light btn-sm rounded-circle">
+          <i class="fa-solid fa-backward-step"></i>
+        </button>
+
+        <button
+          id="play-pause-btn"
+          class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+          style="width: 48px; height: 48px;"
+        >
+          <i class="fa-solid fa-play fa-lg text-dark"></i>
+        </button>
+
+        <!-- Next (optional) -->
+        <button id="next-btn" class="btn btn-outline-light btn-sm rounded-circle">
+          <i class="fa-solid fa-forward-step"></i>
+        </button>
+      </div>
+
+      <!-- Right section -->
+      <div class="d-flex align-items-center ms-md-3 flex-grow-1">
+        <input
+          type="range"
+          id="seek-bar"
+          class="form-range mx-3"
+          value="0"
+        />
+        <small>
+          <span id="current-time">0:00</span> /
+          <span id="total-time">0:00</span>
+        </small>
+      </div>
+
+      <audio id="audio-player" preload="metadata"></audio>
     </div>
-    <div class="container d-flex align-items-center justify-content-between">
-        <button id="prev-btn" class="btn btn-light">⏮</button>
-        <button id="play-pause-btn" class="btn btn-light">▶</button>
-        <button id="next-btn" class="btn btn-light">⏭</button>
-        <input type="range" id="seek-bar" class="form-range mx-2" value="0">
-        <span id="current-time">0:00</span> / <span id="total-time">0:00</span>
-        <audio id="audio-player" preload="metadata"></audio>
-    </div>
+  </div>
 </div>
 
 <script>
@@ -53,7 +94,14 @@
 
     // Update play/pause button icon
     function updatePlayPauseButton() {
-        playPauseBtn.textContent = audioPlayer.paused ? "▶" : "⏸";
+        const icon = playPauseBtn.querySelector("i");
+        if (audioPlayer.paused) {
+            icon.classList.remove("fa-pause");
+            icon.classList.add("fa-play");
+        } else {
+            icon.classList.remove("fa-play");
+            icon.classList.add("fa-pause");
+        }
     }
 
     // Play next track
@@ -152,38 +200,33 @@
             // console.log("🕒 Final Timestamps Map: ", timestamps);
         }
     
-        // Update lyrics display based on current time
         function updateLyrics(currentTime) {
-            // console.log(`⏳ Checking Lyrics at Time: ${currentTime}s`);
-            const times = Object.keys(timestamps).map(Number);
-            
-            if (times.length === 0) {
-                <!-- console.log("⚠️ No timestamps found, skipping update."); -->
-                return;
-            }
-    
-            const currentTimestamp = times.reduce((prev, curr) => {
-                return (Math.abs(curr - currentTime) < Math.abs(prev - currentTime) ? curr : prev);
-            }, times[0]);
-    
-            // console.log(`🎯 Closest Timestamp: ${currentTimestamp}s`);
-    
-            if (timestamps[currentTimestamp] && 
-                (!currentLine || currentLine.dataset.lineId !== timestamps[currentTimestamp])) {
-                
+            const times = Object.keys(timestamps).map(Number).sort((a, b) => a - b);
+
+            if (times.length === 0) return;
+
+            // Find the latest timestamp that has already passed
+            const lastPassedTimestamp = times
+                .filter(t => currentTime >= t)
+                .pop(); // gets the most recent one (closest in the past)
+
+            // No timestamps reached yet
+            if (lastPassedTimestamp === undefined) return;
+
+            const nextLineId = timestamps[lastPassedTimestamp];
+
+            if (!currentLine || currentLine.dataset.lineId !== nextLineId) {
+                // Mark old line as played
                 if (currentLine) {
-                    // console.log(`🔄 Removing active from Line ${currentLine.dataset.lineId}`);
                     currentLine.classList.remove('active');
                     currentLine.classList.add('played');
                 }
-    
-                currentLine = document.querySelector(`.lyric-line[data-line-id="${timestamps[currentTimestamp]}"]`);
-    
+
+                // Activate new line
+                currentLine = document.querySelector(`.lyric-line[data-line-id="${nextLineId}"]`);
                 if (currentLine) {
-                    // console.log(`✨ Highlighting Line ${currentLine.dataset.lineId}`);
                     currentLine.classList.add('active');
                     currentLine.classList.remove('played');
-    
                     currentLine.scrollIntoView({
                         behavior: 'smooth',
                         block: 'center'
@@ -191,6 +234,7 @@
                 }
             }
         }
+
 
         lyricLines.forEach(line => {
             line.addEventListener('click', function() {

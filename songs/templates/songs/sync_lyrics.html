@@ -39,8 +39,8 @@
     </div>
 
     <div class="mt-4">
-        <a href="{% url 'generate-lrc' mp3_file.id %}" class="btn btn-success">Download LRC</a>
-        <a href="{% url 'song_detail' song.id %}" class="btn btn-secondary">Back to Song</a>
+        <!-- <a href="{% url 'generate-lrc' mp3_file.id %}" class="btn btn-success">Download LRC</a> -->
+        <a href="{% url 'song_detail' song.slug %}" class="btn btn-secondary">Back to Song</a>
     </div>
 </div>
 
@@ -105,7 +105,7 @@
 
     function deleteTimestamp(lyricId, mp3Id, lyricLine) {
         fetch('/delete-timestamp/', {
-            method: 'POST',
+            method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
@@ -115,18 +115,18 @@
                 mp3_id: mp3Id
             })
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const timestampDisplay = lyricLine.querySelector('.timestamp-display');
-                    timestampDisplay.textContent = '';
-                    lyricLine.classList.remove('synced');
-                }
-            })
-            .catch(error => {
-                console.error('Error deleting timestamp:', error);
-                alert('Failed to delete timestamp');
-            });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const timestampDisplay = lyricLine.querySelector('.timestamp-display');
+                timestampDisplay.textContent = '';
+                lyricLine.classList.remove('synced');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting timestamp:', error);
+            alert('Failed to delete timestamp');
+        });
     }
 
     function loadTimestamps(mp3Id) {
