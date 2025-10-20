@@ -1,57 +1,118 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Add a New Song</h1>
-    <!-- Display Form Errors -->
-    {% if song_form.errors %}
-        <div class="alert alert-danger">
-            <strong>Oops! Please fix the following errors:</strong>
-            <ul>
-                {% for field in song_form %}
-                    {% for error in field.errors %}
-                        <li>{{ field.label }}: {{ error }}</li>
-                    {% endfor %}
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
-    <!-- Display Form -->
-     
-    <form method="POST" enctype="multipart/form-data" action="{% url 'add_song' %}">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="id_title" class="form-label">Song Title</label>
-            {{ song_form.title }}
-        </div>
-        <div class="mb-3">
-            <label for="id_composer" class="form-label">Composer</label>
-            {{ song_form.composer }}
-        </div>
-        <div id="lyrics-sections">
-            <p class="fw-bold">Lyrics</p>
-            <div class="mb-3">
-                <label for="id_lyrics_title_1" class="form-label">Section 1 (Add instructions inside brackets e.g. (softly, distant thoughtful wonder))</label>
-                <input type="text" id="id_lyrics_title_1" name="lyrics_title_1" class="form-control my-1" placeholder="Section title">
-                <textarea id="id_lyrics_1" name="lyrics_1" class="form-control my-1" placeholder="Lyrics for the section"></textarea>
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-pyc-purple mb-6">Add a New Song</h1>
+        
+        <!-- Display Form Errors -->
+        {% if song_form.errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg shadow-sm">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-xl mr-3 mt-1"></i>
+                    <div>
+                        <strong class="font-semibold">Oops! Please fix the following errors:</strong>
+                        <ul class="list-disc list-inside mt-2 space-y-1">
+                            {% for field in song_form %}
+                                {% for error in field.errors %}
+                                    <li>{{ field.label }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
             </div>
-        </div>
+        {% endif %}
+        
+        <!-- Display Form -->
+        <form method="POST" enctype="multipart/form-data" action="{% url 'add_song' %}" class="bg-white rounded-lg shadow-md p-6">
+            {% csrf_token %}
+            
+            <div class="mb-6">
+                <label for="id_title" class="block text-sm font-semibold text-pyc-text mb-2">
+                    Song Title <span class="text-red-500">*</span>
+                </label>
+                {{ song_form.title }}
+            </div>
+            
+            <div class="mb-6">
+                <label for="id_composer" class="block text-sm font-semibold text-pyc-text mb-2">
+                    Composer <span class="text-red-500">*</span>
+                </label>
+                {{ song_form.composer }}
+            </div>
+            
+            <div class="mb-6 bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
+                <p class="font-bold text-pyc-purple mb-4 flex items-center">
+                    <i class="fas fa-music mr-2"></i> Lyrics
+                </p>
+                
+                <div id="lyrics-sections">
+                    <div class="mb-4 bg-white p-4 rounded-lg shadow-sm">
+                        <label for="id_lyrics_title_1" class="block text-sm font-medium text-pyc-text mb-2">
+                            Section 1 <span class="text-xs text-gray-500">(Add instructions inside brackets e.g. (softly, distant thoughtful wonder))</span>
+                        </label>
+                        <input type="text" id="id_lyrics_title_1" name="lyrics_title_1" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent mb-2" 
+                               placeholder="Section title">
+                        <textarea id="id_lyrics_1" name="lyrics_1" 
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent" 
+                                  rows="4" placeholder="Lyrics for the section"></textarea>
+                    </div>
+                </div>
 
-        <button type="button" class="btn btn-secondary my-1" onclick="addLyricsSection()">Add Section</button> <br>
+                <button type="button" 
+                        class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors flex items-center" 
+                        onclick="addLyricsSection()">
+                    <i class="fas fa-plus mr-2"></i> Add Section
+                </button>
+            </div>
 
-        <div class="mb-3">
-            <label for="id_youtube_link" class="form-label">YouTube Link</label>
-            {{ song_form.youtube_link }}
-        </div>
-        <div class="mb-3">
-            <label for="id_slogan" class="form-label">Slogan (A verse or quote)</label>
-            {{ song_form.slogan }}
-        </div>
+            <div class="mb-6">
+                <label for="id_youtube_link" class="block text-sm font-semibold text-pyc-text mb-2">
+                    <i class="fab fa-youtube text-red-600 mr-1"></i> YouTube Link
+                </label>
+                {{ song_form.youtube_link }}
+            </div>
+            
+            <div class="mb-6">
+                <label for="id_slogan" class="block text-sm font-semibold text-pyc-text mb-2">
+                    <i class="fas fa-quote-left mr-1 text-pyc-orange"></i> Slogan <span class="text-xs text-gray-500">(A verse or quote)</span>
+                </label>
+                {{ song_form.slogan }}
+            </div>
 
-        <button type="submit" class="btn btn-success">Add Song</button>
-    </form>
+            <div class="flex gap-3">
+                <button type="submit" 
+                        class="px-6 py-3 bg-pyc-purple text-white rounded-lg hover:bg-opacity-90 transition-colors font-semibold flex items-center">
+                    <i class="fas fa-check mr-2"></i> Add Song
+                </button>
+                <a href="{% url 'song_list' %}" 
+                   class="px-6 py-3 bg-gray-200 text-pyc-text rounded-lg hover:bg-gray-300 transition-colors font-semibold flex items-center">
+                    <i class="fas fa-times mr-2"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <style>
+        /* Style Django form fields */
+        #id_title, #id_composer, #id_youtube_link {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        #id_title:focus, #id_composer:focus, #id_youtube_link:focus {
+            outline: none;
+            ring: 2px;
+            ring-color: #4B3FA0;
+            border-color: transparent;
+        }
+    </style>
 
     <script>
-
         document.addEventListener('DOMContentLoaded', function () {
             CKEDITOR.replace("slogan");
         });
@@ -61,11 +122,15 @@
         function addLyricsSection() {
             sectionCount++;
             const newSection = document.createElement('div');
-            newSection.classList.add('mb-3');
+            newSection.classList.add('mb-4', 'bg-white', 'p-4', 'rounded-lg', 'shadow-sm');
             newSection.innerHTML = `
-            <label for="id_lyrics_title_${sectionCount}" class="form-label">Section ${sectionCount}</label>
-            <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" class="form-control my-1" placeholder="Section title">
-            <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" class="form-control my-1" placeholder="Lyrics for the section"></textarea>
+                <label for="id_lyrics_title_${sectionCount}" class="block text-sm font-medium text-pyc-text mb-2">Section ${sectionCount}</label>
+                <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent mb-2" 
+                       placeholder="Section title">
+                <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent" 
+                          rows="4" placeholder="Lyrics for the section"></textarea>
             `;
             document.getElementById('lyrics-sections').appendChild(newSection);
         }
@@ -77,15 +142,19 @@
             const sections = lyrics.split(/\n\s*\n/);
             document.getElementById('lyrics-sections').innerHTML = '';
             sections.forEach((section, index) => {
-            sectionCount = index + 1;
-            const newSection = document.createElement('div');
-            newSection.classList.add('mb-3');
-            newSection.innerHTML = `
-                <label for="id_lyrics_title_${sectionCount}" class="form-label">Section ${sectionCount}</label>
-                <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" class="form-control my-1" placeholder="Section title">
-                <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" class="form-control my-1" placeholder="Lyrics for the section">${section}</textarea>
-            `;
-            document.getElementById('lyrics-sections').appendChild(newSection);
+                sectionCount = index + 1;
+                const newSection = document.createElement('div');
+                newSection.classList.add('mb-4', 'bg-white', 'p-4', 'rounded-lg', 'shadow-sm');
+                newSection.innerHTML = `
+                    <label for="id_lyrics_title_${sectionCount}" class="block text-sm font-medium text-pyc-text mb-2">Section ${sectionCount}</label>
+                    <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent mb-2" 
+                           placeholder="Section title">
+                    <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" 
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent" 
+                              rows="4" placeholder="Lyrics for the section">${section}</textarea>
+                `;
+                document.getElementById('lyrics-sections').appendChild(newSection);
             });
         }
     </script>

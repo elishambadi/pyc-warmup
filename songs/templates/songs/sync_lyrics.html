@@ -3,44 +3,62 @@
 {% load custom_filters %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">Sync Lyrics - {{ mp3_file.voice_part }}</h2>
-    <h3 class="text-muted mb-3">{{ song.title }}</h3>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <h2 class="text-3xl sm:text-4xl font-extrabold text-pyc-text mb-2">Sync Lyrics - {{ mp3_file.voice_part }}</h2>
+    <h3 class="text-xl text-pyc-text/70 font-medium mb-6">{{ song.title }}</h3>
 
-    <!-- Instructions Card -->
-    <div class="card bg-light p-3 mb-4">
-        <h4>🎵 Syncing Instructions</h4>
-        <ol>
-            <li>Click <strong>Play</strong> to start the audio</li>
-            <li>Click <strong>Set Timestamp</strong> when you hear each line</li>
-            <li>Use <strong>Delete</strong> to remove incorrect timestamps</li>
+    <div class="p-4 sm:p-6 mb-6 rounded-xl bg-gray-50 border border-pyc-purple/10 shadow-lg">
+        <h4 class="text-xl font-semibold text-pyc-purple mb-3 flex items-center">
+            <span class="mr-2 text-2xl">🎵</span> Syncing Instructions
+        </h4>
+        <ol class="list-decimal list-inside text-pyc-text space-y-2 ml-4">
+            <li>Click <strong class="text-pyc-orange">Play</strong> to start the audio</li>
+            <li>Click <strong class="text-pyc-purple">Set Timestamp</strong> when you hear each line</li>
+            <li>Use <strong class="text-red-500">Delete</strong> to remove incorrect timestamps</li>
         </ol>
     </div>
 
-    <!-- Audio Player -->
-    <audio id="audio-player" controls class="w-100 mb-4" data-mp3-id="{{ mp3_file.id }}">
+    <audio 
+        id="audio-player" 
+        controls 
+        class="w-full mb-8 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-pyc-purple" 
+        data-mp3-id="{{ mp3_file.id }}"
+    >
         <source src="{{ mp3_file.file.url }}" type="audio/mpeg">
     </audio>
 
-    <!-- Lyrics List -->
-    <div id="lyrics-container">
+    <div id="lyrics-container" class="space-y-4">
         {% for lyric in lyrics %}
-        <p class="lyric-line" data-lyric-id="{{ lyric.id }}">
-            {{ lyric.text }}
-            <button class="sync-btn btn btn-sm btn-primary">Set Timestamp</button>
-            <button class="delete-btn btn btn-sm btn-danger">Delete</button>
-            <span class="timestamp-display">
-                {% if timestamps|get_item:lyric.id %}
-                [{{ timestamps|get_item:lyric.id|floatformat:2 }}s]
-                {% endif %}
+        <p class="lyric-line flex items-center justify-between p-3 rounded-lg hover:bg-pyc-purple/5 transition duration-150 border-b border-gray-200" data-lyric-id="{{ lyric.id }}">
+            
+            <span class="flex-grow text-lg text-pyc-text mr-4">
+                {{ lyric.text }}
+            </span>
+            
+            <span class="flex items-center space-x-3 text-sm">
+                <span class="timestamp-display text-pyc-orange font-mono font-semibold min-w-[70px] text-right">
+                    {% if timestamps|get_item:lyric.id %}
+                    [{{ timestamps|get_item:lyric.id|floatformat:2 }}s]
+                    {% endif %}
+                </span>
+
+                <button class="sync-btn px-3 py-1 bg-pyc-purple text-white rounded-md hover:bg-pyc-purple/90 transition duration-150 text-xs font-medium shadow-sm">
+                    Set Timestamp
+                </button>
+                
+                <button class="delete-btn px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-150 text-xs font-medium shadow-sm">
+                    Delete
+                </button>
             </span>
         </p>
         {% endfor %}
     </div>
 
-    <div class="mt-4">
-        <!-- <a href="{% url 'generate-lrc' mp3_file.id %}" class="btn btn-success">Download LRC</a> -->
-        <a href="{% url 'song_detail' song.slug %}" class="btn btn-secondary">Back to Song</a>
+    <div class="mt-8 pt-4 border-t border-gray-200">
+        <a href="{% url 'song_detail' song.slug %}" class="px-6 py-2 bg-pyc-green text-white rounded-lg shadow-md hover:bg-pyc-green/90 transition duration-150 font-medium">
+            Back to Song
+        </a>
     </div>
 </div>
 

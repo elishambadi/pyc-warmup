@@ -1,50 +1,42 @@
 
-<!-- 🎧 Bottom Audio Player Bar -->
-<!-- Audio Player Bar -->
 <div
   id="audio-player-bar"
-  class="fixed-bottom bg-dark text-white py-2 shadow-lg border-top border-secondary d-none"
-  style="backdrop-filter: blur(10px);"
+  class="fixed bottom-0 left-0 right-0 z-50 py-3 shadow-2xl border-t-2 border-pyc-orange/50 hidden md:block"
+  style="background-color: #4B3FA0E6; backdrop-filter: blur(10px);"
 >
-  <div class="container-fluid px-4">
-    <div class="d-flex align-items-center justify-content-between flex-wrap">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between flex-wrap">
 
-      <!-- Left section -->
-      <div id="mp3-voice-part" class="d-flex align-items-center mb-2 mb-md-0">
-        <i class="fa-solid fa-music fa-lg text-info me-2"></i>
-        <span id="mp3-voice-title" class="fw-semibold">Play something</span>
+      <div id="mp3-voice-part" class="flex items-center mb-2 md:mb-0 text-white">
+        <i class="fa-solid fa-music text-lg text-pyc-orange mr-3"></i>
+        <span id="mp3-voice-title" class="font-semibold text-lg">Play something</span>
       </div>
 
-      <!-- Center controls -->
-      <div class="d-flex align-items-center justify-content-center gap-3" style="margin-left: 10px;">
-        <!-- Previous (optional) -->
-        <button id="prev-btn" class="btn btn-outline-light btn-sm rounded-circle">
+      <div class="flex items-center justify-center space-x-4 ml-2">
+        <button id="prev-btn" class="text-white/75 hover:text-white transition-colors p-2 rounded-full border border-white/20 hover:border-white">
           <i class="fa-solid fa-backward-step"></i>
         </button>
 
         <button
           id="play-pause-btn"
-          class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-          style="width: 48px; height: 48px;"
+          class="bg-pyc-orange text-white rounded-full shadow-lg flex items-center justify-center w-12 h-12 transition-transform hover:scale-105"
         >
-          <i class="fa-solid fa-play fa-lg text-dark"></i>
+          <i class="fa-solid fa-play fa-lg"></i>
         </button>
 
-        <!-- Next (optional) -->
-        <button id="next-btn" class="btn btn-outline-light btn-sm rounded-circle">
+        <button id="next-btn" class="text-white/75 hover:text-white transition-colors p-2 rounded-full border border-white/20 hover:border-white">
           <i class="fa-solid fa-forward-step"></i>
         </button>
       </div>
 
-      <!-- Right section -->
-      <div class="d-flex align-items-center ms-md-3 flex-grow-1">
+      <div class="flex items-center flex-grow-[2] ml-4 mt-2 md:mt-0 max-w-lg">
         <input
           type="range"
           id="seek-bar"
-          class="form-range mx-3"
+          class="w-full h-1 bg-pyc-orange/30 rounded-lg appearance-none cursor-pointer range-lg [&::-webkit-slider-thumb]:bg-pyc-orange [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:bg-pyc-orange [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
           value="0"
         />
-        <small>
+        <small class="text-white ml-4 text-sm whitespace-nowrap">
           <span id="current-time">0:00</span> /
           <span id="total-time">0:00</span>
         </small>

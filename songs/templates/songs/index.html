@@ -1,46 +1,94 @@
 {% extends 'base.html' %}
-
 {% block content %}
     {% if request.GET.next == "/" %}
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="bg-green-50 border-l-4 border-green-500 text-green-800 p-4 mb-6 rounded-lg shadow-sm flex items-start">
+        <i class="fas fa-check-circle text-xl mr-3 mt-0.5"></i>
+        <div class="flex-1">
             Logged out successfully.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+        <button type="button" 
+                onclick="this.parentElement.style.display='none'" 
+                class="text-green-800 hover:text-green-900">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
     {% endif %}
 
+    <!-- Voice Note Request Banner -->
     {% if latest_voicenote_request %}
-        <a href="{% url 'upload_voicenotes_for_request' %}" class="btn btn-warning mb-2">
-            Submit VNs for {{ latest_voicenote_request.title }} ministry
-        </a>
-    {% else %}
-        <!-- Button to create a new VoiceNoteRequest if none exist -->
-        {% if is_trainer %}
-        <a href="{% url 'add_voicenote_request' %}" class="btn btn-success mb-2">
-            Request VNs for upcoming ministry
-        </a>
-        {% endif %}
+    <div class="bg-pyc-orange/10 border-l-4 border-pyc-orange p-4 mb-6 rounded">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-microphone text-pyc-orange text-xl"></i>
+                <span class="text-pyc-text font-medium">Voice notes needed for {{ latest_voicenote_request.title }} ministry</span>
+            </div>
+            <a href="{% url 'upload_voicenotes_for_request' %}" 
+               class="px-4 py-2 bg-pyc-orange text-white rounded hover:bg-opacity-90 transition-colors">
+                Submit
+            </a>
+        </div>
+    </div>
+    {% elif is_trainer %}
+    <div class="bg-pyc-green/10 border-l-4 border-pyc-green p-4 mb-6 rounded">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-plus-circle text-pyc-green text-xl"></i>
+                <span class="text-pyc-text font-medium">Request voice notes for upcoming ministry</span>
+            </div>
+            <a href="{% url 'add_voicenote_request' %}" 
+               class="px-4 py-2 bg-pyc-green text-white rounded hover:bg-opacity-90 transition-colors">
+                Request VNs
+            </a>
+        </div>
+    </div>
     {% endif %}
 
-    <div class="row">
-        <!-- Button to the latest VoiceNoteRequest -->
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-pyc-purple">Songs</h1>
+        <a href="{% url 'add_song' %}" 
+           class="px-4 py-2 bg-pyc-purple text-white rounded hover:bg-opacity-90 transition-colors">
+            <i class="fas fa-plus mr-2"></i>Add Song
+        </a>
+    </div>
 
+    <!-- Songs List -->
+    {% if latest_songs %}
+    <div class="bg-white rounded-lg shadow">
         {% for song in latest_songs %}
-            <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ song.title }}</h5>
-                        <p class="card-text">{{ song.description|truncatewords:20 }}</p>
-                        <a href="{% url 'song_detail' song.slug %}" class="btn btn-primary">View Song</a>
-    
-                        {% if is_trainer %}
-                        <a href="{% url 'upload_voicenote' song.slug %}" class="btn btn-secondary">Voice Notes</a>
-                        {% endif %}
-                    </div>
+        <div class="border-b last:border-b-0 p-4 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex-1">
+                    <h3 class="font-semibold text-pyc-purple mb-1">{{ song.title }}</h3>
+                    <p class="text-sm text-pyc-text/70">{{ song.description|truncatewords:20 }}</p>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    <a href="{% url 'song_detail' song.slug %}" 
+                       class="px-4 py-2 bg-pyc-purple text-white rounded hover:bg-opacity-90 transition-colors text-sm">
+                        View
+                    </a>
+                    {% if is_trainer %}
+                    <a href="{% url 'upload_voicenote' song.slug %}" 
+                       class="px-4 py-2 bg-pyc-green text-white rounded hover:bg-opacity-90 transition-colors text-sm">
+                        VNs
+                    </a>
+                    {% endif %}
                 </div>
             </div>
+        </div>
         {% endfor %}
     </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12">
+        <i class="fas fa-music text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-pyc-text mb-2">No songs yet</h3>
+        <p class="text-gray-500 mb-4">Add your first song to get started</p>
+        <a href="{% url 'add_song' %}" 
+           class="inline-flex items-center px-6 py-3 bg-pyc-purple text-white rounded-lg hover:bg-opacity-90 transition-colors font-semibold">
+            <i class="fas fa-plus mr-2"></i>
+            Add Song
+        </a>
+    </div>
+    {% endif %}
 {% endblock %}
-
-
-

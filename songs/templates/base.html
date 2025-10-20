@@ -16,19 +16,33 @@
   <meta property="og:title" content="{% block og_title %}PYC WarmUp App{% endblock %}">
   <meta property="og:description"
     content="{% block og_description %}Manage and upload voice notes for choir rehearsals and events on the PYC WarmUp App.{% endblock %}">
-  <meta property="og:image" content="{% static 'images/your-image.jpg' %}"> <!-- Replace with a relevant image -->
+  <meta property="og:image" content="{% static 'images/your-image.jpg' %}">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{% block twitter_title %}PYC WarmUp App{% endblock %}">
   <meta name="twitter:description"
     content="{% block twitter_description %}Upload and manage your voice notes for choir events and training with PYC WarmUp App.{% endblock %}">
-  <meta name="twitter:image" content="{% static 'images/your-image.jpg' %}"> <!-- Replace with a relevant image -->
+  <meta name="twitter:image" content="{% static 'images/your-image.jpg' %}">
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.ckeditor.com/4.20.0/standard/ckeditor.js"></script>
-  <!-- <link rel="manifest" href="manifest.json"> -->
   {% progressive_web_app_meta %}
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'pyc-purple': '#4B3FA0',
+            'pyc-orange': '#F36F21',
+            'pyc-green': '#4E9C68',
+            'pyc-text': '#4C4C4C',
+          }
+        }
+      }
+    }
+  </script>
 
   <style>
     html,
@@ -38,70 +52,101 @@
       display: flex;
       flex-direction: column;
     }
-
-    /* Sticky navbar */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      /* Ensures navbar stays above content */
-    }
   </style>
 </head>
 
-<body>
+<body class="bg-white text-pyc-text flex flex-col min-h-screen" style="background-image: url('{% block background_image %}{% endblock %}');">
 
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'song_list' %}">
-        <img src="{% static 'images/icons/pyc-logo.jpg' %}" alt="PYC Logo" width="30" height="30"
-          class="d-inline-block align-text-top">
-        PYC WarmUp
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a target="_blank" class="nav-link" href="https://pychoir.parklandssda.org/">About PYC</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'song_list' %}">Songs</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'add_song' %}">Add Song</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">References</a>
-          </li>
-          <div class="d-flex">
-            {% if user.is_authenticated %}
-            <span class="navbar-text me-3">Welcome, {{ user.username }}!</span>
+  <nav class="sticky top-0 z-50 bg-pyc-purple shadow-md">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between h-16">
+        <!-- Brand -->
+        <a href="{% url 'song_list' %}" class="flex items-center space-x-2 text-white hover:text-pyc-orange transition-colors">
+          <img src="{% static 'images/icons/pyc-logo.jpg' %}" alt="PYC Logo" class="w-8 h-8 rounded-full">
+          <span class="font-bold text-lg">PYC WarmUp</span>
+        </a>
 
+        <!-- Mobile menu button -->
+        <button type="button" class="lg:hidden text-white hover:text-pyc-orange focus:outline-none" 
+                onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+
+        <!-- Desktop Navigation -->
+        <div class="hidden lg:flex items-center space-x-6">
+          <a href="https://pychoir.parklandssda.org/" target="_blank" 
+             class="text-white hover:text-pyc-orange transition-colors">About PYC</a>
+          <a href="{% url 'song_list' %}" 
+             class="text-white hover:text-pyc-orange transition-colors">Songs</a>
+          <a href="{% url 'add_song' %}" 
+             class="text-white hover:text-pyc-orange transition-colors">Add Song</a>
+             <!-- Display coming soon tooltip for Tailwind when someone hovers over our members -->
+          <a href="#" 
+             class="text-white hover:text-pyc-orange transition-colors" disabled title="Coming Soon">Our Members</a>
+
+          {% if user.is_authenticated %}
+            <span class="text-white/90">Welcome, {{ user.username }}!</span>
             {% if user|is_admin %}
-            <a href="{% url 'admin:index' %}" class="nav-link link-primary">Admin</a>
+              <a href="{% url 'admin:index' %}" 
+                 class="px-4 py-2 bg-pyc-orange text-white rounded-lg hover:bg-opacity-90 transition-colors">
+                Admin
+              </a>
             {% endif %}
-
-            <a href="{% url 'logout' %}" class="nav-link link-danger">Logout</a>
-            {% else %}
-            <a href="{% url 'login' %}" class="nav-link">Login</a>
-            {% endif %}
-          </div>
+            <a href="{% url 'logout' %}" 
+               class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+              Logout
+            </a>
+          {% else %}
+            <a href="{% url 'login' %}" 
+               class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors">
+              Login
+            </a>
+          {% endif %}
+        </div>
       </div>
-      </ul>
-    </div>
+
+      <!-- Mobile Navigation -->
+      <div id="mobile-menu" class="hidden lg:hidden pb-4">
+        <div class="flex flex-col space-y-3">
+          <a href="https://pychoir.parklandssda.org/" target="_blank" 
+             class="text-white hover:text-pyc-orange transition-colors">About PYC</a>
+          <a href="{% url 'song_list' %}" 
+             class="text-white hover:text-pyc-orange transition-colors">Songs</a>
+          <a href="{% url 'add_song' %}" 
+             class="text-white hover:text-pyc-orange transition-colors">Add Song</a>
+          <a href="#" 
+             class="text-white hover:text-pyc-orange transition-colors">References</a>
+          
+          {% if user.is_authenticated %}
+            <span class="text-white/90 text-sm">Welcome, {{ user.username }}!</span>
+            {% if user|is_admin %}
+              <a href="{% url 'admin:index' %}" 
+                 class="px-4 py-2 bg-pyc-orange text-white rounded-lg hover:bg-opacity-90 transition-colors text-center">
+                Admin
+              </a>
+            {% endif %}
+            <a href="{% url 'logout' %}" 
+               class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-center">
+              Logout
+            </a>
+          {% else %}
+            <a href="{% url 'login' %}" 
+               class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors text-center">
+              Login
+            </a>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </nav>
 
   <!-- Main Content -->
-  <div class="container mt-4 content">
+  <div class="flex-grow container mx-auto px-4 py-6">
     {% if messages %}
-    <div class="alert-container">
+    <div class="mb-4 space-y-2">
       {% for message in messages %}
-      <div class="alert alert-info alert-dismissible fade show" role="alert">
+      <div class="bg-pyc-green/10 border-l-4 border-pyc-green text-pyc-text px-4 py-3 rounded shadow-sm alert-message">
         {{ message }}
       </div>
       {% endfor %}
@@ -111,31 +156,27 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
       $(document).ready(function () {
-        // Make the alert fade out after 5 seconds
         setTimeout(function () {
-          $(".alert").fadeOut("slow");
-        }, 2000); // 5000ms = 5 seconds
+          $(".alert-message").fadeOut("slow");
+        }, 2000);
       });
     </script>
-
 
     {% block content %}
     {% endblock %}
 
     {% block player %}
-
     {% endblock %}
   </div>
 
   <!-- Footer (Optional) -->
-  <!-- <footer class="bg-light text-dark text-center py-3">
-    <p>&copy; 2025 PYC WarmUp. All rights reserved.</p>
+  <!-- <footer class="bg-gray-100 text-pyc-text text-center py-4 mt-auto">
+    <p class="text-sm">&copy; 2025 PYC WarmUp. All rights reserved.</p>
   </footer> -->
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register("/serviceworker.js") // Register at root
+      navigator.serviceWorker.register("/serviceworker.js")
         .then(function (registration) {
           console.log("Service Worker registered with scope:", registration.scope);
         })
@@ -144,7 +185,6 @@
         });
     }
   </script>
-
 
   {% block extra_js %}
   {% endblock %}

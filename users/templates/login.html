@@ -1,28 +1,59 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 
+{% block background_image %}/static/images/pyc-hero.jpg{% endblock %}
+
 {% block content %}
-    <div class="container mt-5">
-        <h2 class="mb-3">Login</h2>
+    <div class="max-w-md mx-auto mt-10 p-6 sm:p-8 bg-white shadow-xl rounded-lg border border-pyc-purple/10">
+        
+        <h2 class="text-3xl font-bold mb-6 text-pyc-text">Login</h2>
 
         {% if form.errors %}
-            <div class="alert alert-danger">Invalid username or password.</div>
+            <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 border border-red-300" role="alert">
+                Invalid username or password.
+            </div>
         {% endif %}
 
-        <form method="post">
+        <form method="post" class="space-y-6">
             {% csrf_token %}
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" name="username" class="form-control" required>
+            
+            <div>
+                <label for="username" class="block text-sm font-medium text-pyc-text mb-2">Username</label>
+                <input 
+                    type="text" 
+                    name="username" 
+                    id="username"
+                    class="block w-full px-4 py-2 text-pyc-text border border-pyc-text/30 rounded-lg focus:border-pyc-purple focus:ring-pyc-purple focus:ring-1 outline-none transition duration-150" 
+                    required
+                >
             </div>
 
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" required>
+            <div>
+                <label for="password" class="block text-sm font-medium text-pyc-text mb-2">Password</label>
+                <input 
+                    type="password" 
+                    name="password" 
+                    id="password"
+                    class="block w-full px-4 py-2 text-pyc-text border border-pyc-text/30 rounded-lg focus:border-pyc-purple focus:ring-pyc-purple focus:ring-1 outline-none transition duration-150" 
+                    required
+                >
             </div>
 
-            <button type="submit" class="btn btn-primary">Login</button>
-            <button class="btn btn-link"><a href="{% url 'register' %}">Create an account instead</a></button>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                <button 
+                    type="submit" 
+                    class="w-full sm:w-auto px-6 py-2 text-lg font-semibold text-white bg-pyc-orange rounded-lg shadow-md hover:bg-pyc-orange/90 focus:ring-4 focus:ring-pyc-orange/50 transition duration-150"
+                >
+                    Login
+                </button>
+                
+                <a 
+                    href="{% url 'register' %}"
+                    class="text-pyc-purple hover:text-pyc-purple/80 font-medium text-center sm:text-right"
+                >
+                    Create an account instead
+                </a>
+            </div>
         </form>
     </div>
 {% endblock %}

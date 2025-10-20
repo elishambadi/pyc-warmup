@@ -22,3 +22,11 @@ def is_admin(user):
 @register.filter
 def get_voicenote(user_voicenotes, song_id):
     return user_voicenotes.filter(song__id=song_id).first()
+
+@register.filter(name='add_class')
+def add_class(field, css_class):
+    """
+    Adds a CSS class to a Django form field.
+    Usage: {{ form.my_field|add_class:"tailwind-classes-here" }}
+    """
+    return field.as_widget(attrs={"class": css_class})
