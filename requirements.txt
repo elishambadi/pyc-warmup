@@ -11,4 +11,4 @@ psycopg2-binary==2.9.10
 pytz==2025.1
 soupsieve==2.4.1
 sqlparse==0.4.4
-typing-extensions==4.7.1
+typing_extensions==4.7.1

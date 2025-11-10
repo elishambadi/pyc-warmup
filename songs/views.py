@@ -82,7 +82,6 @@ def add_song(request):
 
             # Loop as long as the POST data contains a key for the section title.
             while f"lyrics_title_{index}" in request.POST:
-                # Grab the section title and lyrics text.
                 print(f"Line {index}")
                 section_title = request.POST.get(f"lyrics_title_{index}", "").strip()
                 lyrics_text = request.POST.get(f"lyrics_{index}", "").strip()
@@ -93,20 +92,18 @@ def add_song(request):
 
                 section = Section.objects.create(
                     song=song, 
-                    name=clean_section_title,  # Save the cleaned section title
-                    instruction=instruction,   # Save extracted instruction
+                    name=clean_section_title,
+                    instruction=instruction,
                     position=index
                 )
 
-
-                # Split the submitted lyrics text into individual lines.
                 lines = lyrics_text.splitlines()
                 for line in lines:
                     matches = re.findall(r"\((.*?)\)", line)
                     instruction = " ".join(matches) if matches else None
                     line = re.sub(r"\s*\(.*?\)", "", line).strip()
 
-                    if line:  # Only create a LyricLine for nonempty lines.
+                    if line:
                         LyricLine.objects.create(
                             song=song,
                             section=section,
@@ -119,9 +116,8 @@ def add_song(request):
 
                 index += 1
 
-            # After processing all sections, join all lyric lines with newline characters.
             song.lyrics = "\n".join(all_lyric_lines)
-            song.save()  # Save the final lyrics string to the Song instance.
+            song.save()
             
             return redirect("song_list")
         else:

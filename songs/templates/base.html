@@ -12,7 +12,8 @@
   <meta name="description"
     content="{% block description %}The PYC WarmUp app helps you prepare for PYC events by managing voice notes, songs, and training materials.{% endblock %}">
   <meta name="keywords"
-    content="choir, warm-up, voice notes, music, training, song practice, {{ latest_request.title }}">
+    content="{% block keywords %}Parklands Youth Choir, choir, warm-up, voice notes, {{ latest_request.title }}{% endblock %}">
+
   <meta property="og:title" content="{% block og_title %}PYC WarmUp App{% endblock %}">
   <meta property="og:description"
     content="{% block og_description %}Manage and upload voice notes for choir rehearsals and events on the PYC WarmUp App.{% endblock %}">
