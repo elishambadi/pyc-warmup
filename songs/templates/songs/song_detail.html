@@ -145,9 +145,11 @@
                        type="file" id="new-mp3-file">
                 <input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent" 
                        type="text" id="new-mp3-voice" placeholder="Voice Part">
-                <button class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors" 
+                <button class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
                         id="add-mp3-btn">
-                    <i class="fas fa-plus mr-2"></i>Add MP3
+                    <i class="fas fa-plus mr-2"></i>
+                    <span id="add-mp3-text">Add MP3</span>
+                    <i class="fas fa-spinner fa-spin ml-2 hidden" id="add-mp3-loader"></i>
                 </button>
             </div>
             {% endif %}
@@ -233,23 +235,51 @@
     document.getElementById('add-mp3-btn').addEventListener('click', function () {
         const file = document.getElementById('new-mp3-file').files[0];
         const voicePart = document.getElementById('new-mp3-voice').value;
-        if (file && voicePart) addMP3(file, voicePart);
+        if (file && voicePart) {
+            // Disable button and show loader
+            this.disabled = true;
+            document.getElementById('add-mp3-text').classList.add('hidden');
+            document.getElementById('add-mp3-loader').classList.remove('hidden');
+            
+            addMP3(file, voicePart);
+        }
     });
 
     function saveMP3(mp3Id, newVoicePart) {
         fetch("{% url 'save_mp3' %}", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-            body: JSON.stringify({ mp3_id: mp3Id, voice_part: newVoicePart })
-        }).then(response => response.json())
-            .then(data => alert(data.success ? "MP3 updated!" : "Error updating MP3."));
-    }
-
     function addMP3(file, voicePart) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('voice_part', voicePart);
         formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'add_mp3' song.id %}", {
+            method: 'POST',
+            body: formData
+        }).then(response => response.json())
+            .then(data => {
+                // Re-enable button and hide loader
+                const addBtn = document.getElementById('add-mp3-btn');
+                addBtn.disabled = false;
+                document.getElementById('add-mp3-text').classList.remove('hidden');
+                document.getElementById('add-mp3-loader').classList.add('hidden');
+                
+                if (data.success) {
+                    alert("MP3 added!");
+                    location.reload();
+                } else {
+                    alert("Error adding MP3.");
+                }
+            })
+            .catch(error => {
+                // Re-enable button and hide loader on error
+                const addBtn = document.getElementById('add-mp3-btn');
+                addBtn.disabled = false;
+                document.getElementById('add-mp3-text').classList.remove('hidden');
+                document.getElementById('add-mp3-loader').classList.add('hidden');
+                alert("Error adding MP3.");
+            });
+    }   formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
         fetch("{% url 'add_mp3' song.id %}", {
             method: 'POST',
