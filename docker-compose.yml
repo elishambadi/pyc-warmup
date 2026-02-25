@@ -4,7 +4,7 @@ name: pyc-warmup
 
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:17.2
     container_name: pyc-warmup-db
     restart: always
     environment:
