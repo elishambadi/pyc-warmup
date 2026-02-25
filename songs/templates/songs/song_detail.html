@@ -247,6 +247,13 @@
 
     function saveMP3(mp3Id, newVoicePart) {
         fetch("{% url 'save_mp3' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ mp3_id: mp3Id, voice_part: newVoicePart })
+        }).then(response => response.json())
+            .then(data => alert(data.success ? "MP3 updated!" : "Error updating MP3."));
+    }
+
     function addMP3(file, voicePart) {
         const formData = new FormData();
         formData.append('file', file);
@@ -279,13 +286,6 @@
                 document.getElementById('add-mp3-loader').classList.add('hidden');
                 alert("Error adding MP3.");
             });
-    }   formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
-        fetch("{% url 'add_mp3' song.id %}", {
-            method: 'POST',
-            body: formData
-        }).then(response => response.json())
-            .then(data => alert(data.success ? "MP3 added!" : "Error adding MP3."));
     }
 
     // 📝 Edit & Add Notes
