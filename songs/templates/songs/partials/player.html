@@ -115,14 +115,19 @@
 
     // Update seek bar and time
     function updateSeekBar() {
-        seekBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-        currentTimeDisplay.textContent = formatTime(audioPlayer.currentTime);
+        if (!isNaN(audioPlayer.duration)) {
+            seekBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            currentTimeDisplay.textContent = formatTime(audioPlayer.currentTime);
+        }
     }
 
     // Seek to position
     function seekAudio(event) {
         const percent = event.target.value;
-        audioPlayer.currentTime = (percent / 100) * audioPlayer.duration;
+        const newTime = (percent / 100) * audioPlayer.duration;
+        if (!isNaN(newTime)) {
+            audioPlayer.currentTime = newTime;
+        }
     }
 
     // Format time helper function
@@ -150,12 +155,15 @@
             loadTrack(currentTrackIndex);
         });
     });
-
-    // Event listeners for controls
-    playPauseBtn.addEventListener("click", togglePlayPause);
-    prevBtn.addEventListener("click", playPreviousTrack);
-    nextBtn.addEventListener("click", playNextTrack);
     audioPlayer.addEventListener("timeupdate", updateSeekBar);
+    audioPlayer.addEventListener("loadedmetadata", () => {
+        totalTimeDisplay.textContent = formatTime(audioPlayer.duration);
+        seekBar.max = 100;
+        seekBar.value = 0;
+    });
+    seekBar.addEventListener("input", seekAudio);
+    seekBar.addEventListener("change", seekAudio); // Also handle on change for better mobile support
+    audioPlayer.addEventListener("ended", playNextTrack);Bar);
     audioPlayer.addEventListener("loadedmetadata", () => {
         totalTimeDisplay.textContent = formatTime(audioPlayer.duration);
     });
