@@ -52,14 +52,29 @@
         </a>
     </div>
 
+    <!-- Search Bar -->
+    <div class="mb-6">
+        <div class="relative">
+            <input type="text" 
+                   id="search-input" 
+                   placeholder="Search songs by title or lyrics..." 
+                   class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent">
+            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+        <p id="search-results-count" class="text-sm text-gray-500 mt-2 hidden"></p>
+    </div>
+
     <!-- Songs List -->
     {% if latest_songs %}
-    <div class="bg-white rounded-lg shadow">
+    <div class="bg-white rounded-lg shadow" id="songs-list">
         {% for song in latest_songs %}
-        <div class="border-b last:border-b-0 p-4 hover:bg-gray-50 transition-colors">
+        <div class="song-item border-b last:border-b-0 p-4 hover:bg-gray-50 transition-colors" 
+             data-title="{{ song.title|lower }}" 
+             data-lyrics="{{ song.lyrics|lower }}"
+             data-slug="{{ song.slug }}">
             <div class="flex items-center justify-between gap-4">
                 <div class="flex-1">
-                    <h3 class="font-semibold text-pyc-purple mb-1">{{ song.title }}</h3>
+                    <h3 class="font-semibold text-pyc-purple mb-1 song-title">{{ song.title }}</h3>
                     <p class="text-sm text-pyc-text/70">{{ song.description|truncatewords:20 }}</p>
                 </div>
                 <div class="flex gap-2 flex-shrink-0">
@@ -85,10 +100,94 @@
         <h3 class="text-xl font-semibold text-pyc-text mb-2">No songs yet</h3>
         <p class="text-gray-500 mb-4">Add your first song to get started</p>
         <a href="{% url 'add_song' %}" 
-           class="inline-flex items-center px-6 py-3 bg-pyc-purple text-white rounded-lg hover:bg-opacity-90 transition-colors font-semibold">
-            <i class="fas fa-plus mr-2"></i>
-            Add Song
         </a>
+    </div>
+    {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const songsList = document.getElementById('songs-list');
+            const resultsCount = document.getElementById('search-results-count');
+            
+            if (searchInput && songsList) {
+                searchInput.addEventListener('input', function() {
+                    const query = this.value.toLowerCase().trim();
+                    const songItems = Array.from(document.querySelectorAll('.song-item'));
+                    
+                    if (!query) {
+                        // Show all songs in original order
+                        songItems.forEach(item => {
+                            item.style.display = '';
+                            item.querySelector('.song-title').innerHTML = item.dataset.title;
+                        });
+                        resultsCount.classList.add('hidden');
+                        return;
+                    }
+                    
+                    // Score and filter songs
+                    const scoredSongs = songItems.map(item => {
+                        const title = item.dataset.title;
+                        const lyrics = item.dataset.lyrics;
+                        let score = 0;
+                        
+                        // Title exact match (highest priority)
+                        if (title === query) {
+                            score = 1000;
+                        }
+                        // Title starts with query
+                        else if (title.startsWith(query)) {
+                            score = 500;
+                        }
+                        // Title contains query
+                        else if (title.includes(query)) {
+                            score = 250;
+                        }
+                        // Lyrics contains query
+                        else if (lyrics.includes(query)) {
+                            score = 100;
+                        }
+                        
+                        return { item, score, title };
+                    });
+                    
+                    // Filter and sort
+                    const matches = scoredSongs.filter(s => s.score > 0);
+                    matches.sort((a, b) => b.score - a.score);
+                    
+                    // Hide non-matches and reorder matches
+                    songItems.forEach(item => item.style.display = 'none');
+                    
+                    matches.forEach((match, index) => {
+                        match.item.style.display = '';
+                        
+                        // Highlight matching text in title
+                        const titleElement = match.item.querySelector('.song-title');
+                        const titleText = match.item.dataset.title;
+                        const regex = new RegExp(`(${query})`, 'gi');
+                        const highlightedTitle = titleText.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
+                        titleElement.innerHTML = highlightedTitle;
+                        
+                        // Reorder in DOM
+                        songsList.appendChild(match.item);
+                    });
+                    
+                    // Update results count
+                    if (matches.length === 0) {
+                        resultsCount.textContent = 'No songs found';
+                        resultsCount.classList.remove('hidden');
+                    } else if (matches.length === 1) {
+                        resultsCount.textContent = '1 song found';
+                        resultsCount.classList.remove('hidden');
+                    } else {
+                        resultsCount.textContent = `${matches.length} songs found`;
+                        resultsCount.classList.remove('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}
     </div>
     {% endif %}
 {% endblock %}

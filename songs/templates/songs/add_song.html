@@ -47,10 +47,23 @@
                 </p>
                 
                 <div id="lyrics-sections">
-                    <div class="mb-4 bg-white p-4 rounded-lg shadow-sm">
-                        <label for="id_lyrics_title_1" class="block text-sm font-medium text-pyc-text mb-2">
-                            Section 1 <span class="text-xs text-gray-500">(Add instructions inside brackets e.g. (softly, distant thoughtful wonder))</span>
-                        </label>
+                    <div class="lyrics-section mb-4 bg-white p-4 rounded-lg shadow-sm border-l-4 border-pyc-purple" draggable="true">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-grip-vertical text-gray-400 cursor-move drag-handle"></i>
+                                <label for="id_lyrics_title_1" class="text-sm font-medium text-pyc-text">
+                                    Section 1 <span class="text-xs text-gray-500">(Add instructions inside brackets e.g. (softly, distant thoughtful wonder))</span>
+                                </label>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="button" class="duplicate-btn px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm" title="Duplicate section">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button type="button" class="delete-btn px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm" title="Delete section">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
                         <input type="text" id="id_lyrics_title_1" name="lyrics_title_1" 
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent mb-2" 
                                placeholder="Section title">
@@ -110,52 +123,160 @@
             ring-color: #4B3FA0;
             border-color: transparent;
         }
+
+        .lyrics-section {
+            transition: all 0.3s ease;
+        }
+
+        .lyrics-section:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .drag-handle {
+            cursor: grab;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
     </style>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             CKEDITOR.replace("slogan");
+            initializeDragAndDrop();
+            attachSectionHandlers();
         });
 
         let sectionCount = 1;
+        let draggedElement = null;
 
-        function addLyricsSection() {
+        function addLyricsSection(title = '', lyrics = '') {
             sectionCount++;
             const newSection = document.createElement('div');
-            newSection.classList.add('mb-4', 'bg-white', 'p-4', 'rounded-lg', 'shadow-sm');
+            newSection.classList.add('lyrics-section', 'mb-4', 'bg-white', 'p-4', 'rounded-lg', 'shadow-sm', 'border-l-4', 'border-pyc-purple');
+            newSection.draggable = true;
             newSection.innerHTML = `
-                <label for="id_lyrics_title_${sectionCount}" class="block text-sm font-medium text-pyc-text mb-2">Section ${sectionCount}</label>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-grip-vertical text-gray-400 cursor-move drag-handle"></i>
+                        <label for="id_lyrics_title_${sectionCount}" class="text-sm font-medium text-pyc-text">Section ${sectionCount}</label>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" class="duplicate-btn px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm" title="Duplicate section">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button type="button" class="delete-btn px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm" title="Delete section">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
                 <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent mb-2" 
-                       placeholder="Section title">
+                       placeholder="Section title" value="${title}">
                 <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" 
                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent" 
-                          rows="4" placeholder="Lyrics for the section"></textarea>
+                          rows="4" placeholder="Lyrics for the section">${lyrics}</textarea>
             `;
             document.getElementById('lyrics-sections').appendChild(newSection);
+            attachSectionHandlers();
+            renumberSections();
         }
 
-        document.getElementById('id_lyrics_1').addEventListener('input', extractSections);
-
-        function extractSections() {
-            const lyrics = document.getElementById('id_lyrics_1').value;
-            const sections = lyrics.split(/\n\s*\n/);
-            document.getElementById('lyrics-sections').innerHTML = '';
-            sections.forEach((section, index) => {
-                sectionCount = index + 1;
-                const newSection = document.createElement('div');
-                newSection.classList.add('mb-4', 'bg-white', 'p-4', 'rounded-lg', 'shadow-sm');
-                newSection.innerHTML = `
-                    <label for="id_lyrics_title_${sectionCount}" class="block text-sm font-medium text-pyc-text mb-2">Section ${sectionCount}</label>
-                    <input type="text" id="id_lyrics_title_${sectionCount}" name="lyrics_title_${sectionCount}" 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent mb-2" 
-                           placeholder="Section title">
-                    <textarea id="id_lyrics_${sectionCount}" name="lyrics_${sectionCount}" 
-                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent" 
-                              rows="4" placeholder="Lyrics for the section">${section}</textarea>
-                `;
-                document.getElementById('lyrics-sections').appendChild(newSection);
+        function attachSectionHandlers() {
+            // Drag and drop
+            document.querySelectorAll('.lyrics-section').forEach(section => {
+                section.addEventListener('dragstart', handleDragStart);
+                section.addEventListener('dragover', handleDragOver);
+                section.addEventListener('drop', handleDrop);
+                section.addEventListener('dragend', handleDragEnd);
             });
+
+            // Delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.onclick = function() {
+                    if (document.querySelectorAll('.lyrics-section').length > 1) {
+                        this.closest('.lyrics-section').remove();
+                        renumberSections();
+                    } else {
+                        alert('You must have at least one section.');
+                    }
+                };
+            });
+
+            // Duplicate buttons
+            document.querySelectorAll('.duplicate-btn').forEach(btn => {
+                btn.onclick = function() {
+                    const section = this.closest('.lyrics-section');
+                    const title = section.querySelector('input[type="text"]').value;
+                    const lyrics = section.querySelector('textarea').value;
+                    addLyricsSection(title, lyrics);
+                };
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.style.opacity = '0.4';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            
+            const section = e.target.closest('.lyrics-section');
+            if (section && section !== draggedElement) {
+                const rect = section.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (e.clientY < midpoint) {
+                    section.parentNode.insertBefore(draggedElement, section);
+                } else {
+                    section.parentNode.insertBefore(draggedElement, section.nextSibling);
+                }
+            }
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            renumberSections();
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+            document.querySelectorAll('.lyrics-section').forEach(section => {
+                section.classList.remove('drag-over');
+            });
+        }
+
+        function initializeDragAndDrop() {
+            const container = document.getElementById('lyrics-sections');
+            container.addEventListener('dragover', handleDragOver);
+        }
+
+        function renumberSections() {
+            const sections = document.querySelectorAll('.lyrics-section');
+            sections.forEach((section, index) => {
+                const num = index + 1;
+                const label = section.querySelector('label');
+                const input = section.querySelector('input[type="text"]');
+                const textarea = section.querySelector('textarea');
+                
+                label.textContent = `Section ${num}`;
+                label.htmlFor = `id_lyrics_title_${num}`;
+                input.id = `id_lyrics_title_${num}`;
+                input.name = `lyrics_title_${num}`;
+                textarea.id = `id_lyrics_${num}`;
+                textarea.name = `lyrics_${num}`;
+            });
+            sectionCount = sections.length;
         }
     </script>
 {% endblock %}

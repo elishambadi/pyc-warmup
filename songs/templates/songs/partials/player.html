@@ -1,42 +1,45 @@
 
 <div
   id="audio-player-bar"
-  class="fixed bottom-0 left-0 right-0 z-50 py-3 shadow-2xl border-t-2 border-pyc-orange/50 hidden md:block"
+  class="fixed bottom-0 left-0 right-0 z-50 py-2 md:py-3 shadow-2xl border-t-2 border-pyc-orange/50 hidden"
   style="background-color: #4B3FA0E6; backdrop-filter: blur(10px);"
 >
-  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between flex-wrap">
+  <div class="container mx-auto px-2 sm:px-4 lg:px-8">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0">
 
-      <div id="mp3-voice-part" class="flex items-center mb-2 md:mb-0 text-white">
-        <i class="fa-solid fa-music text-lg text-pyc-orange mr-3"></i>
-        <span id="mp3-voice-title" class="font-semibold text-lg">Play something</span>
+      <!-- Song Title -->
+      <div id="mp3-voice-part" class="flex items-center w-full md:w-auto justify-center md:justify-start text-white mb-1 md:mb-0">
+        <i class="fa-solid fa-music text-base md:text-lg text-pyc-orange mr-2 md:mr-3"></i>
+        <span id="mp3-voice-title" class="font-semibold text-sm md:text-lg truncate max-w-[200px] md:max-w-none">Play something</span>
       </div>
 
-      <div class="flex items-center justify-center space-x-4 ml-2">
-        <button id="prev-btn" class="text-white/75 hover:text-white transition-colors p-2 rounded-full border border-white/20 hover:border-white">
-          <i class="fa-solid fa-backward-step"></i>
+      <!-- Playback Controls -->
+      <div class="flex items-center justify-center space-x-3 md:space-x-4">
+        <button id="prev-btn" class="text-white/75 hover:text-white transition-colors p-1.5 md:p-2 rounded-full border border-white/20 hover:border-white">
+          <i class="fa-solid fa-backward-step text-sm md:text-base"></i>
         </button>
 
         <button
           id="play-pause-btn"
-          class="bg-pyc-orange text-white rounded-full shadow-lg flex items-center justify-center w-12 h-12 transition-transform hover:scale-105"
+          class="bg-pyc-orange text-white rounded-full shadow-lg flex items-center justify-center w-10 h-10 md:w-12 md:h-12 transition-transform hover:scale-105"
         >
-          <i class="fa-solid fa-play fa-lg"></i>
+          <i class="fa-solid fa-play text-base md:text-lg"></i>
         </button>
 
-        <button id="next-btn" class="text-white/75 hover:text-white transition-colors p-2 rounded-full border border-white/20 hover:border-white">
-          <i class="fa-solid fa-forward-step"></i>
+        <button id="next-btn" class="text-white/75 hover:text-white transition-colors p-1.5 md:p-2 rounded-full border border-white/20 hover:border-white">
+          <i class="fa-solid fa-forward-step text-sm md:text-base"></i>
         </button>
       </div>
 
-      <div class="flex items-center flex-grow-[2] ml-4 mt-2 md:mt-0 max-w-lg">
+      <!-- Progress Bar and Time -->
+      <div class="flex items-center w-full md:flex-grow-[2] md:ml-4 md:max-w-lg">
         <input
           type="range"
           id="seek-bar"
-          class="w-full h-1 bg-pyc-orange/30 rounded-lg appearance-none cursor-pointer range-lg [&::-webkit-slider-thumb]:bg-pyc-orange [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:bg-pyc-orange [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
+          class="w-full h-1 bg-pyc-orange/30 rounded-lg appearance-none cursor-pointer range-lg [&::-webkit-slider-thumb]:bg-pyc-orange [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 md:[&::-webkit-slider-thumb]:w-4 md:[&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-moz-range-thumb]:bg-pyc-orange [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 md:[&::-moz-range-thumb]:w-4 md:[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full"
           value="0"
         />
-        <small class="text-white ml-4 text-sm whitespace-nowrap">
+        <small class="text-white ml-2 md:ml-4 text-xs md:text-sm whitespace-nowrap">
           <span id="current-time">0:00</span> /
           <span id="total-time">0:00</span>
         </small>
@@ -71,7 +74,7 @@
         audioPlayer.src = playlist[currentTrackIndex];
         audioPlayer.play();
         updatePlayPauseButton();
-        audioBar.classList.remove("d-none"); // Show player when track starts
+        audioBar.classList.remove("hidden"); // Show player when track starts
     }
 
     // Function to toggle play/pause
