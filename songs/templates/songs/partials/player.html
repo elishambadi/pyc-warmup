@@ -65,6 +65,7 @@
     let playlist = [];
     let mp3Names = [];
     let currentTrackIndex = 0;
+    let isSeeking = false; // Flag to prevent timeupdate interference
 
     // Function to load and play track
     function loadTrack(index) {
@@ -112,9 +113,11 @@
             loadTrack(currentTrackIndex - 1);
         }
     }
-
     // Update seek bar and time
     function updateSeekBar() {
+        // Don't update if user is currently seeking
+        if (isSeeking) return;
+        
         if (audioPlayer.duration && !isNaN(audioPlayer.duration)) {
             const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
             seekBar.value = progress;
@@ -128,6 +131,7 @@
             const percent = seekBar.value;
             audioPlayer.currentTime = (percent / 100) * audioPlayer.duration;
         }
+        isSeeking = false; // Re-enable automatic updates
     }
 
     // Format time helper function
@@ -167,6 +171,9 @@
         seekBar.value = 0;
     });
     seekBar.addEventListener("input", function() {
+        // Set flag to prevent timeupdate from interfering
+        isSeeking = true;
+        
         // Update time display while dragging
         if (audioPlayer.duration && !isNaN(audioPlayer.duration)) {
             const percent = seekBar.value;
@@ -175,6 +182,8 @@
         }
     });
     seekBar.addEventListener("change", seekAudio);
+    seekBar.addEventListener("mousedown", () => isSeeking = true);
+    seekBar.addEventListener("touchstart", () => isSeeking = true);
     audioPlayer.addEventListener("ended", playNextTrack);
 </script>
 
