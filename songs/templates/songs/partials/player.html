@@ -146,6 +146,7 @@
         mp3Item.addEventListener("click", function () {
             const mp3Url = this.getAttribute("data-mp3-url");
             const mp3VoicePart = this.getAttribute("data-mp3-voice-part");
+            const mp3Id = this.getAttribute("data-mp3-id");
 
             // If the song is already in the playlist, just play it
             if (playlist.includes(mp3Url)) {
@@ -154,6 +155,18 @@
                 playlist.push(mp3Url);
                 mp3Names.push(mp3VoicePart)
                 currentTrackIndex = playlist.length - 1;
+            }
+
+            // Set context for lyric syncing
+            if (mp3Id) {
+                audioPlayer.dataset.currentMp3Id = mp3Id;
+                processTimestamps(mp3Id);
+                
+                // Reset lyric highlights
+                lyricLines.forEach(line => {
+                    line.classList.remove('active', 'played');
+                });
+                currentLine = null;
             }
 
             loadTrack(currentTrackIndex);
@@ -255,6 +268,7 @@
         }
 
 
+        // Click on lyric line to seek to that timestamp
         lyricLines.forEach(line => {
             line.addEventListener('click', function() {
                 const lineId = this.dataset.lineId;
@@ -262,26 +276,8 @@
                 const currentMp3Id = audioPlayer.dataset.currentMp3Id;
         
                 if (currentMp3Id && lineTimestamps[currentMp3Id]) {
-                    console.log(`🎯 Seeking to timestamp: ${lineTimestamps[currentMp3Id]}s`);
                     audioPlayer.currentTime = lineTimestamps[currentMp3Id];
-                } else {
-                    // console.log('⚠️ No timestamp found for this line with current MP3');
                 }
-            });
-        });
-    
-        // Handle MP3 selection change
-        mp3List.forEach(mp3Item => {
-            mp3Item.addEventListener('click', function() {
-                const mp3Id = this.dataset.mp3Id;
-                // console.log(`🎵 Selected MP3 ID: ${mp3Id}`);
-                audioPlayer.dataset.currentMp3Id = mp3Id;
-                processTimestamps(mp3Id);
-                
-                lyricLines.forEach(line => {
-                    line.classList.remove('active', 'played');
-                });
-                currentLine = null;
             });
         });
     
