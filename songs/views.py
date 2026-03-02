@@ -1,6 +1,6 @@
 from urllib import request
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment, VoiceNote, VoiceNoteRequest
+from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest
 from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm
 from .utils import generate_lyric_lines
 from django.http import JsonResponse, HttpResponse
@@ -502,6 +502,30 @@ def delete_comment(request, comment_id):
             comment.delete()
             return JsonResponse({'success': True})
         return JsonResponse({'success': False, 'error': 'Permission denied'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def like_comment(request, comment_id):
+    """Toggle like on a comment"""
+    if request.method == 'POST':
+        comment = get_object_or_404(Comment, id=comment_id)
+        
+        # Check if user already liked this comment
+        like_exists = CommentLike.objects.filter(comment=comment, user=request.user).first()
+        
+        if like_exists:
+            # Unlike
+            like_exists.delete()
+            comment.likes -= 1
+            comment.save()
+            return JsonResponse({'success': True, 'liked': False, 'likes': comment.likes})
+        else:
+            # Like
+            CommentLike.objects.create(comment=comment, user=request.user)
+            comment.likes += 1
+            comment.save()
+            return JsonResponse({'success': True, 'liked': True, 'likes': comment.likes})
+    
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required

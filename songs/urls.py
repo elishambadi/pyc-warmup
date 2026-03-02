@@ -36,6 +36,7 @@ urlpatterns = [
     # Comments
     path('song/<slug:song_slug>/add-comment/', views.add_comment, name='add_comment'),
     path('comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
+    path('comment/<int:comment_id>/like/', views.like_comment, name='like_comment'),
 
     # VoiceNote requests
     path('voicenote-request/new/', views.add_voicenote_request, name='add_voicenote_request'),

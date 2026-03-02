@@ -14,11 +14,8 @@ RUN pip install wheel
 RUN pip install --upgrade pip && pip install -r requirements.txt
 RUN pip install gunicorn
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
 # Expose port
 EXPOSE 8000
 
-# Start Django application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "pyc_warmup.wsgi:application"]
+# Start Django application with migrations
+CMD python manage.py migrate && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 pyc_warmup.wsgi:application

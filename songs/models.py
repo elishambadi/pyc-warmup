@@ -137,6 +137,7 @@ class Comment(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name="replies", null=True, blank=True)
     
     text = models.TextField()
+    likes = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -145,6 +146,19 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} on {self.song.title}: {self.text[:50]}"
+
+
+class CommentLike(models.Model):
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="comment_likes")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comment_likes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('comment', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} liked comment {self.comment.id}"
+
 
 
 class VoiceNoteRequest(models.Model):
