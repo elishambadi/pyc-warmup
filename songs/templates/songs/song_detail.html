@@ -324,39 +324,6 @@
 
 </div>
 
-{% include 'songs/partials/player.html' %}  </button>
-                                            {% if reply.user == user or user.is_staff %}
-                                            <button class="text-red-500 hover:underline delete-comment-btn" data-comment-id="{{ reply.id }}">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                            {% endif %}
-                                            {% else %}
-                                            <span class="flex items-center gap-1 text-pyc-text/60">
-                                                <i class="fas fa-heart"></i>
-                                                <span>{{ reply.likes }}</span>
-                                            </span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-        </div>
-    </div><!-- End Comments Sidebar -->
-
-    </div><!-- End Grid -->
-
-</div>
-
 {% include 'songs/partials/player.html' %}
 
 {% endblock %}
