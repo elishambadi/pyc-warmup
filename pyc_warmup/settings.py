@@ -171,18 +171,35 @@ CKEDITOR_UPLOAD_PATH = '/assets/ckeditor/'
 # PWA configs
 PWA_APP_NAME = 'PYC Learn'
 PWA_APP_DESCRIPTION = "Song learning app for PYC"
-PWA_APP_THEME_COLOR = '#000000'
+PWA_APP_THEME_COLOR = '#4B3FA0'
 PWA_APP_BACKGROUND_COLOR = '#ffffff'
-PWA_APP_ICON = '/static/images/icons/pyc-logo.jpg'
-PWA_APP_SPLASH_SCREEN = '/static/images/icons/pyc-logo.jpg'  # Splash screen image
-PWA_APP_DISPLAY = 'standalone'  # How the app behaves when launched
-PWA_APP_ORIENTATION = 'portrait'  # Lock orientation to portrait mode
-PWA_APP_SCOPE = '/'  # The scope of the app, usually the root of the site
-PWA_APP_START_URL = '/'  # Start page of the app when launched
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_SCOPE = '/'
+PWA_APP_ORIENTATION = 'any'
+PWA_APP_START_URL = '/'
+PWA_APP_STATUS_BAR_COLOR = 'default'
 PWA_APP_ICONS = [
     {
         'src': '/static/images/icons/pyc-logo.jpg',
-        'sizes': '192x192'
+        'sizes': '160x160',
+        'type': 'image/jpeg'
+    },
+    {
+        'src': '/static/images/icons/pyc-logo.jpg',
+        'sizes': '512x512',
+        'type': 'image/jpeg'
+    }
+]
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/images/icons/pyc-logo.jpg',
+        'sizes': '160x160'
+    }
+]
+PWA_APP_SPLASH_SCREEN = [
+    {
+        'src': '/static/images/icons/pyc-logo.jpg',
+        'media': '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)'
     }
 ]
 PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'static/js', 'serviceworker.js')
@@ -192,3 +209,11 @@ PWA_APP_LANG = 'en-US'
 LOGOUT_REDIRECT_URL = "home"
 
 LOGIN_REDIRECT_URL = "/"  # Redirect to homepage (change if needed)
+
+# Cache configuration for view tracking
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}

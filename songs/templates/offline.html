@@ -1,24 +1,95 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h2>You're Offline</h2>
-    <p>Your saved songs and MP3s will still be available.</p>
-    <ul id="saved-songs"></ul>
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="text-center mb-8">
+        <i class="fas fa-wifi-slash text-6xl text-pyc-orange mb-4"></i>
+        <h2 class="text-3xl font-bold text-pyc-purple mb-2">Offline mode</h2>
+        <p class="text-pyc-text">Your saved songs and MP3s are available below.</p>
+    </div>
 
-    <script>
-        if ('caches' in window) {
-            caches.open('djangopwa-v2').then(cache => {
-                return cache.keys();
-            }).then(keys => {
-                let savedSongs = document.getElementById('saved-songs');
-                keys.forEach(request => {
-                    if (request.url.includes('/songs/')) {
-                        let listItem = document.createElement('li');
-                        listItem.textContent = request.url;
-                        savedSongs.appendChild(listItem);
-                    }
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-xl font-semibold text-pyc-purple mb-4">
+            <i class="fas fa-music mr-2"></i>Cached Songs
+        </h3>
+        <ul id="saved-songs" class="space-y-2">
+            <li class="text-pyc-text/60 italic">Loading cached content...</li>
+        </ul>
+
+        <h3 class="text-xl font-semibold text-pyc-purple mb-4 mt-6">
+            <i class="fas fa-file-audio mr-2"></i>Cached Audio Files
+        </h3>
+        <ul id="saved-mp3s" class="space-y-2">
+            <li class="text-pyc-text/60 italic">Loading cached content...</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    if ('caches' in window) {
+        Promise.all([
+            caches.open('djangopwa-v3'),
+            caches.open('djangopwa-dynamic-v3')
+        ]).then(function(allCaches) {
+            let allKeys = [];
+            return Promise.all(
+                allCaches.map(cache => cache.keys())
+            ).then(function(keysArrays) {
+                keysArrays.forEach(keys => {
+                    allKeys = allKeys.concat(keys);
                 });
+                return allKeys;
             });
-        }
-    </script>
+        }).then(function(keys) {
+            let savedSongs = document.getElementById('saved-songs');
+            let savedMp3s = document.getElementById('saved-mp3s');
+            let foundSongs = false;
+            let foundMp3s = false;
+
+            savedSongs.innerHTML = '';
+            savedMp3s.innerHTML = '';
+
+            keys.forEach(request => {
+                let url = new URL(request.url);
+                
+                // Song pages
+                if (url.pathname.startsWith('/songs/') && !url.pathname.includes('.mp3')) {
+                    foundSongs = true;
+                    let listItem = document.createElement('li');
+                    listItem.className = 'p-3 bg-gray-50 rounded hover:bg-gray-100';
+                    let link = document.createElement('a');
+                    link.href = url.pathname;
+                    link.className = 'text-pyc-purple hover:text-pyc-orange';
+                    link.innerHTML = '<i class="fas fa-music mr-2"></i>' + url.pathname;
+                    listItem.appendChild(link);
+                    savedSongs.appendChild(listItem);
+                }
+                
+                // MP3 files
+                if (url.pathname.includes('.mp3')) {
+                    foundMp3s = true;
+                    let listItem = document.createElement('li');
+                    listItem.className = 'p-3 bg-gray-50 rounded';
+                    let fileName = url.pathname.split('/').pop();
+                    listItem.innerHTML = '<i class="fas fa-file-audio mr-2 text-pyc-orange"></i>' + decodeURIComponent(fileName);
+                    savedMp3s.appendChild(listItem);
+                }
+            });
+
+            if (!foundSongs) {
+                savedSongs.innerHTML = '<li class="text-pyc-text/60 italic">No cached songs found. Visit songs while online to cache them.</li>';
+            }
+
+            if (!foundMp3s) {
+                savedMp3s.innerHTML = '<li class="text-pyc-text/60 italic">No cached audio files found.</li>';
+            }
+        }).catch(function(error) {
+            console.error('Error loading cached content:', error);
+            document.getElementById('saved-songs').innerHTML = '<li class="text-red-500">Error loading cached content.</li>';
+        });
+    } else {
+        document.getElementById('saved-songs').innerHTML = '<li class="text-red-500">Cache storage not available.</li>';
+        document.getElementById('saved-mp3s').innerHTML = '<li class="text-red-500">Cache storage not available.</li>';
+    }
+</script>
 {% endblock %}
