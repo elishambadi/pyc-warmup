@@ -202,102 +202,94 @@
 
 <!-- Highlight lyrics as song plays -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const audioPlayer = document.getElementById('audio-player');
-        const lyricLines = document.querySelectorAll('.lyric-line');
-        const mp3List = document.querySelectorAll('.mp3-voice');
-        let timestamps = {};
-        let currentLine = null;
-    
-        // console.log("🎵 Script Loaded: Audio Player & Lyrics Initialized");
-    
-        // Process timestamps for current MP3
-        function processTimestamps(mp3Id) {
-            timestamps = {};
-            // console.log(`🎶 Processing timestamps for MP3 ID: ${mp3Id}`);
-    
-            lyricLines.forEach(line => {
-                const lineId = line.dataset.lineId;
-                // console.log(`🔹 Processing Lyric Line ID: ${lineId}`);
-    
-                const lineTimestamps = JSON.parse(line.dataset.timestamps);
-                // console.log(`📌 Timestamps Data for Line ${lineId}: `, lineTimestamps);
-    
-                if (lineTimestamps[mp3Id]) {
-                    timestamps[lineTimestamps[mp3Id]] = lineId;
-                    // console.log(`✅ Mapped Timestamp: ${lineTimestamps[mp3Id]}s -> Line ${lineId}`);
-                }
-            });
-    
-            // console.log("🕒 Final Timestamps Map: ", timestamps);
-        }
-    
-        function updateLyrics(currentTime) {
-            const times = Object.keys(timestamps).map(Number).sort((a, b) => a - b);
+    const lyricLines = document.querySelectorAll('.lyric-line');
+    let timestamps = {};
+    let currentLine = null;
 
-            if (times.length === 0) return;
+    // Process timestamps for current MP3 - MUST be globally accessible
+    function processTimestamps(mp3Id) {
+        timestamps = {};
+        // console.log(`🎶 Processing timestamps for MP3 ID: ${mp3Id}`);
 
-            // Find the latest timestamp that has already passed
-            const lastPassedTimestamp = times
-                .filter(t => currentTime >= t)
-                .pop(); // gets the most recent one (closest in the past)
-
-            // No timestamps reached yet
-            if (lastPassedTimestamp === undefined) return;
-
-            const nextLineId = timestamps[lastPassedTimestamp];
-
-            if (!currentLine || currentLine.dataset.lineId !== nextLineId) {
-                // Mark old line as played
-                if (currentLine) {
-                    currentLine.classList.remove('active');
-                    currentLine.classList.add('played');
-                }
-
-                // Activate new line
-                currentLine = document.querySelector(`.lyric-line[data-line-id="${nextLineId}"]`);
-                if (currentLine) {
-                    currentLine.classList.add('active');
-                    currentLine.classList.remove('played');
-                    currentLine.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                }
-            }
-        }
-
-
-        // Click on lyric line to seek to that timestamp
         lyricLines.forEach(line => {
-            line.addEventListener('click', function() {
-                const lineId = this.dataset.lineId;
-                const lineTimestamps = JSON.parse(this.dataset.timestamps);
-                const currentMp3Id = audioPlayer.dataset.currentMp3Id;
-        
-                if (currentMp3Id && lineTimestamps[currentMp3Id]) {
-                    audioPlayer.currentTime = lineTimestamps[currentMp3Id];
-                }
-            });
+            const lineId = line.dataset.lineId;
+            // console.log(`🔹 Processing Lyric Line ID: ${lineId}`);
+
+            const lineTimestamps = JSON.parse(line.dataset.timestamps);
+            // console.log(`📌 Timestamps Data for Line ${lineId}: `, lineTimestamps);
+
+            if (lineTimestamps[mp3Id]) {
+                timestamps[lineTimestamps[mp3Id]] = lineId;
+                // console.log(`✅ Mapped Timestamp: ${lineTimestamps[mp3Id]}s -> Line ${lineId}`);
+            }
         });
-    
-        // Update lyrics on timeupdate
-        audioPlayer.addEventListener('timeupdate', () => {
-            // console.log(`🎼 Audio Time Update: ${audioPlayer.currentTime}s`);
-            updateLyrics(audioPlayer.currentTime);
-        });
-    
-        // Reset lyrics when audio ends
-        audioPlayer.addEventListener('ended', () => {
-            // console.log("🏁 Audio Ended: Resetting Lyrics.");
+
+        // console.log("🕒 Final Timestamps Map: ", timestamps);
+    }
+
+    function updateLyrics(currentTime) {
+        const times = Object.keys(timestamps).map(Number).sort((a, b) => a - b);
+
+        if (times.length === 0) return;
+
+        // Find the latest timestamp that has already passed
+        const lastPassedTimestamp = times
+            .filter(t => currentTime >= t)
+            .pop(); // gets the most recent one (closest in the past)
+
+        // No timestamps reached yet
+        if (lastPassedTimestamp === undefined) return;
+
+        const nextLineId = timestamps[lastPassedTimestamp];
+
+        if (!currentLine || currentLine.dataset.lineId !== nextLineId) {
+            // Mark old line as played
             if (currentLine) {
                 currentLine.classList.remove('active');
+                currentLine.classList.add('played');
             }
-            lyricLines.forEach(line => line.classList.remove('played'));
-            currentLine = null;
+
+            // Activate new line
+            currentLine = document.querySelector(`.lyric-line[data-line-id="${nextLineId}"]`);
+            if (currentLine) {
+                currentLine.classList.add('active');
+                currentLine.classList.remove('played');
+                currentLine.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }
+    }
+    // Click on lyric line to seek to that timestamp
+    lyricLines.forEach(line => {
+        line.addEventListener('click', function() {
+            const lineId = this.dataset.lineId;
+            const lineTimestamps = JSON.parse(this.dataset.timestamps);
+            const currentMp3Id = audioPlayer.dataset.currentMp3Id;
+    
+            if (currentMp3Id && lineTimestamps[currentMp3Id]) {
+                audioPlayer.currentTime = lineTimestamps[currentMp3Id];
+            }
         });
-    
-        // console.log("🎬 Script Setup Complete!");
     });
-    
+
+    // Update lyrics on timeupdate
+    audioPlayer.addEventListener('timeupdate', () => {
+        // console.log(`🎼 Audio Time Update: ${audioPlayer.currentTime}s`);
+        updateLyrics(audioPlayer.currentTime);
+    });
+
+    // Reset lyrics when audio ends
+    audioPlayer.addEventListener('ended', () => {
+        // console.log("🏁 Audio Ended: Resetting Lyrics.");
+        if (currentLine) {
+            currentLine.classList.remove('active');
+        }
+        lyricLines.forEach(line => line.classList.remove('played'));
+        currentLine = null;
+    });
+
+    // console.log("🎬 Script Setup Complete!");
+
 </script>
