@@ -184,6 +184,39 @@
                     <span id="add-mp3-text">Upload Audio File</span>
                     <i class="fas fa-spinner fa-spin ml-2 hidden" id="add-mp3-loader"></i>
                 </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Lyrics Section -->
+    <div id="lyrics-content" class="mb-8">
+        <h2 class="text-xl font-bold text-pyc-text mb-4 flex items-center">
+            <i class="fas fa-align-left text-pyc-green mr-2"></i>
+            Lyrics
+        </h2>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            {% if annotated_lines %}
+                {% for item in annotated_lines %}
+                    {% if item.is_new_section %}
+                        <p class="mt-6 first:mt-0 text-sm font-semibold text-pyc-purple uppercase tracking-wide">
+                            {{ item.line.section.name }}
+                            <span class="text-pyc-text/60 normal-case font-normal italic ml-2">{{ item.line.section.instruction|default:'' }}</span>
+                        </p>
+                    {% endif %}
+                    <p class="lyric-line my-1" 
+                       data-line-id="{{ item.line.id }}" 
+                       data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
+                        {{ item.line.text }} 
+                        <span class="text-pyc-text/50 italic text-sm">{{ item.line.instruction|default:'' }}</span> 
+                    </p>
+                {% endfor %}
+            {% else %}
+                <div class="prose max-w-none">{{ song.lyrics|safe }}</div>
+            {% endif %}
+        </div>
+        
         <button class="mt-4 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" 
                 disabled id="edit-lyrics-btn">
             Edit Lyrics
@@ -325,6 +358,8 @@
 </div>
 
 {% include 'songs/partials/player.html' %}
+
+{% endblock %}
 
 {% block extra_js %}
 <script>
