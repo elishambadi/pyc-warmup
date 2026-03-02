@@ -367,16 +367,6 @@
     document.getElementById('add-mp3-btn').addEventListener('click', function () {
         const file = document.getElementById('new-mp3-file').files[0];
         const voicePart = document.getElementById('new-mp3-voice').value;
-        if (file && voicePart) {
-            // Disable button and show loader
-            this.disabled = true;
-            document.getElementById('add-mp3-text').classList.add('hidden');
-            document.getElementById('add-mp3-loader').classList.remove('hidden');
-            
-            addMP3(file, voicePart);
-    document.getElementById('add-mp3-btn').addEventListener('click', function () {
-        const file = document.getElementById('new-mp3-file').files[0];
-        const voicePart = document.getElementById('new-mp3-voice').value;
         
         if (!file) {
             alert('Please select an audio file');
@@ -395,6 +385,7 @@
         
         addMP3(file, voicePart);
     });
+
     function addMP3(file, voicePart) {
         const formData = new FormData();
         formData.append('file', file);
