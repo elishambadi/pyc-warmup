@@ -48,11 +48,7 @@
     }
 </style>
 
-<div class="max-w-7xl mx-auto pb-32">
-    
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Content (Left/Center) -->
-        <div class="lg:col-span-2">
+<div class="max-w-5xl mx-auto pb-32">
     
     <!-- Header with Title and Actions -->
     <div class="flex items-start justify-between mb-6">
@@ -144,146 +140,141 @@
             </ul>
 
             {% if user|is_admin %}
-            <div class="mt-4 pt-4 border-t space-y-2">
-                <input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent" 
-                       type="file" id="new-mp3-file">
-                <input class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent" 
-                       type="text" id="new-mp3-voice" placeholder="Voice Part">
-                <button class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-                        id="add-mp3-btn">
-                    <i class="fas fa-plus mr-2"></i>
-                    <span id="add-mp3-text">Add MP3</span>
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-pyc-purple mb-4">
+                    <i class="fas fa-plus-circle mr-2"></i>Add New Audio
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-pyc-text mb-2">
+                            <i class="fas fa-file-audio mr-1"></i>Audio File (MP3)
+                        </label>
+                        <input 
+                            class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-pyc-purple/10 file:text-pyc-purple hover:file:bg-pyc-purple/20" 
+                            type="file" 
+                            id="new-mp3-file"
+                            accept="audio/mp3,audio/mpeg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-pyc-text mb-2">
+                            <i class="fas fa-user-music mr-1"></i>Voice Part
+                        </label>
+                        <select 
+                            class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple transition-all" 
+                            id="new-mp3-voice">
+                            <option value="">Select voice part...</option>
+                            <option value="Soprano 1">Soprano 1</option>
+                            <option value="Soprano 2">Soprano 2</option>
+                            <option value="Alto 1">Alto 1</option>
+                            <option value="Alto 2">Alto 2</option>
+                            <option value="Tenor 1">Tenor 1</option>
+                            <option value="Tenor 2">Tenor 2</option>
+                            <option value="Bass 1">Bass 1</option>
+                            <option value="Bass 2">Bass 2</option>
+                            <option value="Lead 1">Lead 1</option>
+                            <option value="Lead 2">Lead 2</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <button 
+                    class="mt-4 w-full md:w-auto px-6 py-3 bg-pyc-green text-white rounded-lg hover:bg-pyc-green/90 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold" 
+                    id="add-mp3-btn">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i>
+                    <span id="add-mp3-text">Upload Audio File</span>
                     <i class="fas fa-spinner fa-spin ml-2 hidden" id="add-mp3-loader"></i>
                 </button>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Lyrics Section -->
-    <div id="lyrics-content" class="mb-8">
-        <h2 class="text-xl font-bold text-pyc-text mb-4 flex items-center">
-            <i class="fas fa-align-left text-pyc-green mr-2"></i>
-            Lyrics
-        </h2>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            {% if annotated_lines %}
-                {% for item in annotated_lines %}
-                    {% if item.is_new_section %}
-                        <p class="mt-6 first:mt-0 text-sm font-semibold text-pyc-purple uppercase tracking-wide">
-                            {{ item.line.section.name }}
-                            <span class="text-pyc-text/60 normal-case font-normal italic ml-2">{{ item.line.section.instruction|default:'' }}</span>
-                        </p>
-                    {% endif %}
-                    <p class="lyric-line my-1" 
-                       data-line-id="{{ item.line.id }}" 
-                       data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
-                        {{ item.line.text }} 
-                        <span class="text-pyc-text/50 italic text-sm">{{ item.line.instruction|default:'' }}</span> 
-                    </p>
-                {% endfor %}
-            {% else %}
-                <div class="prose max-w-none">{{ song.lyrics|safe }}</div>
-            {% endif %}
-        </div>
-        
         <button class="mt-4 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" 
                 disabled id="edit-lyrics-btn">
             Edit Lyrics
         </button>
     </div>
 
-    </div><!-- End Main Content -->
-
-    <!-- Comments Sidebar (Right) - Visible on large screens, bottom on small -->
-    <div class="lg:col-span-1">
-        <div class="lg:sticky lg:top-4">
     <!-- Comments Section -->
     <div class="mb-8">
         <h2 class="text-xl font-bold text-pyc-text mb-4 flex items-center">
             <i class="fas fa-comments text-pyc-purple mr-2"></i>
             Comments
-            <span class="ml-2 px-2 py-1 bg-pyc-purple/10 text-pyc-purple rounded-full text-sm">{{ comments.count }}</span>
+            <span class="ml-2 px-3 py-1 bg-pyc-purple/10 text-pyc-purple rounded-full text-sm font-semibold">{{ comments.count }}</span>
+            <span class="ml-auto text-sm font-normal text-pyc-text/60">
+                <i class="fas fa-eye mr-1"></i>{{ song.views }} views
+            </span>
         </h2>
-        <div class="text-sm text-pyc-text/60 mb-4">
-            <i class="fas fa-eye mr-1"></i>{{ song.views }} views
-        </div>
         
-        <div class="bg-white rounded-lg shadow p-4 max-h-[70vh] overflow-y-auto">
+        <div class="bg-white rounded-lg shadow p-6">
             {% if user.is_authenticated %}
             <!-- Add Comment Form -->
-            <div class="mb-4 pb-4 border-b">
+            <div class="mb-6">
                 <textarea 
                     id="comment-text" 
-                    rows="2" 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent resize-none text-sm"
+                    rows="3" 
+                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple resize-none transition-all"
                     placeholder="Add a comment..."></textarea>
                 <div class="flex justify-end mt-2">
                     <button 
                         id="submit-comment-btn" 
-                        class="px-3 py-1.5 bg-pyc-purple text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm">
-                        <i class="fas fa-paper-plane mr-1"></i>Post
+                        class="px-5 py-2.5 bg-pyc-purple text-white rounded-lg hover:bg-opacity-90 transition-colors font-semibold shadow-md hover:shadow-lg">
+                        <i class="fas fa-paper-plane mr-2"></i>Post Comment
                     </button>
                 </div>
             </div>
             {% else %}
-            <div class="mb-4 pb-4 border-b p-3 bg-gray-50 rounded-lg text-center text-sm">
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg text-center">
                 <p class="text-pyc-text/60">
-                    <a href="{% url 'login' %}?next={{ request.path }}" class="text-pyc-purple font-semibold hover:underline">Log in</a> to comment
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="text-pyc-purple font-semibold hover:underline">Log in</a> to add a comment
                 </p>
             </div>
             {% endif %}
 
             <!-- Comments List -->
-            <div id="comments-list" class="space-y-3">
+            <div id="comments-list" class="space-y-4">
                 {% if comments.count == 0 %}
-                <p class="text-pyc-text/60 italic text-center py-4 text-sm">No comments yet. Be the first!</p>
+                <p class="text-pyc-text/60 italic text-center py-8">No comments yet. Be the first to comment!</p>
                 {% else %}
                     {% for comment in comments %}
-                    <div class="comment border-l-2 border-pyc-orange pl-3 py-2" data-comment-id="{{ comment.id }}">
-                        <div class="flex items-start gap-2">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="font-semibold text-pyc-purple text-sm truncate">{{ comment.user.username }}</span>
-                                    <span class="text-xs text-pyc-text/60 whitespace-nowrap">{{ comment.created_at|timesince }} ago</span>
+                    <div class="comment border-l-4 border-pyc-orange pl-4 py-3 hover:bg-gray-50 transition-colors rounded-r" data-comment-id="{{ comment.id }}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="font-semibold text-pyc-purple">{{ comment.user.username }}</span>
+                                    <span class="text-xs text-pyc-text/60">{{ comment.created_at|timesince }} ago</span>
                                 </div>
-                                <p class="text-pyc-text text-sm break-words">{{ comment.text }}</p>
+                                <p class="text-pyc-text mb-3">{{ comment.text }}</p>
                                 
-                                <div class="mt-2 flex items-center gap-3 text-xs">
+                                <div class="flex items-center gap-4 text-sm">
                                     {% if user.is_authenticated %}
-                                    <button class="like-comment-btn flex items-center gap-1 text-pyc-purple hover:text-pyc-orange transition-colors" data-comment-id="{{ comment.id }}">
+                                    <button class="like-comment-btn flex items-center gap-1.5 text-pyc-purple hover:text-pyc-orange transition-colors" data-comment-id="{{ comment.id }}">
                                         <i class="fas fa-heart"></i>
-                                        <span class="like-count">{{ comment.likes }}</span>
+                                        <span class="like-count font-semibold">{{ comment.likes }}</span>
                                     </button>
                                     <button class="text-pyc-purple hover:underline reply-btn" data-comment-id="{{ comment.id }}">
                                         <i class="fas fa-reply mr-1"></i>Reply
                                     </button>
                                     {% if comment.user == user or user.is_staff %}
                                     <button class="text-red-500 hover:underline delete-comment-btn" data-comment-id="{{ comment.id }}">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash mr-1"></i>Delete
                                     </button>
                                     {% endif %}
                                     {% else %}
-                                    <span class="flex items-center gap-1 text-pyc-text/60">
+                                    <span class="flex items-center gap-1.5 text-pyc-text/60">
                                         <i class="fas fa-heart"></i>
-                                        <span>{{ comment.likes }}</span>
+                                        <span class="font-semibold">{{ comment.likes }}</span>
                                     </span>
                                     {% endif %}
                                 </div>
 
                                 <!-- Reply Form (hidden by default) -->
                                 {% if user.is_authenticated %}
-                                <div class="reply-form mt-2 hidden" data-parent-id="{{ comment.id }}">
+                                <div class="reply-form mt-3 hidden" data-parent-id="{{ comment.id }}">
                                     <textarea 
-                                        class="reply-text w-full px-2 py-1.5 border border-gray-300 rounded text-xs resize-none"
+                                        class="reply-text w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm resize-none focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple"
                                         rows="2" 
                                         placeholder="Write a reply..."></textarea>
-                                    <div class="flex gap-2 mt-1">
-                                        <button class="submit-reply-btn px-2 py-1 bg-pyc-purple text-white rounded text-xs hover:bg-opacity-90">
-                                            Post
+                                    <div class="flex gap-2 mt-2">
+                                        <button class="submit-reply-btn px-4 py-1.5 bg-pyc-purple text-white rounded text-sm hover:bg-opacity-90 font-semibold">
+                                            Post Reply
                                         </button>
-                                        <button class="cancel-reply-btn px-2 py-1 bg-gray-300 text-gray-700 rounded text-xs hover:bg-gray-400">
+                                        <button class="cancel-reply-btn px-4 py-1.5 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400">
                                             Cancel
                                         </button>
                                     </div>
@@ -292,20 +283,48 @@
 
                                 <!-- Replies -->
                                 {% if comment.replies.all %}
-                                <div class="replies mt-2 ml-3 space-y-2">
+                                <div class="replies mt-4 ml-6 space-y-3 border-l-2 border-pyc-purple/20 pl-4">
                                     {% for reply in comment.replies.all %}
-                                    <div class="reply border-l border-pyc-purple pl-2 py-1" data-comment-id="{{ reply.id }}">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="font-semibold text-pyc-purple text-xs">{{ reply.user.username }}</span>
+                                    <div class="reply bg-gray-50 rounded-lg p-3" data-comment-id="{{ reply.id }}">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="font-semibold text-pyc-purple text-sm">{{ reply.user.username }}</span>
                                             <span class="text-xs text-pyc-text/60">{{ reply.created_at|timesince }} ago</span>
                                         </div>
-                                        <p class="text-pyc-text text-xs break-words">{{ reply.text }}</p>
-                                        <div class="mt-1 flex items-center gap-2 text-xs">
+                                        <p class="text-pyc-text text-sm mb-2">{{ reply.text }}</p>
+                                        <div class="flex items-center gap-3 text-xs">
                                             {% if user.is_authenticated %}
                                             <button class="like-comment-btn flex items-center gap-1 text-pyc-purple hover:text-pyc-orange transition-colors" data-comment-id="{{ reply.id }}">
                                                 <i class="fas fa-heart"></i>
-                                                <span class="like-count">{{ reply.likes }}</span>
+                                                <span class="like-count font-semibold">{{ reply.likes }}</span>
                                             </button>
+                                            {% if reply.user == user or user.is_staff %}
+                                            <button class="text-red-500 hover:underline delete-comment-btn" data-comment-id="{{ reply.id }}">
+                                                <i class="fas fa-trash mr-1"></i>Delete
+                                            </button>
+                                            {% endif %}
+                                            {% else %}
+                                            <span class="flex items-center gap-1 text-pyc-text/60">
+                                                <i class="fas fa-heart"></i>
+                                                <span class="font-semibold">{{ reply.likes }}</span>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% include 'songs/partials/player.html' %}  </button>
                                             {% if reply.user == user or user.is_staff %}
                                             <button class="text-red-500 hover:underline delete-comment-btn" data-comment-id="{{ reply.id }}">
                                                 <i class="fas fa-trash"></i>
@@ -388,18 +407,27 @@
             document.getElementById('add-mp3-loader').classList.remove('hidden');
             
             addMP3(file, voicePart);
+    document.getElementById('add-mp3-btn').addEventListener('click', function () {
+        const file = document.getElementById('new-mp3-file').files[0];
+        const voicePart = document.getElementById('new-mp3-voice').value;
+        
+        if (!file) {
+            alert('Please select an audio file');
+            return;
         }
+        
+        if (!voicePart) {
+            alert('Please select a voice part');
+            return;
+        }
+        
+        // Disable button and show loader
+        this.disabled = true;
+        document.getElementById('add-mp3-text').classList.add('hidden');
+        document.getElementById('add-mp3-loader').classList.remove('hidden');
+        
+        addMP3(file, voicePart);
     });
-
-    function saveMP3(mp3Id, newVoicePart) {
-        fetch("{% url 'save_mp3' %}", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-            body: JSON.stringify({ mp3_id: mp3Id, voice_part: newVoicePart })
-        }).then(response => response.json())
-            .then(data => alert(data.success ? "MP3 updated!" : "Error updating MP3."));
-    }
-
     function addMP3(file, voicePart) {
         const formData = new FormData();
         formData.append('file', file);
