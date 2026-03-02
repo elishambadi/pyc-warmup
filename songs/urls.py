@@ -33,6 +33,10 @@ urlpatterns = [
     path('delete-song/<int:song_id>/', views.delete_song, name='delete-song'),
     path('delete-mp3/<int:mp3_id>/', views.delete_mp3, name='delete-mp3'),
 
+    # Comments
+    path('song/<slug:song_slug>/add-comment/', views.add_comment, name='add_comment'),
+    path('comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
+
     # VoiceNote requests
     path('voicenote-request/new/', views.add_voicenote_request, name='add_voicenote_request'),
     path('submit-voicenotes/', views.upload_voicenotes_for_request, name='upload_voicenotes_for_request'),

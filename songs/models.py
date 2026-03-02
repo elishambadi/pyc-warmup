@@ -13,6 +13,7 @@ class Song(models.Model):
     likes = models.IntegerField(default=0)  # new field for song likes
     youtube_link = models.URLField(null=True, blank=True)  # new field for YouTube link
     slogan = models.CharField(max_length=1024, null=True, blank=True)  # new field for slogan
+    views = models.IntegerField(default=0)  # track page views
 
     def __str__(self):
         return self.title
@@ -131,19 +132,19 @@ class Reference(models.Model):
 
 
 class Comment(models.Model):
-    # A comment may be related to either a Song or a specific LyricLine.
-    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="comments", null=True, blank=True)
-    lyric_line = models.ForeignKey(LyricLine, on_delete=models.CASCADE, related_name="comments", null=True, blank=True)
-    # For replies, a comment may have a parent.
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name="comments", default=1)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments", default=1)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name="replies", null=True, blank=True)
     
     text = models.TextField()
-    likes = models.IntegerField(default=0)
-    dislikes = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
-        return self.text[:50]
+        return f"{self.user.username} on {self.song.title}: {self.text[:50]}"
 
 
 class VoiceNoteRequest(models.Model):

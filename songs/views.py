@@ -31,10 +31,26 @@ def home(request):
 
 def song_detail(request, slug):
     song = get_object_or_404(Song, slug=slug)
+    
+    # Track page views with 5-minute cooldown per device
+    device_id = request.COOKIES.get('device_id')
+    if not device_id:
+        import uuid
+        device_id = str(uuid.uuid4())
+    
+    cache_key = f'song_view_{song.id}_{device_id}'
+    from django.core.cache import cache
+    
+    if not cache.get(cache_key):
+        song.views += 1
+        song.save(update_fields=['views'])
+        cache.set(cache_key, True, 300)  # 5 minutes cooldown
+    
     mp3s = song.mp3_files.all()  # Get all MP3s related to this song
     notes = song.notes.all()  # Get all notes related to this song
     lyric_lines = list(song.lyric_lines.all())  # Get all lyric lines related to this song
     references = song.references.all()  # Get all references related to this song
+    comments = song.comments.filter(parent=None)  # Get top-level comments
 
     annotated_lines = []
     current_section = None
@@ -57,14 +73,21 @@ def song_detail(request, slug):
         }
         mp3_timestamps[line.id] = json.dumps(timestamps)
     
-    return render(request, 'songs/song_detail.html', {
+    response = render(request, 'songs/song_detail.html', {
         'song': song,
         'mp3s': mp3s,
         'notes': notes,
         'references': references,
         'mp3_timestamps': mp3_timestamps,
         'annotated_lines': annotated_lines,
+        'comments': comments,
     })
+    
+    # Set device_id cookie if new
+    if not request.COOKIES.get('device_id'):
+        response.set_cookie('device_id', device_id, max_age=365*24*60*60)  # 1 year
+    
+    return response
 
 def add_song(request):
     if request.method == "POST":
@@ -439,6 +462,47 @@ def approve_voicenote(request, song_slug, voicenote_id):
 
     # Redirect back to the song detail page
     return redirect('upload_voicenote', song_slug=song_slug)
+
+@login_required
+def add_comment(request, song_slug):
+    """Add a comment to a song"""
+    if request.method == 'POST':
+        song = get_object_or_404(Song, slug=song_slug)
+        text = request.POST.get('comment_text', '').strip()
+        parent_id = request.POST.get('parent_id')
+        
+        if text:
+            comment = Comment.objects.create(
+                song=song,
+                user=request.user,
+                text=text,
+                parent_id=parent_id if parent_id else None
+            )
+            return JsonResponse({
+                'success': True,
+                'comment': {
+                    'id': comment.id,
+                    'text': comment.text,
+                    'user': comment.user.username,
+                    'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                    'parent_id': comment.parent_id
+                }
+            })
+        return JsonResponse({'success': False, 'error': 'Comment text is required'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def delete_comment(request, comment_id):
+    """Delete a comment (only by owner or admin)"""
+    if request.method == 'DELETE':
+        comment = get_object_or_404(Comment, id=comment_id)
+        
+        # Check if user is owner or admin
+        if comment.user == request.user or request.user.is_staff:
+            comment.delete()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error': 'Permission denied'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
 def add_voicenote_request(request):

@@ -49,9 +49,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'songs',
     'users',
-    'ckeditor',
-    'ckeditor_uploader',
-    'pwa'
 ]
 
 MIDDLEWARE = [
