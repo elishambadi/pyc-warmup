@@ -1,8 +1,9 @@
 from django import forms
 from .models import Song, MP3File, Note, Reference, VoiceNote, VoiceNoteRequest
+from ckeditor.widgets import CKEditorWidget
 
 class SongForm(forms.ModelForm):
-    lyrics = forms.CharField(widget=forms.Textarea, required=False)
+    lyrics = forms.CharField(widget=CKEditorWidget(), required=False)
 
     slogan = forms.CharField(widget=forms.Textarea, required=False)
 
