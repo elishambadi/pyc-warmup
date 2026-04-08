@@ -3,8 +3,15 @@ from .models import Song, MP3File, Note, Reference, LyricLine
 from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm
 from django.http import JsonResponse, HttpResponse
 import json
+from pathlib import Path
+
+from .musicxml import extract_voicenotes_from_musicxml
 
 from bs4 import BeautifulSoup
+
+
+def extract_musicxml_voicenotes(file_path):
+    return extract_voicenotes_from_musicxml(Path(file_path))
 
 def generate_lyric_lines(song_id):
     try:
