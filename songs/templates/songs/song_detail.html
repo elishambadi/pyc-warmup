@@ -27,7 +27,7 @@
 <style>
     .lyric-line {
         transition: all 0.3s ease;
-        padding: 8px 12px;
+        padding: 10px 14px;
         border-radius: 6px;
         cursor: pointer;
     }
@@ -46,9 +46,27 @@
     .lyric-line:hover {
         background-color: #f9fafb;
     }
+
+    .song-sidebar-panel {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.96) 100%);
+        border: 1px solid rgba(229, 231, 235, 0.9);
+        border-radius: 1rem;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .song-sidebar-panel iframe {
+        border-radius: 0.85rem;
+    }
+
+    .lyrics-shell {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 100%);
+        border: 1px solid rgba(229, 231, 235, 0.9);
+        border-radius: 1rem;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    }
 </style>
 
-<div class="max-w-5xl mx-auto pb-32">
+<div class="max-w-7xl mx-auto pb-32">
     
     <!-- Header with Title and Actions -->
     <div class="flex items-start justify-between mb-6">
@@ -67,164 +85,61 @@
         {% endif %}
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 items-start mb-8">
-
-        {% if song.youtube_link %}
-        <div class="md:col-span-2">
-            <div class="relative w-full" style="padding-bottom: 56.25%;">
-                <iframe 
-                    src="{{ song.youtube_link|youtube_embed }}" 
-                    frameborder="0" 
-                    class="absolute top-0 left-0 w-full h-full rounded-xl shadow-2xl"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerpolicy="strict-origin-when-cross-origin"
-                    allowfullscreen
-                    >
-                </iframe>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if song.slogan %}
-        <div class="md:col-span-2">
-            <div class="p-6 h-full flex items-center bg-pyc-purple/10 border-l-4 border-pyc-purple rounded-xl shadow-lg">
-                <blockquote class="text-pyc-text italic text-lg leading-relaxed">
-                    {{ song.slogan|safe }}
-                </blockquote>
-            </div>
-        </div>
-        {% endif %}
-
-    </div>
-
-    <!-- Voicenotes & Audios Section -->
-    <div class="mb-8">
-        <h2 class="text-xl font-bold text-pyc-text mb-4 flex items-center">
-            <i class="fas fa-microphone text-pyc-orange mr-2"></i>
-            Voicenotes & Audios
-        </h2>
-        
-        <div class="bg-white rounded-lg shadow p-4">
-            <ul id="mp3-files" class="space-y-2">
-               
-                {% if mp3s.count == 0 %}
-                <li class="text-pyc-text/60 italic">No audio files available.</li>
-                {% else %}
-                    {% for mp3 in mp3s %}
-                    <li class="flex items-center justify-between p-3 hover:bg-gray-50 rounded transition-colors">
-                        <span class="mp3-voice text-pyc-purple font-medium cursor-pointer hover:text-pyc-orange transition-colors" 
-                              data-mp3-url="{{ mp3.file.url }}" 
-                              data-mp3-id="{{ mp3.id }}" 
-                              data-mp3-voice-part="{{ mp3.voice_part }}">
-                            <i class="fas fa-play-circle mr-2"></i>{{ mp3.voice_part }} Audio
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div class="lg:col-span-8 xl:col-span-9 space-y-8 min-w-0">
+            <!-- Lyrics Section -->
+            <div id="lyrics-content" class="mb-0">
+                <div class="flex flex-col gap-4 mb-5 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full bg-pyc-green/10 text-pyc-green text-sm font-semibold mb-3">
+                            <i class="fas fa-align-left mr-2"></i>Lyrics First
                         </span>
-                        {% if user|is_admin %}
-                        <div class="flex gap-2">
-                            <a href="{% url 'sync-mp3' mp3.id %}" 
-                               class="px-3 py-1 bg-pyc-orange text-white rounded hover:bg-opacity-90 transition-colors text-sm">
-                                {% if mp3.is_fully_synced %}
-                                    <i class="fas fa-check mr-1"></i>Edit Sync
-                                {% else %}
-                                    <i class="fas fa-music mr-1"></i>Sync Lyrics
-                                {% endif %}
-                            </a>
-                            <button class="px-3 py-1 bg-pyc-purple text-white rounded hover:bg-opacity-90 transition-colors text-sm edit-mp3-btn" 
-                                    data-mp3-id="{{ mp3.id }}">Edit</button>
-                            <button class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm delete-mp3-btn" 
-                                    data-mp3-id="{{ mp3.id }}">Delete</button>
-                        </div>
-                        {% endif %}
-                    </li>
-                    {% endfor %}
-                {% endif %}
-            </ul>
-
-            {% if user|is_admin %}
-            <div class="mt-6 pt-6 border-t border-gray-200">
-                <h3 class="text-lg font-semibold text-pyc-purple mb-4">
-                    <i class="fas fa-plus-circle mr-2"></i>Add New Audio
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-pyc-text mb-2">
-                            <i class="fas fa-file-audio mr-1"></i>Audio File (MP3)
-                        </label>
-                        <input 
-                            class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-pyc-purple/10 file:text-pyc-purple hover:file:bg-pyc-purple/20" 
-                            type="file" 
-                            id="new-mp3-file"
-                            accept="audio/mp3,audio/mpeg">
+                        <h2 class="text-2xl md:text-3xl font-bold text-pyc-text">Lyrics</h2>
+                        <p class="text-pyc-text/65 mt-2 max-w-2xl">
+                            Follow the words comfortably while rehearsal tools stay close by in the sidebar.
+                        </p>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-pyc-text mb-2">
-                            <i class="fas fa-user-music mr-1"></i>Voice Part
-                        </label>
-                        <select 
-                            class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple transition-all" 
-                            id="new-mp3-voice">
-                            <option value="">Select voice part...</option>
-                            <option value="Soprano 1">Soprano 1</option>
-                            <option value="Soprano 2">Soprano 2</option>
-                            <option value="Alto 1">Alto 1</option>
-                            <option value="Alto 2">Alto 2</option>
-                            <option value="Tenor 1">Tenor 1</option>
-                            <option value="Tenor 2">Tenor 2</option>
-                            <option value="Bass 1">Bass 1</option>
-                            <option value="Bass 2">Bass 2</option>
-                            <option value="Lead 1">Lead 1</option>
-                            <option value="Lead 2">Lead 2</option>
-                            <option value="Other">Other</option>
-                        </select>
+                    <div class="flex flex-wrap gap-2 text-sm">
+                        <span class="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-pyc-text/70">
+                            <i class="fas fa-microphone text-pyc-orange mr-1.5"></i>{{ mp3s.count }} audio{{ mp3s.count|pluralize }}
+                        </span>
+                        {% if song.youtube_link %}
+                        <span class="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-pyc-text/70">
+                            <i class="fab fa-youtube text-red-500 mr-1.5"></i>Video guide
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
-                <button 
-                    class="mt-4 w-full md:w-auto px-6 py-3 bg-pyc-green text-white rounded-lg hover:bg-pyc-green/90 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold" 
-                    id="add-mp3-btn">
-                    <i class="fas fa-cloud-upload-alt mr-2"></i>
-                    <span id="add-mp3-text">Upload Audio File</span>
-                    <i class="fas fa-spinner fa-spin ml-2 hidden" id="add-mp3-loader"></i>
+
+                <div class="lyrics-shell p-6 md:p-8">
+                    {% if annotated_lines %}
+                        {% for item in annotated_lines %}
+                            {% if item.is_new_section %}
+                                <p class="mt-6 first:mt-0 text-sm font-semibold text-pyc-purple uppercase tracking-wide">
+                                    {{ item.line.section.name }}
+                                    <span class="text-pyc-text/60 normal-case font-normal italic ml-2">{{ item.line.section.instruction|default:'' }}</span>
+                                </p>
+                            {% endif %}
+                            <p class="lyric-line my-1" 
+                               data-line-id="{{ item.line.id }}" 
+                               data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
+                                {{ item.line.text }} 
+                                <span class="text-pyc-text/50 italic text-sm">{{ item.line.instruction|default:'' }}</span> 
+                            </p>
+                        {% endfor %}
+                    {% else %}
+                        <div class="prose max-w-none prose-p:leading-8 prose-p:text-base md:prose-p:text-lg">{{ song.lyrics|safe }}</div>
+                    {% endif %}
+                </div>
+
+                <button class="mt-4 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" 
+                        disabled id="edit-lyrics-btn">
+                    Edit Lyrics
                 </button>
             </div>
-            {% endif %}
-        </div>
-    </div>
 
-    <!-- Lyrics Section -->
-    <div id="lyrics-content" class="mb-8">
-        <h2 class="text-xl font-bold text-pyc-text mb-4 flex items-center">
-            <i class="fas fa-align-left text-pyc-green mr-2"></i>
-            Lyrics
-        </h2>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            {% if annotated_lines %}
-                {% for item in annotated_lines %}
-                    {% if item.is_new_section %}
-                        <p class="mt-6 first:mt-0 text-sm font-semibold text-pyc-purple uppercase tracking-wide">
-                            {{ item.line.section.name }}
-                            <span class="text-pyc-text/60 normal-case font-normal italic ml-2">{{ item.line.section.instruction|default:'' }}</span>
-                        </p>
-                    {% endif %}
-                    <p class="lyric-line my-1" 
-                       data-line-id="{{ item.line.id }}" 
-                       data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
-                        {{ item.line.text }} 
-                        <span class="text-pyc-text/50 italic text-sm">{{ item.line.instruction|default:'' }}</span> 
-                    </p>
-                {% endfor %}
-            {% else %}
-                <div class="prose max-w-none">{{ song.lyrics|safe }}</div>
-            {% endif %}
-        </div>
-        
-        <button class="mt-4 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" 
-                disabled id="edit-lyrics-btn">
-            Edit Lyrics
-        </button>
-    </div>
-
-    <!-- Comments Section -->
-    <div class="mb-8">
+            <!-- Comments Section -->
+            <div class="mb-8">
         <h2 class="text-xl font-bold text-pyc-text mb-4 flex items-center">
             <i class="fas fa-comments text-pyc-purple mr-2"></i>
             Comments
@@ -352,7 +267,141 @@
                     {% endfor %}
                 {% endif %}
             </div>
+            </div>
         </div>
+
+        <aside class="lg:col-span-4 xl:col-span-3 space-y-6 lg:sticky lg:top-24">
+            {% if song.slogan %}
+            <section class="song-sidebar-panel p-6 border-l-4 border-pyc-purple">
+                <div class="flex items-center text-pyc-purple font-semibold text-sm uppercase tracking-wide mb-3">
+                    <i class="fas fa-quote-left mr-2"></i>Verse Note
+                </div>
+                <blockquote class="text-pyc-text italic text-base leading-relaxed">
+                    {{ song.slogan|safe }}
+                </blockquote>
+            </section>
+            {% endif %}
+
+            {% if song.youtube_link %}
+            <section class="song-sidebar-panel p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-pyc-text flex items-center">
+                        <i class="fab fa-youtube text-red-500 mr-2"></i>
+                        Video
+                    </h2>
+                    <span class="text-xs font-semibold uppercase tracking-wide text-pyc-text/50">Watch</span>
+                </div>
+                <div class="relative w-full overflow-hidden rounded-xl" style="padding-bottom: 56.25%;">
+                    <iframe 
+                        src="{{ song.youtube_link|youtube_embed }}" 
+                        frameborder="0" 
+                        class="absolute top-0 left-0 w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen
+                        >
+                    </iframe>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Voicenotes & Audios Section -->
+            <section class="song-sidebar-panel p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-pyc-text flex items-center">
+                        <i class="fas fa-microphone text-pyc-orange mr-2"></i>
+                        Voicenotes & Audios
+                    </h2>
+                    <span class="text-xs font-semibold uppercase tracking-wide text-pyc-text/50">Listen</span>
+                </div>
+
+                <ul id="mp3-files" class="space-y-2">
+                    {% if mp3s.count == 0 %}
+                    <li class="text-pyc-text/60 italic px-1 py-2">No audio files available.</li>
+                    {% else %}
+                        {% for mp3 in mp3s %}
+                        <li class="p-3 rounded-xl bg-white/80 border border-gray-100 hover:bg-white transition-colors">
+                            <div class="flex items-start justify-between gap-3">
+                                <span class="mp3-voice text-pyc-purple font-medium cursor-pointer hover:text-pyc-orange transition-colors leading-snug" 
+                                      data-mp3-url="{{ mp3.file.url }}" 
+                                      data-mp3-id="{{ mp3.id }}" 
+                                      data-mp3-voice-part="{{ mp3.voice_part }}">
+                                    <i class="fas fa-play-circle mr-2"></i>{{ mp3.voice_part }} Audio
+                                </span>
+                                {% if user|is_admin %}
+                                <span class="text-[11px] uppercase tracking-wide text-pyc-text/40">Admin</span>
+                                {% endif %}
+                            </div>
+                            {% if user|is_admin %}
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <a href="{% url 'sync-mp3' mp3.id %}" 
+                                   class="px-3 py-1 bg-pyc-orange text-white rounded hover:bg-opacity-90 transition-colors text-sm">
+                                    {% if mp3.is_fully_synced %}
+                                        <i class="fas fa-check mr-1"></i>Edit Sync
+                                    {% else %}
+                                        <i class="fas fa-music mr-1"></i>Sync Lyrics
+                                    {% endif %}
+                                </a>
+                                <button class="px-3 py-1 bg-pyc-purple text-white rounded hover:bg-opacity-90 transition-colors text-sm edit-mp3-btn" 
+                                        data-mp3-id="{{ mp3.id }}">Edit</button>
+                                <button class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm delete-mp3-btn" 
+                                        data-mp3-id="{{ mp3.id }}">Delete</button>
+                            </div>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+
+                {% if user|is_admin %}
+                <div class="mt-6 pt-5 border-t border-gray-200">
+                    <h3 class="text-base font-semibold text-pyc-purple mb-4">
+                        <i class="fas fa-plus-circle mr-2"></i>Add New Audio
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-pyc-text mb-2">
+                                <i class="fas fa-file-audio mr-1"></i>Audio File (MP3)
+                            </label>
+                            <input 
+                                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-pyc-purple/10 file:text-pyc-purple hover:file:bg-pyc-purple/20" 
+                                type="file" 
+                                id="new-mp3-file"
+                                accept="audio/mp3,audio/mpeg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-pyc-text mb-2">
+                                <i class="fas fa-user-music mr-1"></i>Voice Part
+                            </label>
+                            <select 
+                                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple transition-all" 
+                                id="new-mp3-voice">
+                                <option value="">Select voice part...</option>
+                                <option value="Soprano 1">Soprano 1</option>
+                                <option value="Soprano 2">Soprano 2</option>
+                                <option value="Alto 1">Alto 1</option>
+                                <option value="Alto 2">Alto 2</option>
+                                <option value="Tenor 1">Tenor 1</option>
+                                <option value="Tenor 2">Tenor 2</option>
+                                <option value="Bass 1">Bass 1</option>
+                                <option value="Bass 2">Bass 2</option>
+                                <option value="Lead 1">Lead 1</option>
+                                <option value="Lead 2">Lead 2</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button 
+                        class="mt-4 w-full px-6 py-3 bg-pyc-green text-white rounded-lg hover:bg-pyc-green/90 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold" 
+                        id="add-mp3-btn">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i>
+                        <span id="add-mp3-text">Upload Audio File</span>
+                        <i class="fas fa-spinner fa-spin ml-2 hidden" id="add-mp3-loader"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </section>
+        </aside>
     </div>
 
 </div>
