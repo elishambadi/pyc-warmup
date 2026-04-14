@@ -9,8 +9,7 @@ Discover '{{ song.title }}' with lyrics {% if song.composer %} by {{ song.compos
 WarmUp App. Practice with synced lyrics, voice parts, and embedded video/audio training.
 {% endblock %}
 
-{% block og_title %}{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %} | PYC WarmUp App{% endblock
-%}
+{% block og_title %}{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %} | PYC WarmUp App{% endblock %}
 
 {% block og_description %}
 Access '{{ song.title }}' with synced lyrics, training audio files, and video resources. Part of your choir preparation
@@ -25,8 +24,7 @@ App.
 {% endblock %}
 
 <!-- add block keywords with song title and composer -->
-{% block keywords %}Parklands Youth Choir, choir, warm-up, voice notes, {{ song.title }} lyrics, {% if song.composer %},
-{{ song.composer }}{% endif %}{% endblock %}
+{% block keywords %}Parklands Youth Choir, choir, warm-up, voice notes, {{ song.title }} lyrics, {% if song.composer %}, {{ song.composer }}{% endif %}{% endblock %}
 
 {% block content %}
 
@@ -104,8 +102,7 @@ App.
                         </span>
                         <h2 class="text-2xl md:text-3xl font-bold text-pyc-text">{% trans "Lyrics" %}</h2>
                         <p class="text-pyc-text/65 mt-2 max-w-2xl">
-                            {% trans "Follow the words comfortably while rehearsal tools stay close by in the sidebar."
-                            %}
+                            {% trans "Follow the words comfortably while rehearsal tools stay close by in the sidebar." %}
                         </p>
                     </div>
                     <div class="flex flex-wrap gap-2 text-sm">
@@ -179,8 +176,7 @@ App.
                     <div class="mb-6 p-4 bg-gray-50 rounded-lg text-center">
                         <p class="text-pyc-text/60">
                             <a href="{% url 'login' %}?next={{ request.path }}"
-                                class="text-pyc-purple font-semibold hover:underline">{% trans "Log in" %}</a> {% trans
-                            "to add a comment" %}
+                                class="text-pyc-purple font-semibold hover:underline">{% trans "Log in" %}</a> {% trans "to add a comment" %}
                         </p>
                     </div>
                     {% endif %}
@@ -188,8 +184,7 @@ App.
                     <!-- Comments List -->
                     <div id="comments-list" class="space-y-4">
                         {% if comments.count == 0 %}
-                        <p class="text-pyc-text/60 italic text-center py-8">{% trans "No comments yet. Be the first to
-                            comment!" %}</p>
+                        <p class="text-pyc-text/60 italic text-center py-8">{% trans "No comments yet. Be the first to comment!" %}</p>
                         {% else %}
                         {% for comment in comments %}
                         <div class="comment border-l-4 border-pyc-orange pl-4 py-3 hover:bg-gray-50 transition-colors rounded-r"
@@ -315,8 +310,7 @@ App.
                         <i class="fab fa-youtube text-red-500 mr-2"></i>
                         {% trans "Video" %}
                     </h2>
-                    <span class="text-xs font-semibold uppercase tracking-wide text-pyc-text/50">{% trans "Watch"
-                        %}</span>
+                    <span class="text-xs font-semibold uppercase tracking-wide text-pyc-text/50">{% trans "Watch" %}</span>
                 </div>
                 <div class="relative w-full overflow-hidden rounded-xl" style="padding-bottom: 56.25%;">
                     <iframe src="{{ song.youtube_link|youtube_embed }}" frameborder="0"
@@ -335,8 +329,7 @@ App.
                         <i class="fas fa-microphone text-pyc-orange mr-2"></i>
                         {% trans "Voicenotes & Audios" %}
                     </h2>
-                    <span class="text-xs font-semibold uppercase tracking-wide text-pyc-text/50">{% trans "Listen"
-                        %}</span>
+                    <span class="text-xs font-semibold uppercase tracking-wide text-pyc-text/50">{% trans "Listen" %}</span>
                 </div>
 
                 <ul id="mp3-files" class="space-y-2">
