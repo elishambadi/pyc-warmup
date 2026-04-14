@@ -1,8 +1,9 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 {% load custom_filters %}
 {% load pwa %}
+{% load i18n %}
 
 <head>
   <meta charset="UTF-8">
@@ -93,33 +94,58 @@
         <!-- Desktop Navigation -->
         <div class="hidden lg:flex items-center space-x-6">
           <a href="https://pychoir.parklandssda.org/" target="_blank" 
-             class="text-white hover:text-pyc-orange transition-colors">About PYC</a>
+             class="text-white hover:text-pyc-orange transition-colors">{% trans "About PYC" %}</a>
           <a href="{% url 'song_list' %}" 
-             class="text-white hover:text-pyc-orange transition-colors">Songs</a>
+             class="text-white hover:text-pyc-orange transition-colors">{% trans "Songs" %}</a>
           <a href="{% url 'add_song' %}" 
-             class="text-white hover:text-pyc-orange transition-colors">Add Song</a>
+             class="text-white hover:text-pyc-orange transition-colors">{% trans "Add Song" %}</a>
              <!-- Display coming soon tooltip for Tailwind when someone hovers over our members -->
           <a href="#" 
-             class="text-white hover:text-pyc-orange transition-colors" disabled title="Coming Soon">Our Members</a>
+             class="text-white hover:text-pyc-orange transition-colors" disabled title="{% trans 'Coming Soon' %}">{% trans "Our Members" %}</a>
 
           {% if user.is_authenticated %}
-            <span class="text-white/90">Welcome, {{ user.username }}!</span>
+            <span class="text-white/90">{% blocktrans with username=user.username %}Welcome, {{ username }}!{% endblocktrans %}</span>
             {% if user|is_admin %}
               <a href="{% url 'admin:index' %}" 
                  class="px-4 py-2 bg-pyc-orange text-white rounded-lg hover:bg-opacity-90 transition-colors">
-                Admin
+                {% trans "Admin" %}
               </a>
             {% endif %}
             <a href="{% url 'logout' %}" 
                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-              Logout
+              {% trans "Logout" %}
             </a>
           {% else %}
             <a href="{% url 'login' %}" 
                class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors">
-              Login
+              {% trans "Login" %}
             </a>
           {% endif %}
+
+          <!-- Language Picker -->
+          <div class="relative" id="lang-picker">
+            <button onclick="document.getElementById('lang-menu').classList.toggle('hidden')"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors">
+              <i class="fas fa-globe text-pyc-orange"></i>
+              <span>{{ LANGUAGE_CODE|upper|slice:":2" }}</span>
+              <i class="fas fa-chevron-down text-xs opacity-70"></i>
+            </button>
+            <div id="lang-menu" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+              <form action="{% url 'set_language' %}" method="post" id="lang-form">
+                {% csrf_token %}
+                <input name="next" type="hidden" value="{{ request.path }}">
+                {% get_available_languages as languages %}
+                {% get_current_language as current_lang %}
+                {% for lang_code, lang_name in languages %}
+                <button type="submit" name="language" value="{{ lang_code }}"
+                        class="w-full text-left px-4 py-2.5 text-sm text-pyc-text hover:bg-pyc-purple/10 transition-colors flex items-center justify-between {% if lang_code == current_lang %}font-semibold text-pyc-purple{% endif %}">
+                  {{ lang_name }}
+                  {% if lang_code == current_lang %}<i class="fas fa-check text-pyc-purple text-xs"></i>{% endif %}
+                </button>
+                {% endfor %}
+              </form>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -127,32 +153,51 @@
       <div id="mobile-menu" class="hidden lg:hidden pb-4">
         <div class="flex flex-col space-y-3">
           <a href="https://pychoir.parklandssda.org/" target="_blank" 
-             class="text-white hover:text-pyc-orange transition-colors">About PYC</a>
+             class="text-white hover:text-pyc-orange transition-colors">{% trans "About PYC" %}</a>
           <a href="{% url 'song_list' %}" 
-             class="text-white hover:text-pyc-orange transition-colors">Songs</a>
+             class="text-white hover:text-pyc-orange transition-colors">{% trans "Songs" %}</a>
           <a href="{% url 'add_song' %}" 
-             class="text-white hover:text-pyc-orange transition-colors">Add Song</a>
+             class="text-white hover:text-pyc-orange transition-colors">{% trans "Add Song" %}</a>
           <a href="#" 
-             class="text-white hover:text-pyc-orange transition-colors">References</a>
+             class="text-white hover:text-pyc-orange transition-colors">{% trans "References" %}</a>
           
           {% if user.is_authenticated %}
-            <span class="text-white/90 text-sm">Welcome, {{ user.username }}!</span>
+            <span class="text-white/90 text-sm">{% blocktrans with username=user.username %}Welcome, {{ username }}!{% endblocktrans %}</span>
             {% if user|is_admin %}
               <a href="{% url 'admin:index' %}" 
                  class="px-4 py-2 bg-pyc-orange text-white rounded-lg hover:bg-opacity-90 transition-colors text-center">
-                Admin
+                {% trans "Admin" %}
               </a>
             {% endif %}
             <a href="{% url 'logout' %}" 
                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-center">
-              Logout
+              {% trans "Logout" %}
             </a>
           {% else %}
             <a href="{% url 'login' %}" 
                class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors text-center">
-              Login
+              {% trans "Login" %}
             </a>
           {% endif %}
+
+          <!-- Mobile Language Picker -->
+          <div class="pt-2 border-t border-white/20">
+            <p class="text-white/60 text-xs uppercase tracking-wide mb-2"><i class="fas fa-globe mr-1"></i>{% trans "Language" %}</p>
+            <form action="{% url 'set_language' %}" method="post">
+              {% csrf_token %}
+              <input name="next" type="hidden" value="{{ request.path }}">
+              {% get_available_languages as languages %}
+              {% get_current_language as current_lang %}
+              <div class="grid grid-cols-2 gap-2">
+                {% for lang_code, lang_name in languages %}
+                <button type="submit" name="language" value="{{ lang_code }}"
+                        class="px-3 py-1.5 rounded-lg text-sm text-center transition-colors {% if lang_code == current_lang %}bg-pyc-orange text-white font-semibold{% else %}bg-white/10 text-white hover:bg-white/20{% endif %}">
+                  {{ lang_name }}
+                </button>
+                {% endfor %}
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

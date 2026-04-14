@@ -1,0 +1,165 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-08 12:29+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: songs/templates/base.html:97 songs/templates/base.html:156
+msgid "About PYC"
+msgstr ""
+
+#: songs/templates/base.html:99 songs/templates/base.html:158
+msgid "Songs"
+msgstr ""
+
+#: songs/templates/base.html:101 songs/templates/base.html:160
+msgid "Add Song"
+msgstr ""
+
+#: songs/templates/base.html:104
+msgid "Coming Soon"
+msgstr ""
+
+#: songs/templates/base.html:104
+msgid "Our Members"
+msgstr ""
+
+#: songs/templates/base.html:107 songs/templates/base.html:165
+#, python-format
+msgid "Welcome, %(username)s!"
+msgstr ""
+
+#: songs/templates/base.html:111 songs/templates/base.html:169
+msgid "Admin"
+msgstr ""
+
+#: songs/templates/base.html:116 songs/templates/base.html:174
+msgid "Logout"
+msgstr ""
+
+#: songs/templates/base.html:121 songs/templates/base.html:179
+msgid "Login"
+msgstr ""
+
+#: songs/templates/base.html:162
+msgid "References"
+msgstr ""
+
+#: songs/templates/base.html:185
+msgid "Language"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:84
+msgid "Delete Song"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:96
+msgid "Lyrics First"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:98
+msgid "Lyrics"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:100
+msgid "Follow the words comfortably while rehearsal tools stay close by in the sidebar."
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:146
+msgid "Comments"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:149
+#, python-format
+msgid "%(views)s views"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:161
+msgid "Add a comment..."
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:166
+msgid "Post Comment"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:173
+msgid "Log in"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:173
+msgid "to add a comment"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:181
+msgid "No comments yet. Be the first to comment!"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:200
+msgid "Reply"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:204
+msgid "Delete"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:221
+msgid "Write a reply..."
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:224
+msgid "Post Reply"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:227
+msgid "Cancel"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:278
+msgid "Verse Note"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:291
+msgid "Video"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:293
+msgid "Watch"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:314
+msgid "Voicenotes & Audios"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:316
+msgid "Listen"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:321
+msgid "No audio files available."
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:330
+msgid "Audio"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:360
+msgid "Add New Audio"
+msgstr ""
+
+#: songs/templates/songs/song_detail.html:399
+msgid "Upload Audio File"
+msgstr ""

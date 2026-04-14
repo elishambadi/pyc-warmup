@@ -22,14 +22,17 @@ from songs.views import home
 import pwa
 
 urlpatterns = [
-    path('', home, name='home'),
+    # Language switcher — must be outside i18n_patterns
+    path('i18n/', include('django.conf.urls.i18n')),
     path('admin/', admin.site.urls),
     path('serviceworker.js', TemplateView.as_view(template_name="serviceworker.js", content_type='application/javascript')),
     path('offline/', TemplateView.as_view(template_name="offline.html"), name='offline'),
+    path('', include('pwa.urls')),
+    path('', home, name='home'),
     path('', include('songs.urls')),
     path('', include('users.urls')),
-    path('', include('pwa.urls')),
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
