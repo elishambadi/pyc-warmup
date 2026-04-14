@@ -86,8 +86,8 @@
         {% endif %}
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-12 gap-8 items-start">
-        <div class="sm:col-span-2 lg:col-span-8 xl:col-span-9 space-y-8 min-w-0">
+    <div class="flex flex-col md:flex-row gap-8 items-start">
+        <div class="w-full md:flex-1 min-w-0 space-y-8">
             <!-- Lyrics Section -->
             <div id="lyrics-content" class="mb-0">
                 <div class="flex flex-col gap-4 mb-5 md:flex-row md:items-end md:justify-between">
@@ -271,7 +271,7 @@
             </div>
         </div>
 
-        <aside class="sm:col-span-1 lg:col-span-4 xl:col-span-3 space-y-6 sm:sticky sm:top-24 self-start">
+        <aside class="w-full md:w-80 lg:w-96 shrink-0 space-y-6 md:sticky md:top-24 self-start">
             {% if song.slogan %}
             <section class="song-sidebar-panel p-6 border-l-4 border-pyc-purple">
                 <div class="flex items-center text-pyc-purple font-semibold text-sm uppercase tracking-wide mb-3">
