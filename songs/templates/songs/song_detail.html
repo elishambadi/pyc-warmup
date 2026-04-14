@@ -107,8 +107,7 @@ App.
                     </div>
                     <div class="flex flex-wrap gap-2 text-sm">
                         <span class="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-pyc-text/70">
-                            <i class="fas fa-microphone text-pyc-orange mr-1.5"></i>{{ mp3s.count }} audio{{
-                            mp3s.count|pluralize }}
+                            <i class="fas fa-microphone text-pyc-orange mr-1.5"></i>{{ mp3s.count }} audio {{mp3s.count|pluralize }}
                         </span>
                         {% if song.youtube_link %}
                         <span class="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-pyc-text/70">
@@ -124,8 +123,7 @@ App.
                     {% if item.is_new_section %}
                     <p class="mt-6 first:mt-0 text-sm font-semibold text-pyc-purple uppercase tracking-wide">
                         {{ item.line.section.name }}
-                        <span class="text-pyc-text/60 normal-case font-normal italic ml-2">{{
-                            item.line.section.instruction|default:'' }}</span>
+                        <span class="text-pyc-text/60 normal-case font-normal italic ml-2">{{ item.line.section.instruction|default:'' }}</span>
                     </p>
                     {% endif %}
                     <p class="lyric-line my-1" data-line-id="{{ item.line.id }}"
