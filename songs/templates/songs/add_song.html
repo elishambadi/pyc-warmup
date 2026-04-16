@@ -73,11 +73,18 @@
                     </div>
                 </div>
 
-                <button type="button" 
-                        class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors flex items-center" 
-                        onclick="addLyricsSection()">
-                    <i class="fas fa-plus mr-2"></i> Add Section
-                </button>
+                <div class="flex gap-2 flex-wrap">
+                    <button type="button" 
+                            class="px-4 py-2 bg-pyc-green text-white rounded-lg hover:bg-opacity-90 transition-colors flex items-center" 
+                            onclick="addLyricsSection()">
+                        <i class="fas fa-plus mr-2"></i> Add Section
+                    </button>
+                    <button type="button"
+                            class="px-4 py-2 bg-pyc-purple text-white rounded-lg hover:bg-opacity-90 transition-colors flex items-center"
+                            onclick="openPasteModal()">
+                        <i class="fas fa-paste mr-2"></i> Paste & Extract Sections
+                    </button>
+                </div>
             </div>
 
             <div class="mb-6">
@@ -107,6 +114,47 @@
         </form>
     </div>
 
+    <!-- Paste & Extract Modal -->
+    <div id="paste-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-pyc-purple flex items-center gap-2">
+                    <i class="fas fa-paste text-pyc-orange"></i> Paste &amp; Extract Sections
+                </h3>
+                <button onclick="closePasteModal()" class="text-gray-400 hover:text-gray-600 transition-colors text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4 flex-1 overflow-y-auto">
+                <p class="text-sm text-pyc-text/70 mb-3">
+                    Paste your full song lyrics below. Each <strong>empty line</strong> will become a new section.
+                    Optionally add a <strong>section title</strong> as the first line of each block (e.g. <code class="bg-gray-100 px-1 rounded">Verse 1</code>).
+                </p>
+                <textarea id="paste-input" rows="16"
+                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple resize-none font-mono text-sm"
+                    placeholder="Verse 1&#10;Amazing grace how sweet the sound&#10;That saved a wretch like me&#10;&#10;Chorus&#10;I once was lost but now I'm found&#10;Was blind but now I see"></textarea>
+                <div id="paste-preview" class="hidden mt-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-pyc-text/50 mb-2">Preview — <span id="preview-count"></span> sections found</p>
+                    <div id="preview-sections" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
+                <button type="button" onclick="previewExtraction()"
+                    class="px-4 py-2 bg-gray-100 text-pyc-text rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    <i class="fas fa-eye mr-1"></i> Preview
+                </button>
+                <button type="button" onclick="applyExtraction()"
+                    class="px-5 py-2 bg-pyc-purple text-white rounded-lg hover:bg-opacity-90 transition-colors font-semibold">
+                    <i class="fas fa-check mr-1"></i> Apply to Form
+                </button>
+                <button type="button" onclick="closePasteModal()"
+                    class="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
     <style>
         /* Style Django form fields */
         #id_title, #id_composer, #id_youtube_link {
@@ -119,9 +167,8 @@
         
         #id_title:focus, #id_composer:focus, #id_youtube_link:focus {
             outline: none;
-            ring: 2px;
-            ring-color: #4B3FA0;
-            border-color: transparent;
+            border-color: #4B3FA0;
+            box-shadow: 0 0 0 2px rgba(75, 63, 160, 0.2);
         }
 
         .lyrics-section {
@@ -278,5 +325,68 @@
             });
             sectionCount = sections.length;
         }
+
+        // --- Paste & Extract Modal ---
+        function openPasteModal() {
+            document.getElementById('paste-modal').classList.remove('hidden');
+            document.getElementById('paste-modal').classList.add('flex');
+            document.getElementById('paste-input').focus();
+        }
+
+        function closePasteModal() {
+            document.getElementById('paste-modal').classList.add('hidden');
+            document.getElementById('paste-modal').classList.remove('flex');
+            document.getElementById('paste-preview').classList.add('hidden');
+        }
+
+        function extractSections(raw) {
+            // Split on one or more blank lines
+            const blocks = raw.split(/\n\s*\n/).map(b => b.trim()).filter(b => b.length > 0);
+            return blocks.map(block => {
+                const lines = block.split('\n');
+                // Heuristic: if the first line has no spaces or is short (≤30 chars) and the block has >1 line, treat it as a title
+                let title = '';
+                let lyrics = block;
+                if (lines.length > 1 && lines[0].trim().length <= 30) {
+                    title = lines[0].trim();
+                    lyrics = lines.slice(1).join('\n').trim();
+                }
+                return { title, lyrics };
+            });
+        }
+
+        function previewExtraction() {
+            const raw = document.getElementById('paste-input').value.trim();
+            if (!raw) return;
+            const sections = extractSections(raw);
+            const previewEl = document.getElementById('paste-preview');
+            const previewSections = document.getElementById('preview-sections');
+            document.getElementById('preview-count').textContent = sections.length;
+            previewSections.innerHTML = sections.map((s, i) => `
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <p class="text-xs font-semibold text-pyc-purple mb-1">${s.title || `Section ${i + 1}`}</p>
+                    <p class="text-xs text-pyc-text/70 font-mono whitespace-pre-wrap">${s.lyrics.substring(0, 120)}${s.lyrics.length > 120 ? '…' : ''}</p>
+                </div>
+            `).join('');
+            previewEl.classList.remove('hidden');
+        }
+
+        function applyExtraction() {
+            const raw = document.getElementById('paste-input').value.trim();
+            if (!raw) { closePasteModal(); return; }
+            const sections = extractSections(raw);
+            // Clear existing sections
+            document.getElementById('lyrics-sections').innerHTML = '';
+            sectionCount = 0;
+            // Add each extracted section
+            sections.forEach(s => addLyricsSection(s.title, s.lyrics));
+            closePasteModal();
+            document.getElementById('paste-input').value = '';
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('paste-modal').addEventListener('click', function(e) {
+            if (e.target === this) closePasteModal();
+        });
     </script>
 {% endblock %}
