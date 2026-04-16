@@ -68,6 +68,24 @@ App.
         border-radius: 1rem;
         box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
     }
+
+    /* Scrollable sidebar styling */
+    aside::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    aside::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    aside::-webkit-scrollbar-thumb {
+        background: rgba(147, 51, 234, 0.3);
+        border-radius: 3px;
+    }
+
+    aside::-webkit-scrollbar-thumb:hover {
+        background: rgba(147, 51, 234, 0.5);
+    }
 </style>
 
 <div class="pb-32">
@@ -284,7 +302,7 @@ App.
 
         </div>
 
-        <aside class="w-full lg:w-80 xl:w-96 shrink-0 space-y-6 lg:sticky lg:top-24 self-start">
+        <aside class="w-full lg:w-80 xl:w-96 shrink-0 space-y-6 lg:sticky lg:top-24 self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
             {% if song.slogan %}
             <section class="song-sidebar-panel p-6 border-l-4 border-pyc-purple">
                 <div class="flex items-center text-pyc-purple font-semibold text-sm uppercase tracking-wide mb-3">
