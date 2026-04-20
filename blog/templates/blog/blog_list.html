@@ -15,6 +15,12 @@
         </span>
         <h1 class="text-4xl md:text-5xl font-extrabold mb-3 tracking-tight">How to Sing Better</h1>
         <p class="text-white/80 text-lg max-w-xl mx-auto">Tips, techniques, and insights from the Parklands Youth Choir team to help you grow as a singer.</p>
+        {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+        <a href="{% url 'add_blog_post' %}"
+           class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 bg-white text-pyc-purple font-semibold rounded-xl hover:bg-white/90 transition-colors shadow-md">
+            <i class="fas fa-plus"></i> Write a Post
+        </a>
+        {% endif %}
     </div>
 </div>
 
@@ -55,6 +61,9 @@
                     {{ post.get_category_display }}
                 </span>
                 <span class="text-xs text-pyc-text/50">{{ post.created_at|date:"M d, Y" }}</span>
+                {% if not post.published %}
+                <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold border border-yellow-200">Draft</span>
+                {% endif %}
             </div>
             <h2 class="text-lg font-bold text-pyc-text group-hover:text-pyc-purple transition-colors mb-2 leading-snug">
                 {{ post.title }}

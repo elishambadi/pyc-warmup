@@ -9,14 +9,27 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto">
-    <!-- Breadcrumb -->
-    <nav class="text-sm text-gray-400 mb-6">
-        <a href="{% url 'song_list' %}" class="hover:text-pyc-purple">Home</a>
-        <span class="mx-2">›</span>
-        <a href="{% url 'blog_list' %}" class="hover:text-pyc-purple">Blog</a>
-        <span class="mx-2">›</span>
-        <span class="text-pyc-text">{{ post.title|truncatewords:8 }}</span>
-    </nav>
+    <!-- Breadcrumb + admin actions -->
+    <div class="flex items-start justify-between gap-4 mb-6">
+      <nav class="text-sm text-gray-400">
+          <a href="{% url 'song_list' %}" class="hover:text-pyc-purple">Home</a>
+          <span class="mx-2">›</span>
+          <a href="{% url 'blog_list' %}" class="hover:text-pyc-purple">Blog</a>
+          <span class="mx-2">›</span>
+          <span class="text-pyc-text">{{ post.title|truncatewords:8 }}</span>
+      </nav>
+      {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+      <div class="flex items-center gap-2 shrink-0">
+        {% if not post.published %}
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">Draft</span>
+        {% endif %}
+        <a href="{% url 'edit_blog_post' post.slug %}"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-pyc-purple text-white rounded-xl text-sm font-semibold hover:bg-opacity-90 transition-colors">
+          <i class="fas fa-edit"></i> Edit
+        </a>
+      </div>
+      {% endif %}
+    </div>
 
     <!-- Cover -->
     {% if post.cover_image %}

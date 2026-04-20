@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ action }} Blog Post | PYC WarmUp{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8 px-4">
+
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-gray-400 mb-6">
+    <a href="{% url 'blog_list' %}" class="hover:text-pyc-purple">Blog</a>
+    <span class="mx-2">›</span>
+    {% if post %}
+      <a href="{% url 'blog_detail' post.slug %}" class="hover:text-pyc-purple">{{ post.title|truncatewords:6 }}</a>
+      <span class="mx-2">›</span>
+      <span class="text-pyc-text">Edit</span>
+    {% else %}
+      <span class="text-pyc-text">New Post</span>
+    {% endif %}
+  </nav>
+
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <h1 class="text-2xl font-bold text-pyc-text mb-6 flex items-center gap-3">
+      <span class="w-9 h-9 rounded-xl bg-pyc-purple/10 flex items-center justify-center">
+        <i class="fas fa-pen-nib text-pyc-purple"></i>
+      </span>
+      {{ action }} Blog Post
+    </h1>
+
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+      {% for message in messages %}
+      <div class="px-4 py-3 rounded-lg text-sm
+        {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+        {% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Title -->
+      <div>
+        <label for="{{ form.title.id_for_label }}" class="block text-sm font-semibold text-pyc-text mb-1">
+          Title <span class="text-red-500">*</span>
+        </label>
+        <input type="text" name="title" id="{{ form.title.id_for_label }}"
+               value="{{ form.title.value|default_if_none:'' }}"
+               class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-pyc-text focus:outline-none focus:ring-2 focus:ring-pyc-purple text-lg font-semibold"
+               placeholder="Enter post title…" required>
+        {% if form.title.errors %}
+          <p class="text-red-500 text-xs mt-1">{{ form.title.errors|join:", " }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Category -->
+      <div>
+        <label for="{{ form.category.id_for_label }}" class="block text-sm font-semibold text-pyc-text mb-1">
+          Category
+        </label>
+        <select name="category" id="{{ form.category.id_for_label }}"
+                class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-pyc-text focus:outline-none focus:ring-2 focus:ring-pyc-purple">
+          {% for val, label in form.fields.category.choices %}
+          <option value="{{ val }}" {% if form.category.value == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Excerpt -->
+      <div>
+        <label for="{{ form.excerpt.id_for_label }}" class="block text-sm font-semibold text-pyc-text mb-1">
+          Excerpt <span class="text-gray-400 font-normal text-xs">(shown on listing page, max 300 chars)</span>
+        </label>
+        <textarea name="excerpt" id="{{ form.excerpt.id_for_label }}" rows="3" maxlength="300"
+                  class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-pyc-text focus:outline-none focus:ring-2 focus:ring-pyc-purple resize-none"
+                  placeholder="A short summary of this post…">{{ form.excerpt.value|default_if_none:'' }}</textarea>
+      </div>
+
+      <!-- Body (CKEditor) -->
+      <div>
+        <label class="block text-sm font-semibold text-pyc-text mb-1">
+          Body <span class="text-red-500">*</span>
+        </label>
+        {{ form.body }}
+        {% if form.body.errors %}
+          <p class="text-red-500 text-xs mt-1">{{ form.body.errors|join:", " }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Cover Image -->
+      <div>
+        <label for="{{ form.cover_image.id_for_label }}" class="block text-sm font-semibold text-pyc-text mb-1">
+          Cover Image
+        </label>
+        {% if post and post.cover_image %}
+        <div class="mb-2 flex items-center gap-3">
+          <img src="{{ post.cover_image.url }}" alt="Current cover" class="w-24 h-16 object-cover rounded-lg border border-gray-200">
+          <span class="text-xs text-gray-400">Current cover — upload a new one to replace</span>
+        </div>
+        {% endif %}
+        <input type="file" name="cover_image" id="{{ form.cover_image.id_for_label }}" accept="image/*"
+               class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-pyc-purple/10 file:text-pyc-purple hover:file:bg-pyc-purple/20 cursor-pointer">
+      </div>
+
+      <!-- Published toggle -->
+      <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+        <input type="checkbox" name="published" id="{{ form.published.id_for_label }}"
+               class="w-5 h-5 rounded accent-pyc-purple cursor-pointer"
+               {% if form.published.value %}checked{% endif %}>
+        <div>
+          <label for="{{ form.published.id_for_label }}" class="font-semibold text-pyc-text cursor-pointer">
+            Publish immediately
+          </label>
+          <p class="text-xs text-gray-400">Uncheck to save as a draft — only you can see it.</p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-3 pt-2">
+        <button type="submit"
+                class="px-6 py-2.5 bg-pyc-purple text-white rounded-xl font-semibold hover:bg-opacity-90 transition-colors flex items-center gap-2">
+          <i class="fas fa-save"></i> {{ action }} Post
+        </button>
+        {% if post %}
+        <a href="{% url 'blog_detail' post.slug %}"
+           class="px-6 py-2.5 border border-gray-300 text-pyc-text rounded-xl font-semibold hover:border-gray-400 transition-colors">
+          Cancel
+        </a>
+        {% else %}
+        <a href="{% url 'blog_list' %}"
+           class="px-6 py-2.5 border border-gray-300 text-pyc-text rounded-xl font-semibold hover:border-gray-400 transition-colors">
+          Cancel
+        </a>
+        {% endif %}
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}
