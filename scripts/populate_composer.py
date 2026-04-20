@@ -20,6 +20,7 @@ import os
 import sys
 import json
 import argparse
+import re
 import django
 
 # ── Django setup ─────────────────────────────────────────────────────────────
@@ -72,11 +73,27 @@ def call_claude(client, name: str) -> dict:
         messages=[{"role": "user", "content": f'Populate the composer info for: "{name}"'}],
     )
     raw = message.content[0].text.strip()
+    payload = extract_json_payload(raw)
     try:
-        return json.loads(raw)
+        return json.loads(payload)
     except json.JSONDecodeError as e:
         print(f"    ✗ Invalid JSON from Claude:\n{raw}\n    Error: {e}")
         return {}
+
+
+def extract_json_payload(text: str) -> str:
+    stripped = text.strip()
+
+    fenced_match = re.match(r"^```(?:json)?\s*(.*?)\s*```$", stripped, flags=re.IGNORECASE | re.DOTALL)
+    if fenced_match:
+        return fenced_match.group(1).strip()
+
+    first_brace = stripped.find("{")
+    last_brace = stripped.rfind("}")
+    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+        return stripped[first_brace:last_brace + 1]
+
+    return stripped
 
 
 # ── Single composer populate ──────────────────────────────────────────────────
