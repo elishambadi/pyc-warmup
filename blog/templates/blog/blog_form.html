@@ -74,8 +74,7 @@
         <label for="{{ form.excerpt.id_for_label }}" class="block text-sm font-semibold text-pyc-text mb-1">
           Excerpt <span class="text-gray-400 font-normal text-xs">(shown on listing page, max 300 chars)</span>
         </label>
-        <textarea id="{{ form.excerpt.id_for_label }}" name="excerpt" class="hidden">{{ form.excerpt.value|default_if_none:'' }}</textarea>
-        <div class="tiptap-editor-shell border border-gray-300 rounded-xl overflow-hidden" data-target="{{ form.excerpt.id_for_label }}" data-placeholder="Write a concise summary..."></div>
+        {{ form.excerpt }}
         {% if form.excerpt.errors %}
           <p class="text-red-500 text-xs mt-1">{{ form.excerpt.errors|join:", " }}</p>
         {% endif %}
@@ -86,8 +85,7 @@
         <label class="block text-sm font-semibold text-pyc-text mb-1">
           Body <span class="text-red-500">*</span>
         </label>
-        <textarea id="{{ form.body.id_for_label }}" name="body" class="hidden">{{ form.body.value|default_if_none:'' }}</textarea>
-        <div class="tiptap-editor-shell border border-gray-300 rounded-xl overflow-hidden" data-target="{{ form.body.id_for_label }}" data-placeholder="Write your full article..."></div>
+        {{ form.body }}
         {% if form.body.errors %}
           <p class="text-red-500 text-xs mt-1">{{ form.body.errors|join:", " }}</p>
         {% endif %}
@@ -143,97 +141,5 @@
     </form>
   </div>
 </div>
-
-<style>
-  .tt-toolbar { background: #f8fafc; border-bottom: 1px solid #e5e7eb; padding: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
-  .tt-btn { border: 1px solid #d1d5db; background: #fff; color: #374151; border-radius: 0.5rem; padding: 0.35rem 0.55rem; font-size: 0.8rem; font-weight: 600; }
-  .tt-btn.active, .tt-btn:hover { border-color: #4B3FA0; color: #4B3FA0; }
-  .tt-editor { min-height: 180px; padding: 0.85rem 1rem; }
-  .tt-editor .ProseMirror { min-height: 140px; outline: none; }
-  .tt-editor .ProseMirror p.is-editor-empty:first-child::before { color: #9ca3af; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
-</style>
-
-<script type="module">
-  import { Editor } from 'https://esm.sh/@tiptap/core@2.11.5';
-  import StarterKit from 'https://esm.sh/@tiptap/starter-kit@2.11.5';
-  import Link from 'https://esm.sh/@tiptap/extension-link@2.11.5';
-  import Placeholder from 'https://esm.sh/@tiptap/extension-placeholder@2.11.5';
-
-  const editors = [];
-
-  function createToolbar(editor) {
-    const toolbar = document.createElement('div');
-    toolbar.className = 'tt-toolbar';
-    const actions = [
-      { label: 'B', run: () => editor.chain().focus().toggleBold().run(), active: () => editor.isActive('bold') },
-      { label: 'I', run: () => editor.chain().focus().toggleItalic().run(), active: () => editor.isActive('italic') },
-      { label: 'H2', run: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: () => editor.isActive('heading', { level: 2 }) },
-      { label: '• List', run: () => editor.chain().focus().toggleBulletList().run(), active: () => editor.isActive('bulletList') },
-      { label: '1. List', run: () => editor.chain().focus().toggleOrderedList().run(), active: () => editor.isActive('orderedList') },
-      { label: 'Link', run: () => {
-          const current = editor.getAttributes('link').href || '';
-          const url = window.prompt('Enter URL', current);
-          if (url === null) return;
-          if (!url) {
-            editor.chain().focus().unsetLink().run();
-            return;
-          }
-          editor.chain().focus().setLink({ href: url }).run();
-        }, active: () => editor.isActive('link') },
-      { label: 'Clear', run: () => editor.chain().focus().clearNodes().unsetAllMarks().run() },
-    ];
-
-    actions.forEach(action => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'tt-btn';
-      button.textContent = action.label;
-      button.addEventListener('click', action.run);
-      if (action.active) {
-        editor.on('selectionUpdate', () => button.classList.toggle('active', !!action.active()));
-        editor.on('transaction', () => button.classList.toggle('active', !!action.active()));
-      }
-      toolbar.appendChild(button);
-    });
-
-    return toolbar;
-  }
-
-  document.querySelectorAll('.tiptap-editor-shell').forEach(shell => {
-    const targetId = shell.dataset.target;
-    const textarea = document.getElementById(targetId);
-    const placeholder = shell.dataset.placeholder || '';
-    if (!textarea) return;
-
-    const editorMount = document.createElement('div');
-    editorMount.className = 'tt-editor';
-    shell.appendChild(editorMount);
-
-    const editor = new Editor({
-      element: editorMount,
-      content: textarea.value || '',
-      extensions: [
-        StarterKit,
-        Link.configure({ openOnClick: false }),
-        Placeholder.configure({ placeholder }),
-      ],
-      onUpdate: ({ editor }) => {
-        textarea.value = editor.getHTML();
-      },
-    });
-
-    const toolbar = createToolbar(editor);
-    shell.prepend(toolbar);
-    editors.push({ editor, textarea });
-  });
-
-  const form = document.querySelector('form');
-  if (form) {
-    form.addEventListener('submit', () => {
-      editors.forEach(({ editor, textarea }) => {
-        textarea.value = editor.getHTML();
-      });
-    });
-  }
-</script>
+{{ form.media }}
 {% endblock %}

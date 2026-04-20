@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'songs',
     'users',
     'blog',
+    'django_tiptap',
     'pwa',
 ]
 

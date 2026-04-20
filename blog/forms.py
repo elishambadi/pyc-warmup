@@ -1,10 +1,11 @@
 from django import forms
+from django_tiptap.widgets import TipTapWidget
 from .models import BlogPost
 
 
 class BlogPostForm(forms.ModelForm):
-    excerpt = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 4}))
-    body = forms.CharField(widget=forms.Textarea(attrs={'rows': 12}))
+    excerpt = forms.CharField(required=False, widget=TipTapWidget())
+    body = forms.CharField(widget=TipTapWidget())
 
     class Meta:
         model = BlogPost
