@@ -15,7 +15,7 @@ class SongForm(forms.ModelForm):
 
     class Meta:
         model = Song
-        fields = ['title', 'composer_fk', 'composer', 'lyrics', 'youtube_link', 'slogan']
+        fields = ['title', 'composer_fk', 'composer', 'composition_type', 'lyrics', 'youtube_link', 'slogan']
 
 class MP3FileForm(forms.ModelForm):
     class Meta:

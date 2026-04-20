@@ -38,12 +38,22 @@ class Composer(models.Model):
 
 
 class Song(models.Model):
+    COMPOSITION_TYPE_CHOICES = [
+        ('original', 'Original'),
+        ('arranged', 'Arranged'),
+        ('transcribed', 'Transcribed'),
+    ]
+
     title = models.CharField(max_length=255)
     lyrics = models.TextField()
     composer = models.CharField(max_length=255, null=True, blank=True)
     composer_fk = models.ForeignKey(
         Composer, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='songs', verbose_name='Composer (from table)'
+    )
+    composition_type = models.CharField(
+        max_length=20, choices=COMPOSITION_TYPE_CHOICES,
+        default='original', blank=True
     )
     slug = models.SlugField(max_length=255, unique=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -74,6 +74,9 @@
           <p class="text-xs text-gray-400 mt-0.5">
             {{ song.mp3_files.count }} track{{ song.mp3_files.count|pluralize }}
             {% if song.views %} · {{ song.views }} view{{ song.views|pluralize }}{% endif %}
+            {% if song.composition_type and song.composition_type != 'original' %}
+            · <span class="{% if song.composition_type == 'arranged' %}text-blue-500{% else %}text-amber-500{% endif %}">{{ song.get_composition_type_display }}</span>
+            {% endif %}
           </p>
         </div>
         <span class="ml-auto text-gray-300 group-hover:text-pyc-purple transition-colors shrink-0">›</span>

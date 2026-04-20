@@ -44,8 +44,8 @@ class ComposerAdmin(admin.ModelAdmin):
 
 @admin.register(Song)
 class SongAdmin(admin.ModelAdmin):
-    list_display = ('title', 'composer_fk', 'composer', 'created_at')
-    list_filter = ('composer_fk',)
+    list_display = ('title', 'composer_fk', 'composer', 'composition_type', 'created_at')
+    list_filter = ('composer_fk', 'composition_type')
     search_fields = ('title', 'composer', 'composer_fk__name')
     inlines = [MP3FileInline, NoteInline, ReferenceInline, SectionInline, LyricInline]
 

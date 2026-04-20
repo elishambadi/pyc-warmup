@@ -50,6 +50,14 @@
                 </label>
                 {{ song_form.composer }}
             </div>
+
+            <div class="mb-6">
+                <label for="id_composition_type" class="block text-sm font-semibold text-pyc-text mb-2">
+                    Composition Type
+                </label>
+                {{ song_form.composition_type }}
+                <p class="text-xs text-gray-400 mt-1">Is this an original work, an arrangement of an existing piece, or a transcription?</p>
+            </div>
             
             <div class="mb-6 bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
                 <p class="font-bold text-pyc-purple mb-4 flex items-center">
