@@ -1,9 +1,10 @@
 from django import forms
+from django_tiptap.widgets import TipTapWidget
 from .models import Song, MP3File, Note, Reference, VoiceNote, VoiceNoteRequest
 
 class SongForm(forms.ModelForm):
     lyrics = forms.CharField(widget=forms.Textarea, required=False)
-    slogan = forms.CharField(widget=forms.Textarea, required=False)
+    slogan = forms.CharField(widget=TipTapWidget(), required=False)
 
     class Meta:
         model = Song
