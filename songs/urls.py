@@ -1,11 +1,12 @@
 from django.urls import path
-from .views import home, song_detail, save_lyrics, add_song, save_mp3, add_mp3, add_note, add_reference, sync_lyrics, save_timestamp, generate_lrc, delete_timestamp
+from .views import home, song_detail, save_lyrics, add_song, save_mp3, add_mp3, add_note, add_reference, sync_lyrics, save_timestamp, generate_lrc, delete_timestamp, edit_song
 from . import views
 
 urlpatterns = [
     path('songs/', home, name="song_list"),
     path('songs/<slug:slug>/', song_detail, name="song_detail"),
-    path('add-song/', add_song, name="add_song"),
+    path('add-song/', add_song, name='add_song'),
+    path('edit-song/<int:song_id>/', edit_song, name='edit_song'),
 
     path('song/<int:song_id>/save-lyrics/', save_lyrics, name='save_lyrics'),
     path('save-mp3/', save_mp3, name='save_mp3'),

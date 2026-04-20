@@ -93,55 +93,10 @@ def add_song(request):
     if request.method == "POST":
         song_form = SongForm(request.POST)
         if song_form.is_valid():
-            # Create the Song instance without committing to the database yet.
             song = song_form.save(commit=False)
-            # Temporarily assign an empty string to lyrics; we will update after processing lyric lines.
             song.lyrics = ""
-            song.save()  # Now song has a primary key so it can be referenced.
-
-            all_lyric_lines = []  # Will collect all lyric texts in order.
-            order = 1             # Order counter for lyric lines.
-            index = 1             # Index for sections: expecting keys like lyrics_title_0, lyrics_0, etc.
-
-            # Loop as long as the POST data contains a key for the section title.
-            while f"lyrics_title_{index}" in request.POST:
-                print(f"Line {index}")
-                section_title = request.POST.get(f"lyrics_title_{index}", "").strip()
-                lyrics_text = request.POST.get(f"lyrics_{index}", "").strip()
-                
-                matches = re.findall(r"\((.*?)\)", section_title)
-                instruction = " ".join(matches) if matches else None
-                clean_section_title = re.sub(r"\s*\(.*?\)", "", section_title).strip()
-
-                section = Section.objects.create(
-                    song=song, 
-                    name=clean_section_title,
-                    instruction=instruction,
-                    position=index
-                )
-
-                lines = lyrics_text.splitlines()
-                for line in lines:
-                    matches = re.findall(r"\((.*?)\)", line)
-                    instruction = " ".join(matches) if matches else None
-                    line = re.sub(r"\s*\(.*?\)", "", line).strip()
-
-                    if line:
-                        LyricLine.objects.create(
-                            song=song,
-                            section=section,
-                            text=line,
-                            instruction=instruction,
-                            order=order
-                        )
-                        all_lyric_lines.append(line)
-                        order += 1
-
-                index += 1
-
-            song.lyrics = "\n".join(all_lyric_lines)
             song.save()
-            
+            _save_lyric_sections(request, song)
             return redirect("song_list")
         else:
             song_form = SongForm(request.POST)
@@ -149,6 +104,98 @@ def add_song(request):
         song_form = SongForm()
 
     return render(request, "songs/add_song.html", {"song_form": song_form})
+
+
+def _save_lyric_sections(request, song, replacing=False):
+    """Shared helper: parse section POST data and create LyricLine/Section objects."""
+    if replacing:
+        LyricTimestamp.objects.filter(lyric_line__song=song).delete()
+        song.lyric_lines.all().delete()
+        song.sections.all().delete()
+
+    all_lyric_lines = []
+    order = 1
+    index = 1
+
+    while f"lyrics_title_{index}" in request.POST:
+        section_title = request.POST.get(f"lyrics_title_{index}", "").strip()
+        lyrics_text  = request.POST.get(f"lyrics_{index}", "").strip()
+
+        matches = re.findall(r"\((.*?)\)", section_title)
+        instruction = " ".join(matches) if matches else None
+        clean_section_title = re.sub(r"\s*\(.*?\)", "", section_title).strip()
+
+        section = Section.objects.create(
+            song=song,
+            name=clean_section_title,
+            instruction=instruction,
+            position=index
+        )
+
+        for line in lyrics_text.splitlines():
+            line_matches = re.findall(r"\((.*?)\)", line)
+            line_instruction = " ".join(line_matches) if line_matches else None
+            clean_line = re.sub(r"\s*\(.*?\)", "", line).strip()
+            if clean_line:
+                LyricLine.objects.create(
+                    song=song,
+                    section=section,
+                    text=clean_line,
+                    instruction=line_instruction,
+                    order=order
+                )
+                all_lyric_lines.append(clean_line)
+                order += 1
+
+        index += 1
+
+    song.lyrics = "\n".join(all_lyric_lines)
+    song.save()
+
+
+@login_required
+def edit_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)
+
+    if request.method == "POST":
+        song_form = SongForm(request.POST, instance=song)
+        if song_form.is_valid():
+            song_form.save()
+            _save_lyric_sections(request, song, replacing=True)
+            return redirect("song_detail", slug=song.slug)
+    else:
+        song_form = SongForm(instance=song)
+
+    # Build existing sections for pre-filling the form
+    sections_data = []
+    current_section = None
+    lines_buffer = []
+
+    for line in song.lyric_lines.select_related("section").order_by("order"):
+        if line.section != current_section:
+            if current_section is not None:
+                sections_data.append({
+                    "title": current_section.name,
+                    "lyrics": "\n".join(lines_buffer),
+                })
+            current_section = line.section
+            lines_buffer = []
+        text = line.text
+        if line.instruction:
+            text += f" ({line.instruction})"
+        lines_buffer.append(text)
+
+    if current_section is not None:
+        sections_data.append({
+            "title": current_section.name,
+            "lyrics": "\n".join(lines_buffer),
+        })
+
+    return render(request, "songs/edit_song.html", {
+        "song_form": song_form,
+        "song": song,
+        "sections_data": sections_data,
+    })
 
 # 🎵 Delete a Song
 @login_required
