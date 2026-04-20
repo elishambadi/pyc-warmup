@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 """
-populate_composer.py — Populate a Composer's info using Claude AI.
+populate_composer.py — Populate all Composer records using Claude AI (claude-haiku-4-5).
 
 Usage:
-    python scripts/populate_composer.py --api-key sk-ant-... --name "Johann Sebastian Bach"
-    python scripts/populate_composer.py --api-key sk-ant-... --name "Handel" --dry-run
+    # Populate ALL composers in the database
+    python scripts/populate_composer.py --api-key sk-ant-...
 
-Reads the Composer record from the DB by name (case-insensitive partial match),
-calls Claude to generate rich content, then saves bio, born, died, nationality, website.
+    # Populate only composers whose name contains a substring
+    python scripts/populate_composer.py --api-key sk-ant-... --name "Bach"
+
+    # Dry run — print what Claude would write without saving
+    python scripts/populate_composer.py --api-key sk-ant-... --dry-run
+
+    # Skip composers that already have a bio filled in
+    python scripts/populate_composer.py --api-key sk-ant-... --skip-populated
 """
 
 import os
@@ -16,15 +22,17 @@ import json
 import argparse
 import django
 
-# ── Django setup ────────────────────────────────────────────────────────────
+# ── Django setup ─────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BASE_DIR)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pyc_warmup.settings")
 django.setup()
 
-from songs.models import Composer  # noqa: E402  (after django.setup)
+from songs.models import Composer  # noqa: E402
 
-# ── Prompt templates ─────────────────────────────────────────────────────────
+MODEL = "claude-haiku-4-5"
+
+# ── Prompts ───────────────────────────────────────────────────────────────────
 SYSTEM_PROMPT = """
 You are a music historian and writer with a flair for engaging, varied prose.
 You will be given a composer's name and you must return a JSON object with the
@@ -39,10 +47,10 @@ following fields populated as richly as possible:
 }
 
 Rules:
-- "bio": Write 150–300 words. Vary the style each time — it may open with a
-  striking quote by or about the composer, a vivid anecdote, a brief story, a
-  reflection on their legacy, or a straightforward but lyrical biography. Do
-  NOT always start with the composer's name. Make it feel human and interesting.
+- "bio": Write 150–300 words. Vary the style — it may open with a striking quote
+  by or about the composer, a vivid anecdote, a brief story, a reflection on their
+  legacy, or a straightforward but lyrical biography. Do NOT always start with the
+  composer's name. Make it feel human and interesting.
 - "born": A human-readable date/year, e.g. "21 March 1685" or "c. 1650".
   If only the year is known, just give the year.
 - "died": Same format, or "still living" / "unknown" as appropriate.
@@ -54,82 +62,37 @@ If a field is genuinely unknown, use an empty string for text fields.
 """.strip()
 
 
-def build_user_message(name: str) -> str:
-    return f'Populate the composer info for: "{name}"'
-
-
-# ── Claude API call ──────────────────────────────────────────────────────────
-def call_claude(api_key: str, name: str, model: str = "claude-opus-4-5") -> dict:
-    try:
-        import anthropic
-    except ImportError:
-        print("ERROR: 'anthropic' package not installed. Run:  pip install anthropic")
-        sys.exit(1)
-
-    client = anthropic.Anthropic(api_key=api_key)
-
-    print(f"  → Calling Claude ({model}) for: {name!r} ...")
+# ── Claude call ───────────────────────────────────────────────────────────────
+def call_claude(client, name: str) -> dict:
+    print(f"    → Querying Claude for: {name!r} ...")
     message = client.messages.create(
-        model=model,
+        model=MODEL,
         max_tokens=1024,
         system=SYSTEM_PROMPT,
-        messages=[
-            {"role": "user", "content": build_user_message(name)},
-        ],
+        messages=[{"role": "user", "content": f'Populate the composer info for: "{name}"'}],
     )
-
     raw = message.content[0].text.strip()
-
     try:
-        data = json.loads(raw)
+        return json.loads(raw)
     except json.JSONDecodeError as e:
-        print(f"ERROR: Claude returned invalid JSON:\n{raw}\n\nParse error: {e}")
-        sys.exit(1)
-
-    return data
+        print(f"    ✗ Invalid JSON from Claude:\n{raw}\n    Error: {e}")
+        return {}
 
 
-# ── Main function ─────────────────────────────────────────────────────────────
-def populate_composer(api_key: str, name: str, dry_run: bool = False, model: str = "claude-opus-4-5"):
-    """
-    Find or create a Composer by name, populate their fields via Claude, and save.
+# ── Single composer populate ──────────────────────────────────────────────────
+def populate_one(client, composer, dry_run: bool) -> bool:
+    data = call_claude(client, composer.name)
+    if not data:
+        return False
 
-    Args:
-        api_key:  Anthropic API key.
-        name:     Composer name (used for DB lookup and AI prompt).
-        dry_run:  If True, print what would be saved without writing to DB.
-        model:    Claude model to use.
-    """
-    # Look up existing composer (case-insensitive)
-    qs = Composer.objects.filter(name__icontains=name)
-    if qs.count() == 0:
-        print(f"  No composer found matching '{name}'. Creating new record.")
-        composer = Composer(name=name)
-    elif qs.count() == 1:
-        composer = qs.first()
-        print(f"  Found composer: {composer.name} (id={composer.pk})")
-    else:
-        print(f"  Multiple matches for '{name}':")
-        for c in qs:
-            print(f"    [{c.pk}] {c.name}")
-        choice = input("  Enter ID to use: ").strip()
-        composer = qs.get(pk=int(choice))
-
-    # Fetch data from Claude
-    data = call_claude(api_key, composer.name, model=model)
-
-    # Show what we got
-    print("\n  ── Claude response ──────────────────────────────────")
     for k, v in data.items():
-        display = (v[:120] + "...") if len(str(v)) > 120 else v
-        print(f"  {k:12s}: {display}")
-    print("  ─────────────────────────────────────────────────────\n")
+        display = (str(v)[:100] + "...") if len(str(v)) > 100 else v
+        print(f"      {k:12s}: {display}")
 
     if dry_run:
-        print("  DRY RUN — no changes written to database.")
-        return data
+        print("      [DRY RUN — not saved]\n")
+        return True
 
-    # Apply fields (only overwrite if Claude returned a non-empty value)
     if data.get("bio"):
         composer.bio = data["bio"]
     if data.get("born"):
@@ -142,33 +105,73 @@ def populate_composer(api_key: str, name: str, dry_run: bool = False, model: str
         composer.website = data["website"]
 
     composer.save()
-    print(f"  ✓ Saved composer '{composer.name}' (id={composer.pk})")
-    return data
+    print("      ✓ Saved\n")
+    return True
 
 
-# ── CLI entry point ───────────────────────────────────────────────────────────
+# ── Main ──────────────────────────────────────────────────────────────────────
+def run(api_key: str, name_filter: str = None, dry_run: bool = False, skip_populated: bool = False):
+    try:
+        import anthropic
+    except ImportError:
+        print("ERROR: 'anthropic' package not installed. Run:  pip install anthropic")
+        sys.exit(1)
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    qs = Composer.objects.all().order_by("name")
+    if name_filter:
+        qs = qs.filter(name__icontains=name_filter)
+    if skip_populated:
+        qs = qs.filter(bio="")
+
+    total = qs.count()
+    if total == 0:
+        print("No composers found matching the given criteria.")
+        return
+
+    print(f"\nModel       : {MODEL}")
+    print(f"Composers   : {total}")
+    print(f"Dry run     : {dry_run}")
+    print(f"Skip filled : {skip_populated}")
+    print("─" * 50)
+
+    ok = 0
+    for i, composer in enumerate(qs, 1):
+        print(f"\n[{i}/{total}] {composer.name} (id={composer.pk})")
+        if populate_one(client, composer, dry_run):
+            ok += 1
+
+    print("─" * 50)
+    print(f"Done — {ok}/{total} composers {'previewed' if dry_run else 'updated'}.")
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Populate a Composer record using Claude AI."
+        description="Populate all Composer records using Claude AI (claude-haiku-4-5)."
     )
     parser.add_argument("--api-key", required=True, help="Anthropic API key (sk-ant-...)")
-    parser.add_argument("--name", required=True, help="Composer name to look up / create")
     parser.add_argument(
-        "--model",
-        default="claude-opus-4-5",
-        help="Claude model to use (default: claude-opus-4-5)",
+        "--name",
+        default=None,
+        help="Optional: filter composers by name substring (default: all composers)",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print generated data without writing to the database",
     )
+    parser.add_argument(
+        "--skip-populated",
+        action="store_true",
+        help="Skip composers that already have a bio filled in",
+    )
 
     args = parser.parse_args()
-
-    populate_composer(
+    run(
         api_key=args.api_key,
-        name=args.name,
+        name_filter=args.name,
         dry_run=args.dry_run,
-        model=args.model,
+        skip_populated=args.skip_populated,
     )
