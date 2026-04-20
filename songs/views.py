@@ -17,6 +17,9 @@ import json, re
 
 from bs4 import BeautifulSoup
 
+def custom_404(request, exception=None):
+    return render(request, "404.html", status=404)
+
 def home(request):
     latest_songs = Song.objects.order_by('-created_at')
     latest_voicenote_request = VoiceNoteRequest.objects.filter(deadline__gt=timezone.now()).order_by('-deadline').first()

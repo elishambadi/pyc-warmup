@@ -23,6 +23,8 @@ from songs.views import home
 from .sitemaps import SongSitemap, ComposerSitemap, BlogSitemap, StaticSitemap
 import pwa
 
+handler404 = 'songs.views.custom_404'
+
 sitemaps = {
     'songs': SongSitemap,
     'composers': ComposerSitemap,

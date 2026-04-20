@@ -178,6 +178,11 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
+# django-tiptap config — fix typo in package default ("tiptapOutputFomat" vs "tiptapOutputFormat")
+DJANGO_TIPTAP_CONFIG = {
+    "tiptapOutputFormat": "html",
+}
+
 # PWA configs
 PWA_APP_NAME = 'PYC Learn'
 PWA_APP_DESCRIPTION = "Song learning app for PYC"
