@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ post.title }} | PYC Blog{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Back -->
+    <a href="{% url 'blog_list' %}" class="inline-flex items-center gap-2 text-sm text-pyc-purple hover:underline mb-6">
+        <i class="fas fa-arrow-left"></i> Back to Blog
+    </a>
+
+    <!-- Cover -->
+    {% if post.cover_image %}
+    <div class="rounded-2xl overflow-hidden mb-8 shadow-lg h-64 md:h-80">
+        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover">
+    </div>
+    {% endif %}
+
+    <!-- Meta -->
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="px-3 py-1 rounded-full bg-pyc-purple/10 text-pyc-purple text-xs font-semibold">
+            {{ post.get_category_display }}
+        </span>
+        <span class="text-xs text-pyc-text/50">
+            <i class="far fa-calendar mr-1"></i>{{ post.created_at|date:"F d, Y" }}
+        </span>
+        {% if post.author %}
+        <span class="text-xs text-pyc-text/50">
+            <i class="far fa-user mr-1"></i>{{ post.author.get_full_name|default:post.author.username }}
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-3xl md:text-4xl font-extrabold text-pyc-text leading-tight mb-4">{{ post.title }}</h1>
+
+    {% if post.excerpt %}
+    <p class="text-lg text-pyc-text/65 border-l-4 border-pyc-orange pl-4 mb-8 italic leading-relaxed">{{ post.excerpt }}</p>
+    {% endif %}
+
+    <!-- Body -->
+    <div class="prose prose-lg max-w-none
+                prose-headings:text-pyc-purple prose-headings:font-bold
+                prose-a:text-pyc-purple prose-a:no-underline hover:prose-a:underline
+                prose-strong:text-pyc-text
+                prose-blockquote:border-pyc-orange prose-blockquote:text-pyc-text/70
+                prose-img:rounded-xl prose-img:shadow-md">
+        {{ post.body|safe }}
+    </div>
+
+    <!-- Divider -->
+    <hr class="my-12 border-gray-200">
+
+    <!-- Related Posts -->
+    {% if related %}
+    <div>
+        <h2 class="text-xl font-bold text-pyc-text mb-5">More in {{ post.get_category_display }}</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {% for r in related %}
+            <a href="{% url 'blog_detail' r.slug %}"
+               class="group bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition-shadow">
+                <span class="text-xs text-pyc-text/50 block mb-1">{{ r.created_at|date:"M d, Y" }}</span>
+                <p class="text-sm font-semibold text-pyc-text group-hover:text-pyc-purple transition-colors leading-snug">{{ r.title }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

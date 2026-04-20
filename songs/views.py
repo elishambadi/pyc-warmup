@@ -16,17 +16,23 @@ import json, re
 from bs4 import BeautifulSoup
 
 def home(request):
-    latest_songs = Song.objects.order_by('-created_at')  # Get 5 latest songs
+    latest_songs = Song.objects.order_by('-created_at')
     latest_voicenote_request = VoiceNoteRequest.objects.filter(deadline__gt=timezone.now()).order_by('-deadline').first()
-
     is_trainer = request.user.groups.filter(name="Trainers").exists() if request.user.is_authenticated else False
-
-    print(f"Latest request {latest_voicenote_request}")
-    
     return render(request, "songs/index.html", {
         'latest_songs': latest_songs,
         'latest_voicenote_request': latest_voicenote_request,
         'is_trainer': is_trainer
+    })
+
+
+def landing(request):
+    from blog.models import BlogPost
+    latest_songs = Song.objects.order_by('-created_at')[:6]
+    latest_posts = BlogPost.objects.filter(published=True)[:3]
+    return render(request, 'songs/landing.html', {
+        'latest_songs': latest_songs,
+        'latest_posts': latest_posts,
     })
 
 def song_detail(request, slug):

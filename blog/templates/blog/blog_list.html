@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Blog — How to Sing Better | PYC WarmUp{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="relative rounded-2xl overflow-hidden mb-10 bg-gradient-to-br from-pyc-purple via-purple-700 to-pyc-orange px-8 py-14 text-white text-center shadow-2xl">
+    <div class="absolute inset-0 opacity-10" style="background-image:url('data:image/svg+xml,<svg width=\"40\" height=\"40\" viewBox=\"0 0 40 40\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"20\" cy=\"20\" r=\"1.5\" fill=\"white\"/></svg>');"></div>
+    <div class="relative">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 text-sm font-semibold mb-4">
+            <i class="fas fa-pen-nib"></i> PYC Blog
+        </span>
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-3 tracking-tight">How to Sing Better</h1>
+        <p class="text-white/80 text-lg max-w-xl mx-auto">Tips, techniques, and insights from the Parklands Youth Choir team to help you grow as a singer.</p>
+    </div>
+</div>
+
+<!-- Category Filter -->
+<div class="flex flex-wrap gap-2 mb-8">
+    <a href="{% url 'blog_list' %}"
+       class="px-4 py-1.5 rounded-full text-sm font-semibold transition-colors {% if not active_category %}bg-pyc-purple text-white{% else %}bg-white border border-gray-200 text-pyc-text hover:border-pyc-purple hover:text-pyc-purple{% endif %}">
+        All
+    </a>
+    {% for code, label in categories %}
+    <a href="?category={{ code }}"
+       class="px-4 py-1.5 rounded-full text-sm font-semibold transition-colors {% if active_category == code %}bg-pyc-purple text-white{% else %}bg-white border border-gray-200 text-pyc-text hover:border-pyc-purple hover:text-pyc-purple{% endif %}">
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Posts Grid -->
+{% if posts %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for post in posts %}
+    <a href="{% url 'blog_detail' post.slug %}"
+       class="group flex flex-col bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition-shadow border border-gray-100">
+        {% if post.cover_image %}
+        <div class="h-48 overflow-hidden">
+            <img src="{{ post.cover_image.url }}" alt="{{ post.title }}"
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+        </div>
+        {% else %}
+        <div class="h-48 bg-gradient-to-br from-pyc-purple/10 to-pyc-orange/10 flex items-center justify-center">
+            <i class="fas fa-music text-4xl text-pyc-purple/30"></i>
+        </div>
+        {% endif %}
+
+        <div class="p-5 flex flex-col flex-1">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="px-2.5 py-0.5 rounded-full bg-pyc-purple/10 text-pyc-purple text-xs font-semibold">
+                    {{ post.get_category_display }}
+                </span>
+                <span class="text-xs text-pyc-text/50">{{ post.created_at|date:"M d, Y" }}</span>
+            </div>
+            <h2 class="text-lg font-bold text-pyc-text group-hover:text-pyc-purple transition-colors mb-2 leading-snug">
+                {{ post.title }}
+            </h2>
+            {% if post.excerpt %}
+            <p class="text-pyc-text/65 text-sm leading-relaxed flex-1">{{ post.excerpt }}</p>
+            {% endif %}
+            <div class="mt-4 flex items-center gap-2 text-pyc-purple text-sm font-semibold">
+                Read more <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-20 text-pyc-text/50">
+    <i class="fas fa-feather-alt text-5xl mb-4 block"></i>
+    <p class="text-lg">No posts yet. Check back soon!</p>
+</div>
+{% endif %}
+{% endblock %}

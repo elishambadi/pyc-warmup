@@ -31,6 +31,7 @@ urlpatterns = [
     path('', home, name='home'),
     path('', include('songs.urls')),
     path('', include('users.urls')),
+    path('', include('blog.urls')),
 ]
 
 

@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Welcome | PYC WarmUp{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-pyc-purple via-purple-800 to-pyc-orange text-white text-center py-20 px-6 mb-16 shadow-2xl">
+    <div class="absolute inset-0 opacity-[0.07]"
+         style="background-image:url('data:image/svg+xml,<svg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M30 5 L35 20 L50 20 L38 29 L43 44 L30 35 L17 44 L22 29 L10 20 L25 20 Z\" fill=\"white\"/></svg>');background-size:60px;">
+    </div>
+    <div class="relative max-w-2xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 text-sm font-semibold mb-6">
+            <i class="fas fa-music"></i> Parklands Youth Choir
+        </div>
+        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-5 leading-tight">
+            Warm Up.<br>Sing Well.<br><span class="text-pyc-orange">Glorify God.</span>
+        </h1>
+        <p class="text-white/80 text-lg md:text-xl mb-8 leading-relaxed">
+            Your choir preparation companion — synced lyrics, voice part audio, training videos and more.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="{% url 'song_list' %}"
+               class="px-7 py-3.5 bg-white text-pyc-purple rounded-xl font-bold hover:bg-pyc-orange hover:text-white transition-colors shadow-lg text-base">
+                <i class="fas fa-headphones mr-2"></i>Browse Songs
+            </a>
+            <a href="{% url 'blog_list' %}"
+               class="px-7 py-3.5 bg-white/15 border border-white/30 text-white rounded-xl font-bold hover:bg-white/25 transition-colors text-base">
+                <i class="fas fa-pen-nib mr-2"></i>Read the Blog
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="mb-16">
+    <h2 class="text-2xl font-bold text-pyc-text text-center mb-8">Everything you need to prepare</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 rounded-full bg-pyc-purple/10 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-align-left text-pyc-purple text-xl"></i>
+            </div>
+            <h3 class="font-bold text-pyc-text mb-2">Synced Lyrics</h3>
+            <p class="text-pyc-text/60 text-sm">Follow every word in real time as the audio plays.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 rounded-full bg-pyc-orange/10 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-microphone text-pyc-orange text-xl"></i>
+            </div>
+            <h3 class="font-bold text-pyc-text mb-2">Voice Part Audio</h3>
+            <p class="text-pyc-text/60 text-sm">Soprano, Alto, Tenor, Bass — isolate your part and practise.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <i class="fab fa-youtube text-red-500 text-xl"></i>
+            </div>
+            <h3 class="font-bold text-pyc-text mb-2">Video Guides</h3>
+            <p class="text-pyc-text/60 text-sm">Watch performance videos right alongside the lyrics.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
+            <div class="w-12 h-12 rounded-full bg-pyc-green/10 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-globe text-pyc-green text-xl"></i>
+            </div>
+            <h3 class="font-bold text-pyc-text mb-2">100+ Languages</h3>
+            <p class="text-pyc-text/60 text-sm">Read lyrics in your own language with Google Translate.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Latest Songs -->
+{% if latest_songs %}
+<section class="mb-16">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-pyc-text">Latest Songs</h2>
+        <a href="{% url 'song_list' %}" class="text-pyc-purple text-sm font-semibold hover:underline">View all <i class="fas fa-arrow-right ml-1"></i></a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for song in latest_songs|slice:":6" %}
+        <a href="{% url 'song_detail' song.slug %}"
+           class="group flex items-center gap-4 bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md hover:border-pyc-purple/30 transition-all">
+            <div class="w-10 h-10 rounded-full bg-pyc-purple/10 flex items-center justify-center shrink-0 group-hover:bg-pyc-purple group-hover:text-white transition-colors">
+                <i class="fas fa-music text-pyc-purple group-hover:text-white text-sm"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="font-semibold text-pyc-text truncate group-hover:text-pyc-purple transition-colors">{{ song.title }}</p>
+                {% if song.composer %}
+                <p class="text-xs text-pyc-text/50 truncate">{{ song.composer }}</p>
+                {% endif %}
+            </div>
+            <i class="fas fa-chevron-right text-gray-300 group-hover:text-pyc-purple ml-auto shrink-0 text-xs transition-colors"></i>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest Blog Posts -->
+{% if latest_posts %}
+<section class="mb-16">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-pyc-text">From the Blog</h2>
+        <a href="{% url 'blog_list' %}" class="text-pyc-purple text-sm font-semibold hover:underline">All posts <i class="fas fa-arrow-right ml-1"></i></a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {% for post in latest_posts %}
+        <a href="{% url 'blog_detail' post.slug %}"
+           class="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
+            {% if post.cover_image %}
+            <div class="h-36 overflow-hidden">
+                <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            </div>
+            {% else %}
+            <div class="h-36 bg-gradient-to-br from-pyc-purple/10 to-pyc-orange/10 flex items-center justify-center">
+                <i class="fas fa-feather-alt text-3xl text-pyc-purple/30"></i>
+            </div>
+            {% endif %}
+            <div class="p-4">
+                <span class="text-xs text-pyc-purple font-semibold">{{ post.get_category_display }}</span>
+                <h3 class="font-bold text-pyc-text mt-1 leading-snug group-hover:text-pyc-purple transition-colors">{{ post.title }}</h3>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA -->
+<section class="rounded-2xl bg-pyc-purple/5 border border-pyc-purple/20 p-10 text-center mb-4">
+    <h2 class="text-2xl font-bold text-pyc-text mb-3">Ready to practise?</h2>
+    <p class="text-pyc-text/60 mb-6">Pick a song and start warming up today.</p>
+    <a href="{% url 'song_list' %}"
+       class="inline-flex items-center gap-2 px-8 py-3.5 bg-pyc-purple text-white rounded-xl font-bold hover:bg-opacity-90 transition-colors shadow-md">
+        <i class="fas fa-play"></i> Go to Songs
+    </a>
+</section>
+{% endblock %}
