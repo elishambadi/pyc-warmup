@@ -1,6 +1,6 @@
 from urllib import request
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest
+from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest, Composer
 from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm
 from .utils import generate_lyric_lines
 from django.http import JsonResponse, HttpResponse
@@ -87,6 +87,9 @@ def song_detail(request, slug):
         'mp3_timestamps': mp3_timestamps,
         'annotated_lines': annotated_lines,
         'comments': comments,
+        'related_songs': Song.objects.filter(
+            composer_fk=song.composer_fk
+        ).exclude(id=song.id)[:4] if song.composer_fk else Song.objects.exclude(id=song.id).order_by('-created_at')[:4],
     })
     
     # Set device_id cookie if new
@@ -629,4 +632,20 @@ def upload_voicenotes_for_request(request):
         'songs': songs,
         'latest_request': latest_request,
         'user_voicenotes': user_voicenotes
+    })
+
+
+def composer_list(request):
+    composers = Composer.objects.all()
+    return render(request, 'songs/composer_list.html', {'composers': composers})
+
+
+def composer_detail(request, slug):
+    composer = get_object_or_404(Composer, slug=slug)
+    songs = composer.songs.order_by('title')
+    other_composers = Composer.objects.exclude(id=composer.id)[:5]
+    return render(request, 'songs/composer_detail.html', {
+        'composer': composer,
+        'songs': songs,
+        'other_composers': other_composers,
     })

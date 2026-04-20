@@ -1,15 +1,21 @@
 from django import forms
-from .models import Song, MP3File, Note, Reference, VoiceNote, VoiceNoteRequest
+from .models import Song, MP3File, Note, Reference, VoiceNote, VoiceNoteRequest, Composer
 from ckeditor.widgets import CKEditorWidget
 
 class SongForm(forms.ModelForm):
     lyrics = forms.CharField(widget=CKEditorWidget(), required=False)
-
     slogan = forms.CharField(widget=forms.Textarea, required=False)
+    composer_fk = forms.ModelChoiceField(
+        queryset=Composer.objects.all(),
+        required=False,
+        empty_label="— Select a composer —",
+        label="Composer (from table)",
+        widget=forms.Select(attrs={'class': 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pyc-purple'})
+    )
 
     class Meta:
         model = Song
-        fields = ['title', 'lyrics', 'composer', 'youtube_link', 'slogan']
+        fields = ['title', 'composer_fk', 'composer', 'lyrics', 'youtube_link', 'slogan']
 
 class MP3FileForm(forms.ModelForm):
     class Meta:

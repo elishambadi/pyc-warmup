@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ composer.name }} – Composer | PYC WarmUp{% endblock %}
+{% block description %}{{ composer.name }}{% if composer.nationality %} ({{ composer.nationality }}){% endif %}{% if composer.bio %} – {{ composer.bio|truncatewords:25 }}{% endif %}{% endblock %}
+{% block keywords %}{{ composer.name }}, {{ composer.name }} biography, {{ composer.name }} works, choir composer{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8 px-4">
+
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-gray-400 mb-6">
+    <a href="{% url 'song_list' %}" class="hover:text-pyc-purple">Songs</a>
+    <span class="mx-2">›</span>
+    <a href="{% url 'composer_list' %}" class="hover:text-pyc-purple">Composers</a>
+    <span class="mx-2">›</span>
+    <span class="text-pyc-text">{{ composer.name }}</span>
+  </nav>
+
+  <!-- Profile header -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 flex flex-col sm:flex-row gap-6 items-start">
+    {% if composer.image %}
+      <img src="{{ composer.image.url }}" alt="{{ composer.name }}"
+           class="w-24 h-24 rounded-full object-cover border-4 border-pyc-purple/20 shrink-0">
+    {% else %}
+      <div class="w-24 h-24 rounded-full bg-gradient-to-br from-pyc-purple to-pyc-orange flex items-center justify-center text-white text-3xl font-bold shrink-0">
+        {{ composer.name|slice:":1" }}
+      </div>
+    {% endif %}
+
+    <div class="flex-1 min-w-0">
+      <h1 class="text-2xl font-bold text-pyc-text">{{ composer.name }}</h1>
+
+      <div class="flex flex-wrap gap-x-5 gap-y-1 mt-1 text-sm text-gray-500">
+        {% if composer.nationality %}
+          <span><i class="fas fa-globe-africa mr-1 text-pyc-purple/60"></i>{{ composer.nationality }}</span>
+        {% endif %}
+        {% if composer.born %}
+          <span><i class="fas fa-calendar-alt mr-1 text-pyc-purple/60"></i>
+            {{ composer.born }}{% if composer.died %} – {{ composer.died }}{% endif %}
+          </span>
+        {% endif %}
+        {% if composer.website %}
+          <a href="{{ composer.website }}" target="_blank" rel="noopener"
+             class="text-pyc-purple hover:underline">
+            <i class="fas fa-external-link-alt mr-1"></i>Website
+          </a>
+        {% endif %}
+      </div>
+
+      {% if composer.bio %}
+        <p class="mt-4 text-gray-600 leading-relaxed">{{ composer.bio }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Songs by this composer -->
+  {% if songs %}
+  <section class="mb-10">
+    <h2 class="text-lg font-bold text-pyc-text mb-4 flex items-center gap-2">
+      <i class="fas fa-music text-pyc-purple"></i>
+      Songs by {{ composer.name }}
+      <span class="ml-auto text-sm font-normal text-gray-400">{{ songs.count }} song{{ songs.count|pluralize }}</span>
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {% for song in songs %}
+      <a href="{{ song.get_absolute_url }}"
+         class="group flex items-start gap-3 bg-white rounded-xl border border-gray-100 p-4 hover:border-pyc-purple/40 hover:shadow-sm transition-all">
+        <div class="w-9 h-9 rounded-lg bg-pyc-purple/10 flex items-center justify-center shrink-0 mt-0.5">
+          <i class="fas fa-music text-pyc-purple text-sm"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="font-semibold text-pyc-text group-hover:text-pyc-purple transition-colors truncate">{{ song.title }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">
+            {{ song.mp3_files.count }} track{{ song.mp3_files.count|pluralize }}
+            {% if song.views %} · {{ song.views }} view{{ song.views|pluralize }}{% endif %}
+          </p>
+        </div>
+        <span class="ml-auto text-gray-300 group-hover:text-pyc-purple transition-colors shrink-0">›</span>
+      </a>
+      {% endfor %}
+    </div>
+
+    <p class="mt-4 text-sm text-gray-500">
+      Practice the choral works of {{ composer.name }} with synced audio tracks on
+      <a href="{% url 'song_list' %}" class="text-pyc-purple hover:underline">PYC WarmUp</a>.
+    </p>
+  </section>
+  {% endif %}
+
+  <!-- Other composers -->
+  {% if other_composers %}
+  <section>
+    <h2 class="text-lg font-bold text-pyc-text mb-4">Other Composers</h2>
+    <div class="flex flex-wrap gap-3">
+      {% for c in other_composers %}
+      <a href="{% url 'composer_detail' c.slug %}"
+         class="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-pyc-text hover:border-pyc-purple hover:text-pyc-purple transition-colors">
+        {{ c.name }}
+      </a>
+      {% endfor %}
+      <a href="{% url 'composer_list' %}"
+         class="px-4 py-2 bg-pyc-purple/10 border border-pyc-purple/20 rounded-full text-sm text-pyc-purple hover:bg-pyc-purple hover:text-white transition-colors">
+        View all composers →
+      </a>
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+
+<!-- Schema.org Person markup -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "{{ composer.name }}",
+  {% if composer.bio %}"description": "{{ composer.bio|escapejs }}",{% endif %}
+  {% if composer.nationality %}"nationality": "{{ composer.nationality }}",{% endif %}
+  {% if composer.image %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ composer.image.url }}",{% endif %}
+  "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'composer_detail' composer.slug %}"
+}
+</script>
+{% endblock %}

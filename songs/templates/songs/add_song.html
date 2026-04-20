@@ -35,8 +35,18 @@
             </div>
             
             <div class="mb-6">
-                <label for="id_composer" class="block text-sm font-semibold text-pyc-text mb-2">
+                <label for="id_composer_fk" class="block text-sm font-semibold text-pyc-text mb-2">
                     Composer <span class="text-red-500">*</span>
+                </label>
+                {{ song_form.composer_fk }}
+                <p class="text-xs text-gray-400 mt-1">
+                  Select from the composers table.
+                  <a href="{% url 'admin:songs_composer_add' %}" target="_blank" class="text-pyc-purple hover:underline">+ Add new composer</a>
+                </p>
+            </div>
+            <div class="mb-6">
+                <label for="id_composer" class="block text-sm font-semibold text-pyc-text mb-2">
+                    Composer name <span class="text-gray-400 text-xs font-normal">(text fallback if not in table)</span>
                 </label>
                 {{ song_form.composer }}
             </div>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure, VoiceNote, VoiceNoteRequest
+from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure, VoiceNote, VoiceNoteRequest, Composer
 from django.contrib.auth.models import Group, User
 
 
@@ -27,8 +27,26 @@ class SectionInline(admin.TabularInline):
     model = Section
     extra = 1
 
+@admin.register(Composer)
+class ComposerAdmin(admin.ModelAdmin):
+    list_display = ('name', 'nationality', 'born', 'died', 'song_count')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name', 'nationality')
+    fieldsets = (
+        (None, {'fields': ('name', 'slug', 'image', 'nationality', 'born', 'died', 'website')}),
+        ('Biography', {'fields': ('bio',)}),
+    )
+
+    def song_count(self, obj):
+        return obj.songs.count()
+    song_count.short_description = 'Songs'
+
+
 @admin.register(Song)
 class SongAdmin(admin.ModelAdmin):
+    list_display = ('title', 'composer_fk', 'composer', 'created_at')
+    list_filter = ('composer_fk',)
+    search_fields = ('title', 'composer', 'composer_fk__name')
     inlines = [MP3FileInline, NoteInline, ReferenceInline, SectionInline, LyricInline]
 
 @admin.register(MP3File)

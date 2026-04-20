@@ -2,7 +2,7 @@
 {% load custom_filters %}
 {% load i18n %}
 
-{% block title %}{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %} | PYC WarmUp App{% endblock %}
+{% block title %}{{ song.title }}{% if song.composer_fk %} - {{ song.composer_fk.name }}{% elif song.composer %} - {{ song.composer }}{% endif %} | PYC WarmUp App{% endblock %}
 
 {% block description %}
 Discover '{{ song.title }}' with lyrics {% if song.composer %} by {{ song.composer }}{% endif %}, a song on the PYC
@@ -95,7 +95,12 @@ App.
         <div class="flex-1">
             <h1 id="song-title" class="text-3xl font-bold text-pyc-purple mb-2">
                 {{ song.title }}
-                {% if song.composer %}
+                {% if song.composer_fk %}
+                <span class="text-pyc-text/60 text-2xl">by
+                  <a href="{% url 'composer_detail' song.composer_fk.slug %}"
+                     class="hover:text-pyc-purple transition-colors">{{ song.composer_fk.name }}</a>
+                </span>
+                {% elif song.composer %}
                 <span class="text-pyc-text/60 text-2xl">by {{ song.composer }}</span>
                 {% endif %}
             </h1>
@@ -765,5 +770,43 @@ App.
         });
     </script>
     {% endif %}
+
+    {% if related_songs %}
+    <!-- Related Songs -->
+    <section class="mt-10">
+      <h2 class="text-lg font-bold text-pyc-text mb-4 flex items-center gap-2">
+        <i class="fas fa-music text-pyc-purple"></i>
+        {% if song.composer_fk %}More by {{ song.composer_fk.name }}{% else %}More Songs{% endif %}
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for s in related_songs %}
+        <a href="{{ s.get_absolute_url }}"
+           class="group bg-white rounded-xl border border-gray-100 p-4 hover:border-pyc-purple/40 hover:shadow-sm transition-all">
+          <div class="w-8 h-8 rounded-lg bg-pyc-purple/10 flex items-center justify-center mb-2">
+            <i class="fas fa-music text-pyc-purple text-xs"></i>
+          </div>
+          <p class="font-semibold text-pyc-text group-hover:text-pyc-purple transition-colors text-sm truncate">{{ s.title }}</p>
+          {% if s.composer_fk %}
+          <p class="text-xs text-gray-400 truncate">{{ s.composer_fk.name }}</p>
+          {% elif s.composer %}
+          <p class="text-xs text-gray-400 truncate">{{ s.composer }}</p>
+          {% endif %}
+          <p class="text-xs text-gray-300 mt-1">{{ s.mp3_files.count }} track{{ s.mp3_files.count|pluralize }}</p>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- Schema.org MusicComposition -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MusicComposition",
+      "name": "{{ song.title|escapejs }}",
+      {% if song.composer_fk %}"composer": {"@type": "Person", "name": "{{ song.composer_fk.name|escapejs }}", "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'composer_detail' song.composer_fk.slug %}"},{% elif song.composer %}"composer": {"@type": "Person", "name": "{{ song.composer|escapejs }}"},{% endif %}
+      "url": "{{ request.scheme }}://{{ request.get_host }}{{ song.get_absolute_url }}"
+    }
+    </script>
 
     {% endblock %}

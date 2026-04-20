@@ -4,10 +4,47 @@ from django.utils.text import slugify
 from django.urls import reverse
 from django.contrib.auth.models import Group
 
+
+class Composer(models.Model):
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    bio = models.TextField(blank=True, help_text="Short biography shown on the composer page")
+    image = models.ImageField(upload_to='composers/', null=True, blank=True)
+    born = models.CharField(max_length=100, blank=True, help_text="e.g. 1856 or March 3, 1856")
+    died = models.CharField(max_length=100, blank=True)
+    nationality = models.CharField(max_length=100, blank=True)
+    website = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('composer_detail', args=[self.slug])
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.name)
+            slug = base
+            n = 1
+            while Composer.objects.filter(slug=slug).exists():
+                slug = f'{base}-{n}'
+                n += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+
 class Song(models.Model):
     title = models.CharField(max_length=255)
     lyrics = models.TextField()
-    composer = models.CharField(max_length=255, null=True)
+    composer = models.CharField(max_length=255, null=True, blank=True)
+    composer_fk = models.ForeignKey(
+        Composer, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='songs', verbose_name='Composer (from table)'
+    )
     slug = models.SlugField(max_length=255, unique=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.IntegerField(default=0)  # new field for song likes
@@ -23,8 +60,9 @@ class Song(models.Model):
 
     
     def save(self, *args, **kwargs):
-        if not self.slug:  # Generate slug only if it's empty
-            base_slug = slugify(f"{self.title} {self.composer or ''}")
+        if not self.slug:
+            composer_name = self.composer_fk.name if self.composer_fk else (self.composer or '')
+            base_slug = slugify(f"{self.title} {composer_name}")
             unique_slug = base_slug
             counter = 1
 
