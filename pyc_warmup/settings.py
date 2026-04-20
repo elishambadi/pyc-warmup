@@ -52,8 +52,6 @@ INSTALLED_APPS = [
     'users',
     'blog',
     'pwa',
-    'ckeditor',
-    'ckeditor_uploader',
 ]
 
 MIDDLEWARE = [
@@ -178,26 +176,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
-
-CKEDITOR_UPLOAD_PATH = '/assets/ckeditor/'
-
-CKEDITOR_CONFIGS = {
-    'default': {
-        'toolbar': 'full',
-        'height': 400,
-    },
-    'minimal': {
-        'toolbar': 'Custom',
-        'toolbar_Custom': [
-            ['Bold', 'Italic', 'Underline'],
-            ['NumberedList', 'BulletedList'],
-            ['Link', 'Unlink'],
-            ['RemoveFormat'],
-        ],
-        'height': 150,
-        'removePlugins': 'elementspath',
-    },
-}
 
 # PWA configs
 PWA_APP_NAME = 'PYC Learn'

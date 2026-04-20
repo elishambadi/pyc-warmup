@@ -37,7 +37,6 @@ urlpatterns = [
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('serviceworker.js', TemplateView.as_view(template_name="serviceworker.js", content_type='application/javascript')),
     path('offline/', TemplateView.as_view(template_name="offline.html"), name='offline'),
-    path('ckeditor/', include('ckeditor_uploader.urls')),
     path('', include('pwa.urls')),
     path('', home, name='home'),
     path('', include('songs.urls')),

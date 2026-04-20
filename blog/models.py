@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
-from ckeditor_uploader.fields import RichTextUploadingField
 
 
 class BlogPost(models.Model):
@@ -18,8 +17,8 @@ class BlogPost(models.Model):
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='blog_posts')
     category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='technique')
-    excerpt = models.TextField(max_length=300, blank=True, help_text='Short summary shown on the listing page')
-    body = RichTextUploadingField()
+    excerpt = models.TextField(blank=True, help_text='Short summary shown on the listing page')
+    body = models.TextField()
     cover_image = models.ImageField(upload_to='blog/covers/', null=True, blank=True)
     published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
