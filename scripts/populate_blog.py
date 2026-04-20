@@ -26,6 +26,7 @@ import os
 import re
 import sys
 from html import escape
+from typing import Optional
 
 import django
 
@@ -104,7 +105,7 @@ def resolve_category(category: str) -> str:
     return "other"
 
 
-def call_claude(client, topic: str, forced_category: str | None = None) -> dict:
+def call_claude(client, topic: str, forced_category: Optional[str] = None) -> dict:
     user_prompt = f'Write a blog post about: "{topic}".'
     if forced_category:
         user_prompt += f" Use category '{forced_category}'."
@@ -128,7 +129,7 @@ def call_claude(client, topic: str, forced_category: str | None = None) -> dict:
     return data
 
 
-def resolve_author(author_value: str | None):
+def resolve_author(author_value: Optional[str]):
     if not author_value:
         return None
 
@@ -143,7 +144,7 @@ def resolve_author(author_value: str | None):
             return None
 
 
-def build_post_data(data: dict, topic: str, category: str | None) -> dict:
+def build_post_data(data: dict, topic: str, category: Optional[str]) -> dict:
     title = (data.get("title") or topic).strip()
     excerpt = normalize_html(data.get("excerpt", ""))
     body = normalize_html(data.get("body", ""))
@@ -157,7 +158,7 @@ def build_post_data(data: dict, topic: str, category: str | None) -> dict:
     }
 
 
-def populate_blog(api_key: str, topic: str, category: str | None = None, author_value: str | None = None,
+def populate_blog(api_key: str, topic: str, category: Optional[str] = None, author_value: Optional[str] = None,
                   published: bool = False, dry_run: bool = False):
     try:
         import anthropic
