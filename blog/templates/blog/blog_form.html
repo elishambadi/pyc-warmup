@@ -74,9 +74,10 @@
         <label for="{{ form.excerpt.id_for_label }}" class="block text-sm font-semibold text-pyc-text mb-1">
           Excerpt <span class="text-gray-400 font-normal text-xs">(shown on listing page, max 300 chars)</span>
         </label>
-        <textarea name="excerpt" id="{{ form.excerpt.id_for_label }}" rows="3" maxlength="300"
-                  class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-pyc-text focus:outline-none focus:ring-2 focus:ring-pyc-purple resize-none"
-                  placeholder="A short summary of this post…">{{ form.excerpt.value|default_if_none:'' }}</textarea>
+        {{ form.excerpt }}
+        {% if form.excerpt.errors %}
+          <p class="text-red-500 text-xs mt-1">{{ form.excerpt.errors|join:", " }}</p>
+        {% endif %}
       </div>
 
       <!-- Body (CKEditor) -->
@@ -140,4 +141,5 @@
     </form>
   </div>
 </div>
+{{ form.media }}
 {% endblock %}

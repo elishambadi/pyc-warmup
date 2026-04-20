@@ -181,6 +181,24 @@ STATICFILES_DIRS = [
 
 CKEDITOR_UPLOAD_PATH = '/assets/ckeditor/'
 
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+        'height': 400,
+    },
+    'minimal': {
+        'toolbar': 'Custom',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList'],
+            ['Link', 'Unlink'],
+            ['RemoveFormat'],
+        ],
+        'height': 150,
+        'removePlugins': 'elementspath',
+    },
+}
+
 # PWA configs
 PWA_APP_NAME = 'PYC Learn'
 PWA_APP_DESCRIPTION = "Song learning app for PYC"
