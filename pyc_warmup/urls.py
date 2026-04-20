@@ -18,13 +18,23 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from django.contrib.sitemaps.views import sitemap
 from songs.views import home
+from .sitemaps import SongSitemap, ComposerSitemap, BlogSitemap, StaticSitemap
 import pwa
+
+sitemaps = {
+    'songs': SongSitemap,
+    'composers': ComposerSitemap,
+    'blog': BlogSitemap,
+    'static': StaticSitemap,
+}
 
 urlpatterns = [
     # Language switcher — must be outside i18n_patterns
     path('i18n/', include('django.conf.urls.i18n')),
     path('admin/', admin.site.urls),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('serviceworker.js', TemplateView.as_view(template_name="serviceworker.js", content_type='application/javascript')),
     path('offline/', TemplateView.as_view(template_name="offline.html"), name='offline'),
     path('', include('pwa.urls')),

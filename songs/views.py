@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 
 from django.utils import timezone
 from django.urls import reverse
+from blog.models import BlogPost
 
 import json, re
 
@@ -27,7 +28,6 @@ def home(request):
 
 
 def landing(request):
-    from blog.models import BlogPost
     latest_songs = Song.objects.order_by('-created_at')[:6]
     latest_posts = BlogPost.objects.filter(published=True)[:3]
     return render(request, 'songs/landing.html', {
@@ -90,6 +90,7 @@ def song_detail(request, slug):
         'related_songs': Song.objects.filter(
             composer_fk=song.composer_fk
         ).exclude(id=song.id)[:4] if song.composer_fk else Song.objects.exclude(id=song.id).order_by('-created_at')[:4],
+        'related_blog_posts': BlogPost.objects.filter(published=True)[:3],
     })
     
     # Set device_id cookie if new

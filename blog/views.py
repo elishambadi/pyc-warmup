@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from .models import BlogPost
+from songs.models import Song
 
 
 def blog_list(request):
@@ -18,7 +19,10 @@ def blog_list(request):
 def blog_detail(request, slug):
     post = get_object_or_404(BlogPost, slug=slug, published=True)
     related = BlogPost.objects.filter(published=True, category=post.category).exclude(pk=post.pk)[:3]
+    # Surface up to 4 songs as contextual CTAs — most viewed first
+    related_songs = Song.objects.order_by('-views')[:4]
     return render(request, 'blog/blog_detail.html', {
         'post': post,
         'related': related,
+        'related_songs': related_songs,
     })
