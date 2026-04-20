@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% load i18n %}
 
 {% block title %}{{ composer.name }} – Composer | PYC WarmUp{% endblock %}
@@ -74,9 +75,11 @@
           <p class="text-xs text-gray-400 mt-0.5">
             {{ song.mp3_files.count }} track{{ song.mp3_files.count|pluralize }}
             {% if song.views %} · {{ song.views }} view{{ song.views|pluralize }}{% endif %}
-            {% if song.composition_type and song.composition_type != 'original' %}
-            · <span class="{% if song.composition_type == 'arranged' %}text-blue-500{% else %}text-amber-500{% endif %}">{{ song.get_composition_type_display }}</span>
+            {% with ctype=composition_types_by_song|get_item:song.id %}
+            {% if ctype and ctype != 'Original' %}
+            · <span class="{% if ctype == 'Arranged' %}text-blue-500{% elif ctype == 'Transcribed' %}text-amber-500{% else %}text-emerald-500{% endif %}">{{ ctype }}</span>
             {% endif %}
+            {% endwith %}
           </p>
         </div>
         <span class="ml-auto text-gray-300 group-hover:text-pyc-purple transition-colors shrink-0">›</span>

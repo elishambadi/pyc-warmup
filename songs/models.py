@@ -37,6 +37,26 @@ class Composer(models.Model):
         super().save(*args, **kwargs)
 
 
+class SongComposerContribution(models.Model):
+    COMPOSITION_TYPE_CHOICES = [
+        ('original', 'Original'),
+        ('arranged', 'Arranged'),
+        ('transcribed', 'Transcribed'),
+    ]
+
+    song = models.ForeignKey('Song', on_delete=models.CASCADE, related_name='composer_links')
+    composer = models.ForeignKey(Composer, on_delete=models.CASCADE, related_name='song_links')
+    composition_type = models.CharField(max_length=20, choices=COMPOSITION_TYPE_CHOICES, default='original')
+    position = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ['position', 'id']
+        unique_together = ('song', 'composer')
+
+    def __str__(self):
+        return f"{self.song.title} - {self.composer.name} ({self.get_composition_type_display()})"
+
+
 class Song(models.Model):
     COMPOSITION_TYPE_CHOICES = [
         ('original', 'Original'),
@@ -50,6 +70,12 @@ class Song(models.Model):
     composer_fk = models.ForeignKey(
         Composer, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='songs', verbose_name='Composer (from table)'
+    )
+    composers = models.ManyToManyField(
+        Composer,
+        through='SongComposerContribution',
+        related_name='composed_songs',
+        blank=True
     )
     composition_type = models.CharField(
         max_length=20, choices=COMPOSITION_TYPE_CHOICES,
@@ -67,6 +93,19 @@ class Song(models.Model):
     
     def get_absolute_url(self):
         return reverse("song_detail", args=[self.slug])
+
+    @property
+    def primary_composer_name(self):
+        contribution = self.composer_links.select_related('composer').first()
+        if contribution:
+            return contribution.composer.name
+        if self.composer_fk:
+            return self.composer_fk.name
+        return self.composer or ''
+
+    @property
+    def has_multiple_composers(self):
+        return self.composer_links.count() > 1
 
     
     def save(self, *args, **kwargs):

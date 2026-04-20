@@ -2,14 +2,14 @@
 {% load custom_filters %}
 {% load i18n %}
 
-{% block title %}{{ song.title }}{% if song.composer_fk %} - {{ song.composer_fk.name }}{% elif song.composer %} - {{ song.composer }}{% endif %} | PYC WarmUp App{% endblock %}
+{% block title %}{{ song.title }}{% if song.primary_composer_name %} - {{ song.primary_composer_name }}{% endif %} | PYC WarmUp App{% endblock %}
 
 {% block description %}
-Discover '{{ song.title }}' with lyrics {% if song.composer %} by {{ song.composer }}{% endif %}, a song on the PYC
+Discover '{{ song.title }}' with lyrics {% if song.primary_composer_name %} by {{ song.primary_composer_name }}{% endif %}, a song on the PYC
 WarmUp App. Practice with synced lyrics, voice parts, and embedded video/audio training.
 {% endblock %}
 
-{% block og_title %}{{ song.title }}{% if song.composer %} - {{ song.composer }}{% endif %} | PYC WarmUp App{% endblock %}
+{% block og_title %}{{ song.title }}{% if song.primary_composer_name %} - {{ song.primary_composer_name }}{% endif %} | PYC WarmUp App{% endblock %}
 
 {% block og_description %}
 Access '{{ song.title }}' with synced lyrics, training audio files, and video resources. Part of your choir preparation
@@ -24,7 +24,7 @@ App.
 {% endblock %}
 
 <!-- add block keywords with song title and composer -->
-{% block keywords %}Parklands Youth Choir, choir, warm-up, voice notes, {{ song.title }} lyrics, {% if song.composer %}, {{ song.composer }}{% endif %}{% endblock %}
+{% block keywords %}Parklands Youth Choir, choir, warm-up, voice notes, {{ song.title }} lyrics, {% if song.primary_composer_name %}, {{ song.primary_composer_name }}{% endif %}{% endblock %}
 
 {% block content %}
 
@@ -95,23 +95,38 @@ App.
         <div class="flex-1">
             <h1 id="song-title" class="text-3xl font-bold text-pyc-purple mb-2">
                 {{ song.title }}
-                {% if song.composer_fk %}
-                <span class="text-pyc-text/60 text-2xl">by
-                  <a href="{% url 'composer_detail' song.composer_fk.slug %}"
-                     class="hover:text-pyc-purple transition-colors">{{ song.composer_fk.name }}</a>
-                </span>
-                {% elif song.composer %}
-                <span class="text-pyc-text/60 text-2xl">by {{ song.composer }}</span>
-                {% endif %}
+                                {% if composer_links %}
+                                <span class="text-pyc-text/60 text-2xl">by {{ composer_links|length }} composer{{ composer_links|length|pluralize }}</span>
+                                {% elif song.composer_fk %}
+                                <span class="text-pyc-text/60 text-2xl">by
+                                    <a href="{% url 'composer_detail' song.composer_fk.slug %}"
+                                         class="hover:text-pyc-purple transition-colors">{{ song.composer_fk.name }}</a>
+                                </span>
+                                {% elif song.composer %}
+                                <span class="text-pyc-text/60 text-2xl">by {{ song.composer }}</span>
+                                {% endif %}
             </h1>
-            {% if song.composition_type and song.composition_type != 'original' %}
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
-              {% if song.composition_type == 'arranged' %}bg-blue-100 text-blue-700
-              {% elif song.composition_type == 'transcribed' %}bg-amber-100 text-amber-700
-              {% else %}bg-gray-100 text-gray-600{% endif %}">
-              <i class="fas fa-{% if song.composition_type == 'arranged' %}sliders-h{% else %}file-alt{% endif %}"></i>
-              {{ song.get_composition_type_display }}
-            </span>
+                        {% if composer_links %}
+                        <div class="flex flex-wrap gap-2 mt-2">
+                                {% for link in composer_links %}
+                                <a href="{% url 'composer_detail' link.composer.slug %}"
+                                     class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border
+                                     {% if link.composition_type == 'arranged' %}bg-blue-50 text-blue-700 border-blue-200
+                                     {% elif link.composition_type == 'transcribed' %}bg-amber-50 text-amber-700 border-amber-200
+                                     {% else %}bg-emerald-50 text-emerald-700 border-emerald-200{% endif %}">
+                                        <i class="fas fa-user-music"></i>
+                                        {{ link.composer.name }} · {{ link.get_composition_type_display }}
+                                </a>
+                                {% endfor %}
+                        </div>
+                        {% elif song.composition_type and song.composition_type != 'original' %}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
+                            {% if song.composition_type == 'arranged' %}bg-blue-100 text-blue-700
+                            {% elif song.composition_type == 'transcribed' %}bg-amber-100 text-amber-700
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            <i class="fas fa-{% if song.composition_type == 'arranged' %}sliders-h{% else %}file-alt{% endif %}"></i>
+                            {{ song.get_composition_type_display }}
+                        </span>
             {% endif %}
         </div>
         {% if user|is_admin %}

@@ -1,6 +1,6 @@
 from urllib import request
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest, Composer
+from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution
 from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm
 from .utils import generate_lyric_lines
 from django.http import JsonResponse, HttpResponse
@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 
 from django.utils import timezone
 from django.urls import reverse
+from django.db.models import Count
 from blog.models import BlogPost
 
 import json, re
@@ -37,6 +38,7 @@ def landing(request):
 
 def song_detail(request, slug):
     song = get_object_or_404(Song, slug=slug)
+    composer_links = list(song.composer_links.select_related('composer').all())
     
     # Track page views with 5-minute cooldown per device
     device_id = request.COOKIES.get('device_id')
@@ -79,8 +81,10 @@ def song_detail(request, slug):
         }
         mp3_timestamps[line.id] = json.dumps(timestamps)
     
+    primary_composer = composer_links[0].composer if composer_links else song.composer_fk
     response = render(request, 'songs/song_detail.html', {
         'song': song,
+        'composer_links': composer_links,
         'mp3s': mp3s,
         'notes': notes,
         'references': references,
@@ -88,8 +92,8 @@ def song_detail(request, slug):
         'annotated_lines': annotated_lines,
         'comments': comments,
         'related_songs': Song.objects.filter(
-            composer_fk=song.composer_fk
-        ).exclude(id=song.id)[:4] if song.composer_fk else Song.objects.exclude(id=song.id).order_by('-created_at')[:4],
+            composer_links__composer=primary_composer
+        ).exclude(id=song.id).distinct()[:4] if primary_composer else Song.objects.exclude(id=song.id).order_by('-created_at')[:4],
         'related_blog_posts': BlogPost.objects.filter(published=True)[:3],
     })
     
@@ -102,18 +106,59 @@ def song_detail(request, slug):
 def add_song(request):
     if request.method == "POST":
         song_form = SongForm(request.POST)
-        if song_form.is_valid():
+        composer_ids = [composer_id for composer_id in request.POST.getlist('composer_ids[]') if composer_id]
+        if song_form.is_valid() and composer_ids:
             song = song_form.save(commit=False)
             song.lyrics = ""
             song.save()
+            _save_composer_contributions(request, song, replacing=True)
             _save_lyric_sections(request, song)
             return redirect("song_list")
         else:
-            song_form = SongForm(request.POST)
+            if not composer_ids:
+                song_form.add_error(None, "Please add at least one composer.")
     else:
         song_form = SongForm()
 
-    return render(request, "songs/add_song.html", {"song_form": song_form})
+    return render(request, "songs/add_song.html", {
+        "song_form": song_form,
+        "composer_choices": Composer.objects.order_by('name'),
+        "composition_type_choices": SongComposerContribution.COMPOSITION_TYPE_CHOICES,
+    })
+
+
+def _save_composer_contributions(request, song, replacing=False):
+    if replacing:
+        song.composer_links.all().delete()
+
+    composer_ids = request.POST.getlist('composer_ids[]')
+    composition_types = request.POST.getlist('composition_types[]')
+
+    links = []
+    for index, composer_id in enumerate(composer_ids):
+        if not composer_id:
+            continue
+        composition_type = composition_types[index] if index < len(composition_types) else 'original'
+        try:
+            composer = Composer.objects.get(id=int(composer_id))
+        except (ValueError, Composer.DoesNotExist):
+            continue
+        links.append((composer, composition_type))
+
+    for index, (composer, composition_type) in enumerate(links, start=1):
+        SongComposerContribution.objects.create(
+            song=song,
+            composer=composer,
+            composition_type=composition_type,
+            position=index,
+        )
+
+    if links:
+        primary_composer, primary_type = links[0]
+        song.composer_fk = primary_composer
+        song.composer = primary_composer.name
+        song.composition_type = primary_type
+        song.save(update_fields=['composer_fk', 'composer', 'composition_type'])
 
 
 def _save_lyric_sections(request, song, replacing=False):
@@ -169,10 +214,14 @@ def edit_song(request, song_id):
 
     if request.method == "POST":
         song_form = SongForm(request.POST, instance=song)
-        if song_form.is_valid():
+        composer_ids = [composer_id for composer_id in request.POST.getlist('composer_ids[]') if composer_id]
+        if song_form.is_valid() and composer_ids:
             song_form.save()
+            _save_composer_contributions(request, song, replacing=True)
             _save_lyric_sections(request, song, replacing=True)
             return redirect("song_detail", slug=song.slug)
+        if not composer_ids:
+            song_form.add_error(None, "Please add at least one composer.")
     else:
         song_form = SongForm(instance=song)
 
@@ -205,6 +254,9 @@ def edit_song(request, song_id):
         "song_form": song_form,
         "song": song,
         "sections_data": sections_data,
+        "composer_choices": Composer.objects.order_by('name'),
+        "composition_type_choices": SongComposerContribution.COMPOSITION_TYPE_CHOICES,
+        "composer_links_data": list(song.composer_links.values('composer_id', 'composition_type').order_by('position')),
     })
 
 # 🎵 Delete a Song
@@ -637,16 +689,21 @@ def upload_voicenotes_for_request(request):
 
 
 def composer_list(request):
-    composers = Composer.objects.all()
+    composers = Composer.objects.annotate(contribution_count=Count('song_links__song', distinct=True))
     return render(request, 'songs/composer_list.html', {'composers': composers})
 
 
 def composer_detail(request, slug):
     composer = get_object_or_404(Composer, slug=slug)
-    songs = composer.songs.order_by('title')
+    songs = Song.objects.filter(composer_links__composer=composer).distinct().order_by('title')
+    composition_types_by_song = {
+        link.song_id: link.get_composition_type_display()
+        for link in SongComposerContribution.objects.filter(song__in=songs, composer=composer)
+    }
     other_composers = Composer.objects.exclude(id=composer.id)[:5]
     return render(request, 'songs/composer_detail.html', {
         'composer': composer,
         'songs': songs,
+        'composition_types_by_song': composition_types_by_song,
         'other_composers': other_composers,
     })

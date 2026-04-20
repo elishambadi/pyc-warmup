@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure, VoiceNote, VoiceNoteRequest, Composer
+from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution
 from django.contrib.auth.models import Group, User
 
 
@@ -27,6 +27,12 @@ class SectionInline(admin.TabularInline):
     model = Section
     extra = 1
 
+
+class SongComposerContributionInline(admin.TabularInline):
+    model = SongComposerContribution
+    extra = 1
+    ordering = ('position',)
+
 @admin.register(Composer)
 class ComposerAdmin(admin.ModelAdmin):
     list_display = ('name', 'nationality', 'born', 'died', 'song_count')
@@ -38,7 +44,7 @@ class ComposerAdmin(admin.ModelAdmin):
     )
 
     def song_count(self, obj):
-        return obj.songs.count()
+        return obj.song_links.values('song_id').distinct().count()
     song_count.short_description = 'Songs'
 
 
@@ -47,7 +53,14 @@ class SongAdmin(admin.ModelAdmin):
     list_display = ('title', 'composer_fk', 'composer', 'composition_type', 'created_at')
     list_filter = ('composer_fk', 'composition_type')
     search_fields = ('title', 'composer', 'composer_fk__name')
-    inlines = [MP3FileInline, NoteInline, ReferenceInline, SectionInline, LyricInline]
+    inlines = [SongComposerContributionInline, MP3FileInline, NoteInline, ReferenceInline, SectionInline, LyricInline]
+
+
+@admin.register(SongComposerContribution)
+class SongComposerContributionAdmin(admin.ModelAdmin):
+    list_display = ('song', 'composer', 'composition_type', 'position')
+    list_filter = ('composition_type', 'composer')
+    search_fields = ('song__title', 'composer__name')
 
 @admin.register(MP3File)
 class MP3Admin(admin.ModelAdmin):

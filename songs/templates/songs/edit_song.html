@@ -18,6 +18,9 @@
             <div>
                 <strong class="font-semibold">Please fix the following errors:</strong>
                 <ul class="list-disc list-inside mt-2 space-y-1">
+                    {% for error in song_form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
                     {% for field in song_form %}
                         {% for error in field.errors %}
                             <li>{{ field.label }}: {{ error }}</li>
@@ -42,27 +45,54 @@
                 {{ song_form.title }}
             </div>
             <div>
-                <label for="id_composer_fk" class="block text-sm font-semibold text-pyc-text mb-2">
-                    Composer <span class="text-red-500">*</span>
+                <label class="block text-sm font-semibold text-pyc-text mb-2">
+                    Composers &amp; Contribution Type <span class="text-red-500">*</span>
                 </label>
-                {{ song_form.composer_fk }}
-                <p class="text-xs text-gray-400 mt-1">
-                  Select from the composers table.
-                  <a href="{% url 'admin:songs_composer_add' %}" target="_blank" class="text-pyc-purple hover:underline">+ Add new composer</a>
-                </p>
-            </div>
-            <div>
-                <label for="id_composer" class="block text-sm font-semibold text-pyc-text mb-2">
-                    Composer name <span class="text-gray-400 text-xs font-normal">(text fallback)</span>
-                </label>
-                {{ song_form.composer }}
-            </div>
-            <div>
-                <label for="id_composition_type" class="block text-sm font-semibold text-pyc-text mb-2">
-                    Composition Type
-                </label>
-                {{ song_form.composition_type }}
-                <p class="text-xs text-gray-400 mt-1">Original, arranged, or transcribed?</p>
+                <div id="composer-rows" class="space-y-3">
+                    {% for item in composer_links_data %}
+                    <div class="composer-row grid grid-cols-1 md:grid-cols-[1fr_220px_auto] gap-2 items-center">
+                        <select name="composer_ids[]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pyc-purple" required>
+                            <option value="">— Select composer —</option>
+                            {% for composer in composer_choices %}
+                            <option value="{{ composer.id }}" {% if composer.id == item.composer_id %}selected{% endif %}>{{ composer.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="composition_types[]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pyc-purple">
+                            {% for value, label in composition_type_choices %}
+                            <option value="{{ value }}" {% if value == item.composition_type %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="remove-composer-row px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors" title="Remove composer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% empty %}
+                    <div class="composer-row grid grid-cols-1 md:grid-cols-[1fr_220px_auto] gap-2 items-center">
+                        <select name="composer_ids[]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pyc-purple" required>
+                            <option value="">— Select composer —</option>
+                            {% for composer in composer_choices %}
+                            <option value="{{ composer.id }}">{{ composer.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="composition_types[]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pyc-purple">
+                            {% for value, label in composition_type_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="remove-composer-row px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors" title="Remove composer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-2 flex items-center gap-3">
+                    <button type="button" onclick="addComposerRow()" class="px-3 py-2 bg-pyc-purple/10 text-pyc-purple rounded-lg hover:bg-pyc-purple/20 transition-colors text-sm font-medium">
+                        <i class="fas fa-plus mr-1"></i> Add Composer
+                    </button>
+                    <a href="{% url 'admin:songs_composer_add' %}" target="_blank" class="text-sm text-pyc-purple hover:underline">+ Create composer in admin</a>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Each composer can have a different type: Original, Arranged, or Transcribed.</p>
+                {{ song_form.composer.as_hidden }}
             </div>
         </div>
 
@@ -236,6 +266,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         initializeDragAndDrop();
         attachSectionHandlers();
+        attachComposerRowHandlers();
 
         // Auto-preview YouTube if link already exists
         const existing = document.getElementById('id_youtube_link').value.trim();
@@ -244,6 +275,52 @@
 
     let sectionCount = {{ sections_data|length|default:1 }};
     let draggedElement = null;
+    const composerOptionsHtml = `
+        <option value="">— Select composer —</option>
+        {% for composer in composer_choices %}
+        <option value="{{ composer.id }}">{{ composer.name|escapejs }}</option>
+        {% endfor %}
+    `;
+    const compositionTypeOptionsHtml = `
+        {% for value, label in composition_type_choices %}
+        <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+    `;
+
+    function addComposerRow(composerId = '', compositionType = 'original') {
+        const row = document.createElement('div');
+        row.className = 'composer-row grid grid-cols-1 md:grid-cols-[1fr_220px_auto] gap-2 items-center';
+        row.innerHTML = `
+            <select name="composer_ids[]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pyc-purple" required>
+                ${composerOptionsHtml}
+            </select>
+            <select name="composition_types[]" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pyc-purple">
+                ${compositionTypeOptionsHtml}
+            </select>
+            <button type="button" class="remove-composer-row px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors" title="Remove composer">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        document.getElementById('composer-rows').appendChild(row);
+        if (composerId) {
+            row.querySelector('select[name="composer_ids[]"]').value = String(composerId);
+        }
+        row.querySelector('select[name="composition_types[]"]').value = compositionType || 'original';
+        attachComposerRowHandlers();
+    }
+
+    function attachComposerRowHandlers() {
+        document.querySelectorAll('.remove-composer-row').forEach(btn => {
+            btn.onclick = function () {
+                const rows = document.querySelectorAll('.composer-row');
+                if (rows.length <= 1) {
+                    alert('At least one composer is required.');
+                    return;
+                }
+                this.closest('.composer-row').remove();
+            };
+        });
+    }
 
     // --- YouTube Preview ---
     function extractYouTubeId(url) {
