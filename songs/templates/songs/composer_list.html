@@ -47,7 +47,7 @@
       </div>
 
       {% if composer.bio %}
-        <p class="text-sm text-gray-500 line-clamp-2">{{ composer.bio|truncatewords:20 }}</p>
+        <p class="text-sm text-gray-500 line-clamp-2">{{ composer.bio|striptags|truncatewords:20 }}</p>
       {% endif %}
 
       <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">

@@ -10,6 +10,7 @@ class Composer(models.Model):
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     bio = models.TextField(blank=True, help_text="Short biography shown on the composer page")
     image = models.ImageField(upload_to='composers/', null=True, blank=True)
+    image_url = models.URLField(blank=True, help_text="External image URL suggested by AI")
     born = models.CharField(max_length=100, blank=True, help_text="e.g. 1856 or March 3, 1856")
     died = models.CharField(max_length=100, blank=True)
     nationality = models.CharField(max_length=100, blank=True)

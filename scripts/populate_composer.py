@@ -21,6 +21,7 @@ import sys
 import json
 import argparse
 import re
+from html import escape
 import django
 
 # ── Django setup ─────────────────────────────────────────────────────────────
@@ -44,11 +45,13 @@ following fields populated as richly as possible:
   "born": "<string>",
   "died": "<string>",
   "nationality": "<string>",
-  "website": "<string>"
+    "website": "<string>",
+    "image_url": "<string>"
 }
 
 Rules:
-- "bio": Write 150–300 words. Vary the style — it may open with a striking quote
+- "bio": Write 150–300 words as HTML (not plain text). Use semantic tags like
+    <p>, <blockquote>, <em>, <strong>. Vary the style — it may open with a striking quote
   by or about the composer, a vivid anecdote, a brief story, a reflection on their
   legacy, or a straightforward but lyrical biography. Do NOT always start with the
   composer's name. Make it feel human and interesting.
@@ -57,6 +60,8 @@ Rules:
 - "died": Same format, or "still living" / "unknown" as appropriate.
 - "nationality": e.g. "German", "Nigerian", "American–British".
 - "website": Official website URL if one exists, else an empty string "".
+- "image_url": A direct public image URL for the composer if reasonably reliable,
+  else an empty string "".
 
 Return ONLY valid JSON — no markdown fences, no extra keys, no commentary.
 If a field is genuinely unknown, use an empty string for text fields.
@@ -96,6 +101,24 @@ def extract_json_payload(text: str) -> str:
     return stripped
 
 
+def normalize_bio_html(value: str) -> str:
+    if not value:
+        return ""
+
+    text = value.strip()
+    if not text:
+        return ""
+
+    if re.search(r"<\s*[a-zA-Z][^>]*>", text):
+        return text
+
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    if not paragraphs:
+        return f"<p>{escape(text)}</p>"
+
+    return "\n".join(f"<p>{escape(paragraph)}</p>" for paragraph in paragraphs)
+
+
 # ── Single composer populate ──────────────────────────────────────────────────
 def populate_one(client, composer, dry_run: bool) -> bool:
     data = call_claude(client, composer.name)
@@ -111,7 +134,7 @@ def populate_one(client, composer, dry_run: bool) -> bool:
         return True
 
     if data.get("bio"):
-        composer.bio = data["bio"]
+        composer.bio = normalize_bio_html(data["bio"])
     if data.get("born"):
         composer.born = data["born"]
     if data.get("died"):
@@ -120,6 +143,8 @@ def populate_one(client, composer, dry_run: bool) -> bool:
         composer.nationality = data["nationality"]
     if data.get("website"):
         composer.website = data["website"]
+    if data.get("image_url"):
+        composer.image_url = data["image_url"]
 
     composer.save()
     print("      ✓ Saved\n")
