@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load custom_filters %}
 {% load i18n %}
 
 {% block title %}Blog — How to Sing Better | PYC WarmUp{% endblock %}
@@ -70,7 +69,7 @@
                 {{ post.title }}
             </h2>
             {% if post.excerpt %}
-            <p class="text-pyc-text/65 text-sm leading-relaxed flex-1">{{ post.excerpt|html_to_text|truncatewords:30 }}</p>
+            <div class="text-pyc-text/65 text-sm leading-relaxed flex-1">{{ post.excerpt|safe }}</div>
             {% endif %}
             <div class="mt-4 flex items-center gap-2 text-pyc-purple text-sm font-semibold">
                 Read more <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>

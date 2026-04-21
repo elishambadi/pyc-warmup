@@ -3,7 +3,7 @@
 {% load i18n %}
 
 {% block title %}{{ composer.name }} – Composer | PYC WarmUp{% endblock %}
-{% block description %}{{ composer.name }}{% if composer.nationality %} ({{ composer.nationality }}){% endif %}{% if composer.bio %} – {{ composer.bio|html_to_text|truncatewords:25 }}{% endif %}{% endblock %}
+{% block description %}{{ composer.name }}{% if composer.nationality %} ({{ composer.nationality }}){% endif %}{% if composer.bio %} – {{ composer.bio|striptags|truncatewords:25 }}{% endif %}{% endblock %}
 {% block keywords %}{{ composer.name }}, {{ composer.name }} biography, {{ composer.name }} works, choir composer{% endblock %}
 
 {% block content %}
@@ -121,7 +121,7 @@
   "@context": "https://schema.org",
   "@type": "Person",
   "name": "{{ composer.name }}",
-  {% if composer.bio %}"description": "{{ composer.bio|html_to_text|escapejs }}",{% endif %}
+  {% if composer.bio %}"description": "{{ composer.bio|striptags|escapejs }}",{% endif %}
   {% if composer.nationality %}"nationality": "{{ composer.nationality }}",{% endif %}
   {% if composer.image %}"image": "{{ request.scheme }}://{{ request.get_host }}{{ composer.image.url }}",{% endif %}
   "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'composer_detail' composer.slug %}"
