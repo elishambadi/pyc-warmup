@@ -185,7 +185,7 @@ DJANGO_TIPTAP_CONFIG = {
         {
             "source_static": "js/tiptap/youtube_extension.js",
             "module_name": "YouTube",
-            "configuration_statement": "YouTube.configure({ controls: true, nocookie: true, width: 640, height: 360 })",
+            "configuration_statement": "YouTube.configure({ controls: true, nocookie: true, width: 640, height: 360, HTMLAttributes: { referrerpolicy: 'strict-origin-when-cross-origin' } })",
             "toolbar_include": "tiptap_extensions/youtube_toolbar.html",
             "buttonsconfig_include": "tiptap_extensions/youtube_buttons_config.js",
             "css_include": "tiptap_extensions/youtube_css.html",

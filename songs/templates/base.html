@@ -244,6 +244,18 @@
   </footer> -->
 
   <script>
+    function applyYouTubeReferrerPolicy(root) {
+      const scope = root || document;
+      const selector = 'iframe[src*="youtube.com/embed"], iframe[src*="youtube-nocookie.com/embed"]';
+      scope.querySelectorAll(selector).forEach(function(iframe) {
+        iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      applyYouTubeReferrerPolicy(document);
+    });
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register("/serviceworker.js")
         .then(function (registration) {
