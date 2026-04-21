@@ -46,6 +46,11 @@ self.addEventListener('fetch', function(event) {
         return;
     }
 
+    // Let the browser handle cross-origin requests (e.g. CDN ESM imports)
+    if (requestUrl.origin !== location.origin) {
+        return;
+    }
+
     // Handle song pages - Cache first, update in background
     if (requestUrl.pathname.startsWith('/songs/') && !requestUrl.pathname.includes('/add')) {
         event.respondWith(

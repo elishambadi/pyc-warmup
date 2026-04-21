@@ -1,3 +1,3 @@
-import Youtube from 'https://cdn.skypack.dev/pin/@tiptap/extension-youtube@v2.0.4-mjGDEKmyx03QwNKiR4mB/mode=imports,min/optimized/@tiptap/extension-youtube.js'
+import Youtube from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-youtube@2.0.4/+esm'
 
 export { Youtube as YouTube }
