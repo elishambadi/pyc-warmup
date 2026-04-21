@@ -64,6 +64,7 @@ Rules:
 - Include concrete tips, examples, and actionable advice.
 - Do not include markdown fences.
 - Do not include any keys beyond the four specified.
+- CRITICAL: the output must be valid JSON. Escape ALL double-quote characters that appear inside string values with a backslash (e.g. write \\" instead of "). This includes quoted terms, nicknames, or phrases like (also called \\"raspberry sounds\\"). Never use unescaped double quotes inside a JSON string value.
 """.strip()
 
 
