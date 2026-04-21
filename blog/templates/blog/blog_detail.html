@@ -61,7 +61,7 @@
     {% endif %}
 
     <!-- Body -->
-    <div class="prose prose-lg max-w-none
+    <div class="blog-content prose prose-lg max-w-none
                 prose-headings:text-pyc-purple prose-headings:font-bold
                 prose-a:text-pyc-purple prose-a:no-underline hover:prose-a:underline
                 prose-strong:text-pyc-text
@@ -128,4 +128,14 @@
   "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'blog_detail' post.slug %}"
 }
 </script>
+<style>
+    .blog-content iframe {
+        width: 100%;
+        max-width: 100%;
+        aspect-ratio: 16 / 9;
+        height: auto;
+        border: 0;
+        border-radius: 0.75rem;
+    }
+</style>
 {% endblock %}

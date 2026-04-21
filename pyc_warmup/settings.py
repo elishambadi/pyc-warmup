@@ -181,6 +181,16 @@ STATICFILES_DIRS = [
 # django-tiptap config — fix typo in package default ("tiptapOutputFomat" vs "tiptapOutputFormat")
 DJANGO_TIPTAP_CONFIG = {
     "tiptapOutputFormat": "html",
+    "custom_extensions": [
+        {
+            "source_static": "js/tiptap/youtube_extension.js",
+            "module_name": "YouTube",
+            "configuration_statement": "YouTube.configure({ controls: true, nocookie: true, width: 640, height: 360 })",
+            "toolbar_include": "tiptap_extensions/youtube_toolbar.html",
+            "buttonsconfig_include": "tiptap_extensions/youtube_buttons_config.js",
+            "css_include": "tiptap_extensions/youtube_css.html",
+        }
+    ],
 }
 
 # PWA configs

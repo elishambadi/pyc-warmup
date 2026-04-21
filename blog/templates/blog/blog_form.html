@@ -85,6 +85,7 @@
         <label class="block text-sm font-semibold text-pyc-text mb-1">
           Body <span class="text-red-500">*</span>
         </label>
+        <p class="text-xs text-gray-400 mb-2">Use the YouTube button in the editor toolbar to embed a video URL as an iframe.</p>
         {{ form.body }}
         {% if form.body.errors %}
           <p class="text-red-500 text-xs mt-1">{{ form.body.errors|join:", " }}</p>
