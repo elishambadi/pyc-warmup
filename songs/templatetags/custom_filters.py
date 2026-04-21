@@ -1,4 +1,7 @@
 from django import template
+from django.utils.html import strip_tags
+import html
+import re
 
 register = template.Library()
 
@@ -30,3 +33,22 @@ def add_class(field, css_class):
     Usage: {{ form.my_field|add_class:"tailwind-classes-here" }}
     """
     return field.as_widget(attrs={"class": css_class})
+
+
+@register.filter(name="html_to_text")
+def html_to_text(value):
+    if not value:
+        return ""
+
+    text = str(value)
+    text = re.sub(r"(?is)<br\s*/?>", "\n", text)
+    text = re.sub(r"(?is)<li[^>]*>\s*", "\n• ", text)
+    text = re.sub(r"(?is)</li>", "", text)
+    text = re.sub(r"(?is)</(p|div|h[1-6]|ul|ol|blockquote|tr)>", "\n", text)
+
+    text = strip_tags(text)
+    text = html.unescape(text)
+
+    text = re.sub(r"[ \t\r\f\v]+", " ", text)
+    text = re.sub(r"\n\s*\n+", "\n", text)
+    return text.strip()

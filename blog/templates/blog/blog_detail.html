@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% load i18n %}
 
 {% block title %}{{ post.title }} | PYC WarmUp Blog{% endblock %}
-{% block description %}{% if post.excerpt %}{{ post.excerpt }}{% else %}{{ post.body|striptags|truncatewords:30 }}{% endif %}{% endblock %}
+{% block description %}{% if post.excerpt %}{{ post.excerpt|html_to_text|truncatewords:30 }}{% else %}{{ post.body|html_to_text|truncatewords:30 }}{% endif %}{% endblock %}
 {% block og_title %}{{ post.title }} | PYC WarmUp Blog{% endblock %}
-{% block og_description %}{% if post.excerpt %}{{ post.excerpt }}{% else %}{{ post.body|striptags|truncatewords:30 }}{% endif %}{% endblock %}
+{% block og_description %}{% if post.excerpt %}{{ post.excerpt|html_to_text|truncatewords:30 }}{% else %}{{ post.body|html_to_text|truncatewords:30 }}{% endif %}{% endblock %}
 {% block keywords %}{{ post.title }}, {{ post.get_category_display }}, choir, singing, vocal practice{% endblock %}
 
 {% block content %}
@@ -57,7 +58,7 @@
     <h1 class="text-3xl md:text-4xl font-extrabold text-pyc-text leading-tight mb-4">{{ post.title }}</h1>
 
     {% if post.excerpt %}
-    <p class="text-lg text-pyc-text/65 border-l-4 border-pyc-orange pl-4 mb-8 italic leading-relaxed">{{ post.excerpt }}</p>
+    <p class="text-lg text-pyc-text/65 border-l-4 border-pyc-orange pl-4 mb-8 italic leading-relaxed">{{ post.excerpt|html_to_text }}</p>
     {% endif %}
 
     <!-- Body -->
@@ -119,7 +120,7 @@
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "{{ post.title|escapejs }}",
-  "description": "{% if post.excerpt %}{{ post.excerpt|escapejs }}{% endif %}",
+    "description": "{% if post.excerpt %}{{ post.excerpt|html_to_text|escapejs }}{% else %}{{ post.body|html_to_text|truncatewords:30|escapejs }}{% endif %}",
   "datePublished": "{{ post.created_at|date:'c' }}",
   "dateModified": "{{ post.updated_at|date:'c' }}",
   {% if post.author %}"author": {"@type": "Person", "name": "{{ post.author.get_full_name|default:post.author.username|escapejs }}"},{% endif %}
