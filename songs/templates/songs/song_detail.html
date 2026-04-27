@@ -522,7 +522,7 @@ App.
     </div>
     {% endif %}
 
-    <div id="lyric-comments-panel" class="hidden fixed z-[9997] right-4 sm:right-6 left-4 sm:left-auto bottom-24 sm:w-96 rounded-2xl border border-gray-200 bg-white shadow-2xl">
+    <div id="lyric-comments-panel" class="hidden fixed z-[9997] w-[22rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-200 bg-white shadow-2xl">
         <div class="px-4 py-3 border-b border-gray-100 flex items-start justify-between gap-3">
             <div>
                 <p class="text-sm font-semibold text-pyc-text">{% trans "Lyric Line Comments" %}</p>
@@ -623,6 +623,38 @@ App.
                 panel.classList.toggle('hidden', !open);
             }
 
+            function positionPanel(trigger) {
+                if (!trigger) return;
+
+                const rect = trigger.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const panelWidth = Math.min(352, viewportWidth - 24);
+                panel.style.width = panelWidth + 'px';
+
+                const panelHeight = panel.offsetHeight || 320;
+                const gap = 10;
+
+                let left = rect.right + gap;
+                if (left + panelWidth > viewportWidth - 12) {
+                    left = rect.left - panelWidth - gap;
+                }
+                if (left < 12) {
+                    left = Math.max(12, viewportWidth - panelWidth - 12);
+                }
+
+                let top = rect.top - 12;
+                if (top + panelHeight > viewportHeight - 12) {
+                    top = viewportHeight - panelHeight - 12;
+                }
+                if (top < 12) {
+                    top = 12;
+                }
+
+                panel.style.left = left + 'px';
+                panel.style.top = top + 'px';
+            }
+
             function renderComments(comments) {
                 if (!comments.length) {
                     panelList.innerHTML = '<p class="text-sm text-pyc-text/60 italic">No comments yet for this line.</p>';
@@ -670,6 +702,7 @@ App.
                     panelLineText.textContent = this.dataset.lineText || '';
                     panelList.innerHTML = '<p class="text-sm text-pyc-text/60 italic">Loading comments...</p>';
                     setPanelOpen(true);
+                    positionPanel(this);
 
                     fetchComments(activeLineId).then(function (data) {
                         if (!data.success) {
@@ -723,6 +756,13 @@ App.
 
             panelClose?.addEventListener('click', function () {
                 setPanelOpen(false);
+            });
+
+            window.addEventListener('resize', function () {
+                if (!panel.classList.contains('hidden')) {
+                    const activeTrigger = document.querySelector('.lyric-comment-trigger[data-line-id="' + activeLineId + '"]');
+                    positionPanel(activeTrigger);
+                }
             });
 
             document.addEventListener('click', function (event) {
