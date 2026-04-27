@@ -466,11 +466,84 @@ App.
         </aside>
     </div>
 
+    {% if mp3s.count %}
+    <div id="floating-audio-wrapper" class="fixed right-4 sm:right-6 z-[9998]" style="bottom: 6.5rem;">
+        <div id="floating-audio-dropdown" class="hidden mb-3 w-72 max-h-64 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl p-3">
+            <p class="text-xs font-semibold uppercase tracking-wide text-pyc-text/60 mb-2">
+                <i class="fas fa-music mr-1 text-pyc-purple"></i>{% trans "Available Audios" %}
+            </p>
+            <div class="space-y-2">
+                {% for mp3 in mp3s %}
+                <button
+                    type="button"
+                    class="floating-mp3 mp3-voice w-full text-left px-3 py-2 rounded-lg border border-gray-100 hover:border-pyc-purple/30 hover:bg-pyc-purple/5 text-pyc-purple transition-colors"
+                    data-mp3-url="{{ mp3.file.url }}"
+                    data-mp3-id="{{ mp3.id }}"
+                    data-mp3-voice-part="{{ mp3.voice_part }}"
+                >
+                    <i class="fas fa-play-circle mr-2"></i>{{ mp3.voice_part }} {% trans "Audio" %}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button
+            id="floating-audio-toggle"
+            type="button"
+            class="inline-grid grid-cols-[1rem_auto_0.75rem] items-center gap-2 px-4 py-3 rounded-full bg-pyc-purple text-white shadow-xl hover:bg-opacity-90 transition-all leading-none"
+            aria-expanded="false"
+            aria-controls="floating-audio-dropdown"
+        >
+            <i class="fas fa-play w-4 text-center"></i>
+            <span class="text-sm font-semibold">{% trans "Play" %}</span>
+            <i id="floating-audio-caret" class="fas fa-chevron-up w-3 text-center text-xs opacity-80"></i>
+        </button>
+    </div>
+    {% endif %}
+
     {% include 'songs/partials/player.html' %}
 
     {% endblock %}
 
     {% block extra_js %}
+    <script>
+        (function () {
+            const wrapper = document.getElementById('floating-audio-wrapper');
+            const toggle = document.getElementById('floating-audio-toggle');
+            const dropdown = document.getElementById('floating-audio-dropdown');
+            const caret = document.getElementById('floating-audio-caret');
+
+            if (!wrapper || !toggle || !dropdown) return;
+
+            function setOpenState(isOpen) {
+                dropdown.classList.toggle('hidden', !isOpen);
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                if (caret) {
+                    caret.classList.toggle('fa-chevron-up', !isOpen);
+                    caret.classList.toggle('fa-chevron-down', isOpen);
+                }
+            }
+
+            toggle.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const isOpen = dropdown.classList.contains('hidden');
+                setOpenState(isOpen);
+            });
+
+            dropdown.querySelectorAll('.floating-mp3').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    setOpenState(false);
+                });
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!wrapper.contains(event.target)) {
+                    setOpenState(false);
+                }
+            });
+        })();
+    </script>
+
     <script>
         document.getElementById('edit-lyrics-btn').addEventListener('click', function () {
             const lyricsContent = document.getElementById('lyrics-content');
