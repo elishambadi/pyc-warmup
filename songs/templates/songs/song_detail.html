@@ -174,11 +174,32 @@ App.
                         <span class="text-pyc-text/60 normal-case font-normal italic ml-2">{{ item.line.section.instruction|default:'' }}</span>
                     </p>
                     {% endif %}
+                    {% with comment_count=line_comment_counts|get_item:item.line.id|default:0 %}
                     <p class="lyric-line my-1" data-line-id="{{ item.line.id }}"
                         data-timestamps="{{ mp3_timestamps|get_item:item.line.id|default:'{}' }}">
-                        {{ item.line.text }}
-                        <span class="text-pyc-text/50 italic text-sm">{{ item.line.instruction|default:'' }}</span>
+                        <span class="inline-flex items-start justify-between w-full gap-3">
+                            <span class="flex-1">
+                                {{ item.line.text }}
+                                <span class="text-pyc-text/50 italic text-sm">{{ item.line.instruction|default:'' }}</span>
+                            </span>
+                            {% if user.is_authenticated or comment_count %}
+                            <button
+                                type="button"
+                                class="lyric-comment-trigger inline-flex items-center gap-1 text-pyc-text/40 hover:text-pyc-purple transition-colors"
+                                data-line-id="{{ item.line.id }}"
+                                data-line-text="{{ item.line.text|escape }}"
+                                data-comment-count="{{ comment_count }}"
+                                title="{% trans 'View lyric line comments' %}"
+                            >
+                                <i class="far fa-comment-alt"></i>
+                                {% if comment_count %}
+                                <span class="lyric-comment-count text-xs font-semibold">{{ comment_count }}</span>
+                                {% endif %}
+                            </button>
+                            {% endif %}
+                        </span>
                     </p>
+                    {% endwith %}
                     {% endfor %}
                     {% else %}
                     <div class="prose max-w-none prose-p:leading-8 prose-p:text-base md:prose-p:text-lg">{{
@@ -501,6 +522,41 @@ App.
     </div>
     {% endif %}
 
+    <div id="lyric-comments-panel" class="hidden fixed z-[9997] right-4 sm:right-6 left-4 sm:left-auto bottom-24 sm:w-96 rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-start justify-between gap-3">
+            <div>
+                <p class="text-sm font-semibold text-pyc-text">{% trans "Lyric Line Comments" %}</p>
+                <p id="lyric-comments-line-text" class="text-xs text-pyc-text/60 mt-1"></p>
+            </div>
+            <button id="lyric-comments-close" type="button" class="text-pyc-text/50 hover:text-pyc-purple transition-colors" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div id="lyric-comments-list" class="max-h-64 overflow-y-auto px-4 py-3 space-y-3">
+            <p class="text-sm text-pyc-text/60 italic">{% trans "Select a line to view comments." %}</p>
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="px-4 py-3 border-t border-gray-100">
+            <textarea id="lyric-comment-input" rows="2"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-pyc-purple focus:border-pyc-purple resize-none"
+                placeholder="{% trans 'Add a comment for this line...' %}"></textarea>
+            <div class="flex justify-end mt-2">
+                <button id="lyric-comment-submit" type="button"
+                    class="px-4 py-2 bg-pyc-purple text-white text-sm rounded-lg hover:bg-opacity-90 transition-colors font-semibold">
+                    {% trans "Post" %}
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <div class="px-4 py-3 border-t border-gray-100 text-sm text-pyc-text/60">
+            <a href="{% url 'login' %}?next={{ request.path }}" class="text-pyc-purple font-semibold hover:underline">{% trans "Log in" %}</a>
+            {% trans "to add comments to lyric lines." %}
+        </div>
+        {% endif %}
+    </div>
+
     {% include 'songs/partials/player.html' %}
 
     {% endblock %}
@@ -539,6 +595,139 @@ App.
             document.addEventListener('click', function (event) {
                 if (!wrapper.contains(event.target)) {
                     setOpenState(false);
+                }
+            });
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const panel = document.getElementById('lyric-comments-panel');
+            const panelClose = document.getElementById('lyric-comments-close');
+            const panelList = document.getElementById('lyric-comments-list');
+            const panelLineText = document.getElementById('lyric-comments-line-text');
+            const commentInput = document.getElementById('lyric-comment-input');
+            const commentSubmit = document.getElementById('lyric-comment-submit');
+            const triggers = document.querySelectorAll('.lyric-comment-trigger');
+            let activeLineId = null;
+
+            if (!panel || !panelList || !panelLineText || !triggers.length) return;
+
+            function escapeHtml(value) {
+                const div = document.createElement('div');
+                div.textContent = value || '';
+                return div.innerHTML;
+            }
+
+            function setPanelOpen(open) {
+                panel.classList.toggle('hidden', !open);
+            }
+
+            function renderComments(comments) {
+                if (!comments.length) {
+                    panelList.innerHTML = '<p class="text-sm text-pyc-text/60 italic">No comments yet for this line.</p>';
+                    return;
+                }
+
+                panelList.innerHTML = comments.map(function (comment) {
+                    return '<div class="border border-gray-100 rounded-lg p-3 bg-gray-50">'
+                        + '<div class="flex items-center justify-between gap-2 mb-1">'
+                        + '<span class="text-sm font-semibold text-pyc-purple">' + escapeHtml(comment.user) + '</span>'
+                        + '<span class="text-xs text-pyc-text/50">' + escapeHtml(comment.created_at) + '</span>'
+                        + '</div>'
+                        + '<p class="text-sm text-pyc-text whitespace-pre-wrap">' + escapeHtml(comment.text) + '</p>'
+                        + '</div>';
+                }).join('');
+            }
+
+            function updateTriggerCount(lineId, count) {
+                const trigger = document.querySelector('.lyric-comment-trigger[data-line-id="' + lineId + '"]');
+                if (!trigger) return;
+
+                trigger.dataset.commentCount = String(count);
+                let badge = trigger.querySelector('.lyric-comment-count');
+                if (count > 0) {
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'lyric-comment-count text-xs font-semibold';
+                        trigger.appendChild(badge);
+                    }
+                    badge.textContent = String(count);
+                } else if (badge) {
+                    badge.remove();
+                }
+            }
+
+            function fetchComments(lineId) {
+                return fetch('/lyric-line/' + lineId + '/comments/')
+                    .then(function (response) { return response.json(); });
+            }
+
+            triggers.forEach(function (trigger) {
+                trigger.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    activeLineId = this.dataset.lineId;
+                    panelLineText.textContent = this.dataset.lineText || '';
+                    panelList.innerHTML = '<p class="text-sm text-pyc-text/60 italic">Loading comments...</p>';
+                    setPanelOpen(true);
+
+                    fetchComments(activeLineId).then(function (data) {
+                        if (!data.success) {
+                            panelList.innerHTML = '<p class="text-sm text-red-500">Failed to load comments.</p>';
+                            return;
+                        }
+                        renderComments(data.comments || []);
+                        updateTriggerCount(activeLineId, data.count || 0);
+                    }).catch(function () {
+                        panelList.innerHTML = '<p class="text-sm text-red-500">Failed to load comments.</p>';
+                    });
+                });
+            });
+
+            if (commentSubmit && commentInput) {
+                commentSubmit.addEventListener('click', function () {
+                    const text = commentInput.value.trim();
+                    if (!activeLineId) {
+                        alert('Select a lyric line first.');
+                        return;
+                    }
+                    if (!text) {
+                        alert('Please add a comment.');
+                        return;
+                    }
+
+                    fetch('/lyric-line/' + activeLineId + '/comments/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ text: text })
+                    }).then(function (response) {
+                        return response.json();
+                    }).then(function (data) {
+                        if (!data.success) {
+                            alert(data.error || 'Could not post comment.');
+                            return;
+                        }
+                        commentInput.value = '';
+                        return fetchComments(activeLineId).then(function (refreshed) {
+                            renderComments(refreshed.comments || []);
+                            updateTriggerCount(activeLineId, refreshed.count || 0);
+                        });
+                    }).catch(function () {
+                        alert('Could not post comment.');
+                    });
+                });
+            }
+
+            panelClose?.addEventListener('click', function () {
+                setPanelOpen(false);
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!panel.classList.contains('hidden') && !panel.contains(event.target) && !event.target.closest('.lyric-comment-trigger')) {
+                    setPanelOpen(false);
                 }
             });
         })();

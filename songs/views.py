@@ -1,6 +1,6 @@
 from urllib import request
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution
+from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, LyricLineComment, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution
 from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm
 from .utils import generate_lyric_lines
 from django.http import JsonResponse, HttpResponse
@@ -83,6 +83,13 @@ def song_detail(request, slug):
             for ts in line.timestamps.all()
         }
         mp3_timestamps[line.id] = json.dumps(timestamps)
+
+    line_comment_counts = {
+        item['lyric_line_id']: item['total']
+        for item in LyricLineComment.objects.filter(lyric_line__song=song)
+        .values('lyric_line_id')
+        .annotate(total=Count('id'))
+    }
     
     primary_composer = composer_links[0].composer if composer_links else song.composer_fk
     response = render(request, 'songs/song_detail.html', {
@@ -92,6 +99,7 @@ def song_detail(request, slug):
         'notes': notes,
         'references': references,
         'mp3_timestamps': mp3_timestamps,
+        'line_comment_counts': line_comment_counts,
         'annotated_lines': annotated_lines,
         'comments': comments,
         'related_songs': Song.objects.filter(
@@ -105,6 +113,59 @@ def song_detail(request, slug):
         response.set_cookie('device_id', device_id, max_age=365*24*60*60)  # 1 year
     
     return response
+
+
+@require_http_methods(["GET", "POST"])
+def lyric_line_comments(request, line_id):
+    lyric_line = get_object_or_404(LyricLine, id=line_id)
+
+    if request.method == 'GET':
+        comments = lyric_line.comments.select_related('user').all()
+        return JsonResponse({
+            'success': True,
+            'line_id': lyric_line.id,
+            'comments': [
+                {
+                    'id': comment.id,
+                    'text': comment.text,
+                    'user': comment.user.username,
+                    'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                }
+                for comment in comments
+            ],
+            'count': comments.count(),
+            'can_comment': request.user.is_authenticated,
+        })
+
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Authentication required'}, status=401)
+
+    try:
+        data = json.loads(request.body or '{}')
+    except json.JSONDecodeError:
+        data = {}
+
+    text = (data.get('text') or request.POST.get('text') or '').strip()
+    if not text:
+        return JsonResponse({'success': False, 'error': 'Comment text is required'}, status=400)
+
+    comment = LyricLineComment.objects.create(
+        lyric_line=lyric_line,
+        song=lyric_line.song,
+        user=request.user,
+        text=text,
+    )
+
+    return JsonResponse({
+        'success': True,
+        'comment': {
+            'id': comment.id,
+            'text': comment.text,
+            'user': comment.user.username,
+            'created_at': comment.created_at.strftime('%B %d, %Y at %I:%M %p'),
+        },
+        'count': lyric_line.comments.count(),
+    })
 
 def add_song(request):
     if request.method == "POST":

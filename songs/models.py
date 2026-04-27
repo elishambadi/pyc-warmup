@@ -194,6 +194,21 @@ class LyricTimestamp(models.Model):
         unique_together = ('lyric_line', 'mp3_file')
 
 
+class LyricLineComment(models.Model):
+    lyric_line = models.ForeignKey(LyricLine, on_delete=models.CASCADE, related_name='comments')
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='lyric_line_comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lyric_line_comments')
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.user.username} on line {self.lyric_line_id}: {self.text[:50]}"
+
+
 # Song structure models
 
 class SongStructure(models.Model):

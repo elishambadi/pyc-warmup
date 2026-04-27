@@ -16,6 +16,7 @@ urlpatterns = [
     path('song/<int:song_id>/add-mp3/', add_mp3, name='add_mp3'),
     path('song/<int:song_id>/add-note/', add_note, name='add_note'),
     path('song/<int:song_id>/add-reference/', add_reference, name='add_reference'),
+    path('lyric-line/<int:line_id>/comments/', views.lyric_line_comments, name='lyric_line_comments'),
 
     path('song/<slug:song_slug>/upload-voicenote/', views.upload_voicenote, name='upload_voicenote'),
     path('song/<slug:song_slug>/delete-voicenote/<int:voicenote_id>/', views.delete_voicenote, name='delete_voicenote'),
