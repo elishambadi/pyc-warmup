@@ -337,6 +337,10 @@
         }
 
         function handleDragStart(e) {
+            if (!e.target.closest('.drag-handle')) {
+                e.preventDefault();
+                return;
+            }
             draggedElement = this;
             this.style.opacity = '0.4';
             e.dataTransfer.effectAllowed = 'move';

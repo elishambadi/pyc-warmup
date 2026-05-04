@@ -411,7 +411,10 @@
         });
     }
 
-    function handleDragStart(e) { draggedElement = this; this.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move'; }
+    function handleDragStart(e) {
+        if (!e.target.closest('.drag-handle')) { e.preventDefault(); return; }
+        draggedElement = this; this.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move';
+    }
     function handleDragOver(e) {
         if (e.preventDefault) e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
