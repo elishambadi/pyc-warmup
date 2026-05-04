@@ -226,47 +226,148 @@ def _save_composer_contributions(request, song, replacing=False):
 
 
 def _save_lyric_sections(request, song, replacing=False):
-    """Shared helper: parse section POST data and create LyricLine/Section objects."""
-    if replacing:
-        LyricTimestamp.objects.filter(lyric_line__song=song).delete()
-        song.lyric_lines.all().delete()
-        song.sections.all().delete()
+    """
+    Parse section POST data and upsert LyricLine/Section objects.
 
-    all_lyric_lines = []
-    order = 1
+    When replacing=True (edit flow) we diff against existing data so that
+    LyricLine rows whose text+order haven't changed keep their primary key —
+    and therefore keep all their LyricTimestamp (sync) and LyricLineComment rows.
+    Only genuinely new lines are inserted; genuinely removed lines are deleted
+    (which cascades their timestamps away naturally).
+
+    When replacing=False (add flow) we just create everything from scratch.
+    """
+    # ------------------------------------------------------------------ #
+    # 1. Parse the incoming form data into a clean in-memory structure     #
+    # ------------------------------------------------------------------ #
+    incoming_sections = []   # list of {title, instruction, lines: [{text, instruction, global_order}]}
+    global_order = 1
     index = 1
 
     while f"lyrics_title_{index}" in request.POST:
         section_title = request.POST.get(f"lyrics_title_{index}", "").strip()
-        lyrics_text  = request.POST.get(f"lyrics_{index}", "").strip()
+        lyrics_text   = request.POST.get(f"lyrics_{index}", "").strip()
 
-        matches = re.findall(r"\((.*?)\)", section_title)
-        instruction = " ".join(matches) if matches else None
-        clean_section_title = re.sub(r"\s*\(.*?\)", "", section_title).strip()
+        sec_matches   = re.findall(r"\((.*?)\)", section_title)
+        sec_instr     = " ".join(sec_matches) if sec_matches else None
+        clean_sec     = re.sub(r"\s*\(.*?\)", "", section_title).strip()
 
-        section = Section.objects.create(
-            song=song,
-            name=clean_section_title,
-            instruction=instruction,
-            position=index
-        )
-
-        for line in lyrics_text.splitlines():
-            line_matches = re.findall(r"\((.*?)\)", line)
-            line_instruction = " ".join(line_matches) if line_matches else None
-            clean_line = re.sub(r"\s*\(.*?\)", "", line).strip()
+        lines = []
+        for raw_line in lyrics_text.splitlines():
+            line_matches  = re.findall(r"\((.*?)\)", raw_line)
+            line_instr    = " ".join(line_matches) if line_matches else None
+            clean_line    = re.sub(r"\s*\(.*?\)", "", raw_line).strip()
             if clean_line:
+                lines.append({
+                    'text': clean_line,
+                    'instruction': line_instr,
+                    'order': global_order,
+                })
+                global_order += 1
+
+        incoming_sections.append({
+            'title': clean_sec,
+            'instruction': sec_instr,
+            'position': index,
+            'lines': lines,
+        })
+        index += 1
+
+    # ------------------------------------------------------------------ #
+    # 2. Fast path for add_song (no existing data to diff)                #
+    # ------------------------------------------------------------------ #
+    if not replacing:
+        all_lyric_lines = []
+        for sec_data in incoming_sections:
+            section = Section.objects.create(
+                song=song,
+                name=sec_data['title'],
+                instruction=sec_data['instruction'],
+                position=sec_data['position'],
+            )
+            for line_data in sec_data['lines']:
                 LyricLine.objects.create(
                     song=song,
                     section=section,
-                    text=clean_line,
-                    instruction=line_instruction,
-                    order=order
+                    text=line_data['text'],
+                    instruction=line_data['instruction'],
+                    order=line_data['order'],
                 )
-                all_lyric_lines.append(clean_line)
-                order += 1
+                all_lyric_lines.append(line_data['text'])
+        song.lyrics = "\n".join(all_lyric_lines)
+        song.save()
+        return
 
-        index += 1
+    # ------------------------------------------------------------------ #
+    # 3. Diff/upsert path for edit_song                                   #
+    # ------------------------------------------------------------------ #
+
+    # Load existing sections keyed by position for quick lookup
+    existing_sections = {s.position: s for s in song.sections.all()}
+    incoming_positions = {s['position'] for s in incoming_sections}
+
+    # Delete sections (and their lines/timestamps via cascade) that no longer exist
+    for pos, sec in list(existing_sections.items()):
+        if pos not in incoming_positions:
+            sec.delete()
+
+    all_lyric_lines = []
+
+    for sec_data in incoming_sections:
+        pos = sec_data['position']
+
+        # Upsert section
+        if pos in existing_sections:
+            section = existing_sections[pos]
+            changed = False
+            if section.name != sec_data['title']:
+                section.name = sec_data['title']
+                changed = True
+            if section.instruction != sec_data['instruction']:
+                section.instruction = sec_data['instruction']
+                changed = True
+            if changed:
+                section.save(update_fields=['name', 'instruction'])
+        else:
+            section = Section.objects.create(
+                song=song,
+                name=sec_data['title'],
+                instruction=sec_data['instruction'],
+                position=pos,
+            )
+
+        # Build a lookup of existing lines in this section: (text, order) → LyricLine
+        existing_lines = {
+            (ll.text, ll.order): ll
+            for ll in section.lyric_lines.all()
+        }
+        incoming_line_keys = {(ld['text'], ld['order']) for ld in sec_data['lines']}
+
+        # Delete lines that are no longer present (cascades timestamps)
+        for key, ll in list(existing_lines.items()):
+            if key not in incoming_line_keys:
+                ll.delete()
+
+        for line_data in sec_data['lines']:
+            key = (line_data['text'], line_data['order'])
+            if key in existing_lines:
+                # Line unchanged — keep the row (and its timestamps) as-is.
+                # Only update instruction if it changed.
+                ll = existing_lines[key]
+                if ll.instruction != line_data['instruction']:
+                    ll.instruction = line_data['instruction']
+                    ll.save(update_fields=['instruction'])
+            else:
+                # New or moved line — create fresh (no timestamps to lose)
+                LyricLine.objects.create(
+                    song=song,
+                    section=section,
+                    text=line_data['text'],
+                    instruction=line_data['instruction'],
+                    order=line_data['order'],
+                )
+
+            all_lyric_lines.append(line_data['text'])
 
     song.lyrics = "\n".join(all_lyric_lines)
     song.save()
