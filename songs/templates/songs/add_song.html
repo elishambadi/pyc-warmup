@@ -75,7 +75,7 @@
                 </p>
                 
                 <div id="lyrics-sections">
-                    <div class="lyrics-section mb-4 bg-white p-4 rounded-lg shadow-sm border-l-4 border-pyc-purple" draggable="true">
+                    <div class="lyrics-section mb-4 bg-white p-4 rounded-lg shadow-sm border-l-4 border-pyc-purple">
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-grip-vertical text-gray-400 cursor-move drag-handle"></i>
@@ -276,7 +276,6 @@
             sectionCount++;
             const newSection = document.createElement('div');
             newSection.classList.add('lyrics-section', 'mb-4', 'bg-white', 'p-4', 'rounded-lg', 'shadow-sm', 'border-l-4', 'border-pyc-purple');
-            newSection.draggable = true;
             newSection.innerHTML = `
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
@@ -311,6 +310,11 @@
                 section.addEventListener('dragover', handleDragOver);
                 section.addEventListener('drop', handleDrop);
                 section.addEventListener('dragend', handleDragEnd);
+                const handle = section.querySelector('.drag-handle');
+                if (handle) {
+                    handle.addEventListener('mousedown', function () { section.draggable = true; });
+                    handle.addEventListener('mouseup', function () { section.draggable = false; });
+                }
             });
 
             // Delete buttons
@@ -337,10 +341,6 @@
         }
 
         function handleDragStart(e) {
-            if (!e.target.closest('.drag-handle')) {
-                e.preventDefault();
-                return;
-            }
             draggedElement = this;
             this.style.opacity = '0.4';
             e.dataTransfer.effectAllowed = 'move';
@@ -375,6 +375,7 @@
         }
 
         function handleDragEnd(e) {
+            this.draggable = false;
             this.style.opacity = '1';
             document.querySelectorAll('.lyrics-section').forEach(section => {
                 section.classList.remove('drag-over');
