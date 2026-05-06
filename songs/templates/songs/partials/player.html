@@ -66,6 +66,34 @@
     let mp3Names = [];
     let currentTrackIndex = 0;
     let isSeeking = false; // Flag to prevent timeupdate interference
+    let pendingSeekTime = null;
+
+    function hasUsableMetadata() {
+        return Number.isFinite(audioPlayer.duration) && audioPlayer.duration > 0;
+    }
+
+    function seekToTime(seconds) {
+        const target = Number(seconds);
+        if (!Number.isFinite(target)) return;
+
+        if (hasUsableMetadata()) {
+            const clamped = Math.max(0, Math.min(target, audioPlayer.duration));
+            audioPlayer.currentTime = clamped;
+            currentTimeDisplay.textContent = formatTime(clamped);
+            seekBar.value = (clamped / audioPlayer.duration) * 100;
+            pendingSeekTime = null;
+            return;
+        }
+
+        pendingSeekTime = Math.max(0, target);
+    }
+
+    function applyPendingSeek() {
+        if (pendingSeekTime === null || !hasUsableMetadata()) return;
+        const target = pendingSeekTime;
+        pendingSeekTime = null;
+        seekToTime(target);
+    }
 
     // Function to load and play track
     function loadTrack(index) {
@@ -73,7 +101,7 @@
         currentTrackIndex = index;
         mp3VoiceTitle.textContent = mp3Names[currentTrackIndex];
         audioPlayer.src = playlist[currentTrackIndex];
-        audioPlayer.play();
+        audioPlayer.play().catch(() => {});
         updatePlayPauseButton();
         audioBar.classList.remove("hidden"); // Show player when track starts
     }
@@ -129,7 +157,7 @@
     function seekAudio() {
         if (audioPlayer.duration && !isNaN(audioPlayer.duration)) {
             const percent = seekBar.value;
-            audioPlayer.currentTime = (percent / 100) * audioPlayer.duration;
+            seekToTime((percent / 100) * audioPlayer.duration);
         }
         isSeeking = false; // Re-enable automatic updates
     }
@@ -182,7 +210,9 @@
         totalTimeDisplay.textContent = formatTime(audioPlayer.duration);
         seekBar.max = 100;
         seekBar.value = 0;
+        applyPendingSeek();
     });
+    audioPlayer.addEventListener("canplay", applyPendingSeek);
     seekBar.addEventListener("input", function() {
         // Set flag to prevent timeupdate from interfering
         isSeeking = true;
@@ -192,11 +222,15 @@
             const percent = seekBar.value;
             const newTime = (percent / 100) * audioPlayer.duration;
             currentTimeDisplay.textContent = formatTime(newTime);
+            seekToTime(newTime);
         }
     });
     seekBar.addEventListener("change", seekAudio);
     seekBar.addEventListener("mousedown", () => isSeeking = true);
     seekBar.addEventListener("touchstart", () => isSeeking = true);
+    seekBar.addEventListener("mouseup", seekAudio);
+    seekBar.addEventListener("touchend", seekAudio);
+    seekBar.addEventListener("pointerup", seekAudio);
     audioPlayer.addEventListener("ended", playNextTrack);
 </script>
 
@@ -267,9 +301,9 @@
             const lineId = this.dataset.lineId;
             const lineTimestamps = JSON.parse(this.dataset.timestamps);
             const currentMp3Id = audioPlayer.dataset.currentMp3Id;
-    
-            if (currentMp3Id && lineTimestamps[currentMp3Id]) {
-                audioPlayer.currentTime = lineTimestamps[currentMp3Id];
+
+            if (currentMp3Id && Object.prototype.hasOwnProperty.call(lineTimestamps, currentMp3Id)) {
+                seekToTime(lineTimestamps[currentMp3Id]);
             }
         });
     });
