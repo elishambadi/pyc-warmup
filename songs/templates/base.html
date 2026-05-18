@@ -272,11 +272,11 @@
 
   <!-- Google Translate Widget -->
   <div id="google-translate-wrapper"
-       style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;">
+       style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;max-width:calc(100vw - 2rem);">
     <!-- Trigger button -->
     <button id="gt-toggle"
             onclick="document.getElementById('gt-dropdown').classList.toggle('hidden')"
-            style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;background:#4B3FA0;color:#fff;border:none;border-radius:9999px;font-size:0.875rem;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.2);">
+            style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;background:#4B3FA0;color:#fff;border:none;border-radius:9999px;font-size:0.875rem;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.2);margin-left:auto;">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
@@ -287,7 +287,7 @@
     <!-- Google Translate element -->
     <div id="gt-dropdown"
          class="hidden"
-         style="position:absolute;bottom:3rem;right:0;background:#fff;border-radius:0.75rem;box-shadow:0 8px 30px rgba(0,0,0,0.15);padding:0.75rem;min-width:220px;">
+         style="position:absolute;bottom:3rem;right:0;background:#fff;border-radius:0.75rem;box-shadow:0 8px 30px rgba(0,0,0,0.15);padding:0.75rem;width:220px;max-width:90vw;overflow:hidden;">
       <p style="font-size:0.7rem;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;font-weight:600;">
         Powered by Google Translate
       </p>
@@ -299,9 +299,10 @@
     /* Hide the Google banner and attribution bar */
     .goog-te-banner-frame, .goog-te-balloon-frame { display: none !important; }
     body { top: 0 !important; }
-    .goog-te-gadget { font-size: 0 !important; }
+    .goog-te-gadget { font-size: 0 !important; max-width: 100% !important; overflow: hidden !important; }
     .goog-te-gadget .goog-te-combo {
-      width: 100%;
+      width: 100% !important;
+      max-width: 100% !important;
       padding: 0.4rem 0.75rem;
       border: 1.5px solid #e5e7eb;
       border-radius: 0.5rem;
@@ -309,10 +310,19 @@
       color: #1f2937;
       background: #f9fafb;
       cursor: pointer;
+      box-sizing: border-box;
     }
     .goog-te-gadget .goog-te-combo:focus {
       outline: none;
       border-color: #4B3FA0;
+    }
+    /* Contain Google Translate iframe */
+    #google_translate_element, #google_translate_element > div {
+      max-width: 100% !important;
+      overflow: hidden !important;
+    }
+    #google_translate_element iframe, #google_translate_element .skiptranslate {
+      max-width: 100% !important;
     }
   </style>
 

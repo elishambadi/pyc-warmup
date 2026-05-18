@@ -1,7 +1,7 @@
 from urllib import request
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, LyricLineComment, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution
-from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm
+from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, LyricLineComment, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution, ScoreSheet
+from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm, ScoreSheetForm
 from .utils import generate_lyric_lines
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.db.models import Count
 from blog.models import BlogPost
 
-import json, re
+import json, re, os
 
 from bs4 import BeautifulSoup
 
@@ -872,3 +872,184 @@ def composer_detail(request, slug):
         'composition_types_by_song': composition_types_by_song,
         'other_composers': other_composers,
     })
+
+
+def _detect_file_type(filename):
+    ext = os.path.splitext(filename)[1].lower()
+    if ext in ('.xml', '.musicxml', '.mxl'):
+        return 'musicxml'
+    elif ext in ('.pdf',):
+        return 'pdf'
+    elif ext in ('.mid', '.midi'):
+        return 'midi'
+    elif ext in ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'):
+        return 'image'
+    return 'unknown'
+
+
+def _process_musicxml(file_path, scoresheet):
+    from .musicxml import extract_voicenotes_from_musicxml, ExtractedNote
+    data = extract_voicenotes_from_musicxml(file_path)
+    extracted = {}
+    for part_name, notes in data.items():
+        extracted[part_name] = [
+            {
+                'measure': n.measure,
+                'beat': n.beat,
+                'duration': n.duration_quarter,
+                'step': n.step,
+                'alter': n.alter,
+                'octave': n.octave,
+                'midi': n.midi,
+                'is_rest': n.is_rest,
+                'lyric': n.lyric,
+            }
+            for n in notes
+        ]
+    scoresheet.extracted_data = {'parts': extracted}
+    scoresheet.processed = True
+    scoresheet.save()
+
+
+def _process_image(file_path, scoresheet):
+    import base64
+    import anthropic
+    from django.conf import settings
+
+    api_key = getattr(settings, 'ANTHROPIC_API_KEY', os.environ.get('ANTHROPIC_API_KEY', ''))
+    if not api_key:
+        scoresheet.error_message = "No Anthropic API key configured. Set ANTHROPIC_API_KEY in environment."
+        scoresheet.save()
+        return
+
+    with open(file_path, 'rb') as f:
+        image_data = base64.b64encode(f.read()).decode('utf-8')
+
+    ext = os.path.splitext(file_path)[1].lower()
+    media_type = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp',
+        '.bmp': 'image/bmp',
+    }.get(ext, 'image/png')
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    prompt = """Analyze this sheet music image and extract the different voice parts (SATB).
+
+For each voice part found, list the notes with:
+- measure number
+- beat position (1-4)
+- note name (C, D, E, F, G, A, B)
+- octave (3-5)
+- whether it's a rest
+- any lyrics attached
+
+Return the result as a JSON object with this structure:
+{
+  "parts": {
+    "Soprano": [{"measure": 1, "beat": 1.0, "duration": 1.0, "step": "C", "alter": 0, "octave": 4, "is_rest": false, "lyric": "A"}],
+    "Alto": [...],
+    "Tenor": [...],
+    "Bass": [...]
+  }
+}
+
+Only include parts that are actually present. Return ONLY the JSON, no other text."""
+
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": image_data}},
+                    {"type": "text", "text": prompt},
+                ]
+            }]
+        )
+        result_text = response.content[0].text.strip()
+        if result_text.startswith('```'):
+            result_text = result_text.split('```')[1]
+            if result_text.startswith('json'):
+                result_text = result_text[4:]
+        extracted = json.loads(result_text)
+        scoresheet.extracted_data = extracted
+        scoresheet.processed = True
+    except Exception as e:
+        scoresheet.error_message = str(e)
+    scoresheet.save()
+
+
+@login_required
+def upload_scoresheet(request, song_slug):
+    song = get_object_or_404(Song, slug=song_slug)
+
+    if request.method == 'POST':
+        form = ScoreSheetForm(request.POST, request.FILES)
+        if form.is_valid():
+            uploaded_file = request.FILES['file']
+            file_type = _detect_file_type(uploaded_file.name)
+
+            if file_type == 'unknown':
+                messages.error(request, "Unsupported file type. Please upload MusicXML (.xml, .musicxml, .mxl), PDF, or image (.png, .jpg).")
+                return redirect('upload_scoresheet', song_slug=song.slug)
+
+            scoresheet = ScoreSheet.objects.create(
+                song=song,
+                file=uploaded_file,
+                file_type=file_type,
+                uploaded_by=request.user,
+            )
+
+            file_path = scoresheet.file.path
+            if file_type == 'musicxml':
+                _process_musicxml(file_path, scoresheet)
+            elif file_type in ('image', 'pdf'):
+                _process_image(file_path, scoresheet)
+            else:
+                scoresheet.error_message = f"Processing not yet supported for {file_type} files."
+                scoresheet.save()
+
+            if scoresheet.processed:
+                messages.success(request, f"Scoresheet processed successfully! Found {len(scoresheet.extracted_data.get('parts', {}))} voice parts.")
+            elif scoresheet.error_message:
+                messages.warning(request, f"Processing warning: {scoresheet.error_message}")
+
+            return redirect('scoresheet_detail', scoresheet_id=scoresheet.id)
+    else:
+        form = ScoreSheetForm()
+
+    return render(request, 'songs/upload_scoresheet.html', {
+        'song': song,
+        'form': form,
+    })
+
+
+def scoresheet_detail(request, scoresheet_id):
+    scoresheet = get_object_or_404(ScoreSheet, id=scoresheet_id)
+    parts = {}
+    if scoresheet.extracted_data and 'parts' in scoresheet.extracted_data:
+        parts = scoresheet.extracted_data['parts']
+
+    return render(request, 'songs/scoresheet_detail.html', {
+        'scoresheet': scoresheet,
+        'parts': parts,
+        'song': scoresheet.song,
+    })
+
+
+@login_required
+def delete_scoresheet(request, scoresheet_id):
+    scoresheet = get_object_or_404(ScoreSheet, id=scoresheet_id)
+    song_slug = scoresheet.song.slug
+    if request.user.is_superuser or scoresheet.uploaded_by == request.user:
+        scoresheet.file.delete(save=False)
+        scoresheet.delete()
+        messages.success(request, "Scoresheet deleted.")
+    else:
+        messages.error(request, "You don't have permission to delete this scoresheet.")
+    return redirect('song_detail', slug=song_slug)

@@ -302,3 +302,22 @@ class VoiceNote(models.Model):
 
     def __str__(self):
         return f"{self.song.title} - {self.voice_part} ({self.uploader.username})"
+
+
+class ScoreSheet(models.Model):
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='scoresheets')
+    file = models.FileField(upload_to='scoresheets/')
+    file_type = models.CharField(max_length=20, choices=[
+        ('musicxml', 'MusicXML'),
+        ('pdf', 'PDF'),
+        ('image', 'Image'),
+        ('midi', 'MIDI'),
+    ])
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    extracted_data = models.JSONField(null=True, blank=True)
+    processed = models.BooleanField(default=False)
+    error_message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Scoresheet for {self.song.title} ({self.get_file_type_display()})"

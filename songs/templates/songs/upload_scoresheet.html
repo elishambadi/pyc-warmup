@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Upload Scoresheet - {{ song.title }} | PYC WarmUp{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'song_detail' song.slug %}" class="text-pyc-purple hover:underline text-sm">
+            <i class="fas fa-arrow-left mr-1"></i>Back to {{ song.title }}
+        </a>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-pyc-purple/15 to-pyc-orange/15 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-file-music text-pyc-purple text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-pyc-text mb-2">Upload Scoresheet</h1>
+            <p class="text-pyc-text/60">For <strong>{{ song.title }}</strong></p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-pyc-purple/40 transition-colors cursor-pointer" 
+                 id="drop-zone">
+                <div class="mb-4">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-300"></i>
+                </div>
+                <p class="text-pyc-text font-medium mb-1">Drag & drop your scoresheet here</p>
+                <p class="text-pyc-text/50 text-sm mb-4">or click to browse</p>
+                
+                <div class="flex justify-center">
+                    <label class="px-6 py-2.5 bg-pyc-purple/10 text-pyc-purple rounded-xl font-semibold hover:bg-pyc-purple/20 transition-colors cursor-pointer">
+                        <i class="fas fa-folder-open mr-2"></i>Choose File
+                        {{ form.file }}
+                    </label>
+                </div>
+                
+                <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs text-pyc-text/40">
+                    <span class="px-2 py-1 bg-gray-50 rounded">.xml</span>
+                    <span class="px-2 py-1 bg-gray-50 rounded">.musicxml</span>
+                    <span class="px-2 py-1 bg-gray-50 rounded">.mxl</span>
+                    <span class="px-2 py-1 bg-gray-50 rounded">.midi</span>
+                    <span class="px-2 py-1 bg-gray-50 rounded">.pdf</span>
+                    <span class="px-2 py-1 bg-gray-50 rounded">.png</span>
+                    <span class="px-2 py-1 bg-gray-50 rounded">.jpg</span>
+                </div>
+            </div>
+
+            {% if form.file.errors %}
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600 text-sm">
+                <i class="fas fa-exclamation-triangle mr-2"></i>{{ form.file.errors|join:", " }}
+            </div>
+            {% endif %}
+
+            <div class="bg-pyc-purple/5 border border-pyc-purple/10 rounded-xl p-4">
+                <h3 class="text-sm font-bold text-pyc-purple mb-2">
+                    <i class="fas fa-info-circle mr-1"></i>Supported Formats
+                </h3>
+                <ul class="text-sm text-pyc-text/70 space-y-1">
+                    <li><i class="fas fa-check text-pyc-green mr-2"></i><strong>MusicXML</strong> (.xml, .musicxml, .mxl) — Full note & lyric extraction</li>
+                    <li><i class="fas fa-check text-pyc-green mr-2"></i><strong>PDF / Images</strong> (.pdf, .png, .jpg) — AI-powered extraction</li>
+                    <li><i class="fas fa-minus text-pyc-orange/60 mr-2"></i><strong>MIDI</strong> (.mid, .midi) — Coming soon</li>
+                </ul>
+            </div>
+
+            <button type="submit" 
+                    class="w-full py-3.5 bg-pyc-purple text-white rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl text-lg">
+                <i class="fas fa-magic mr-2"></i>Process Scoresheet
+            </button>
+        </form>
+    </div>
+
+    {% if song.scoresheets.exists %}
+    <div class="mt-8">
+        <h2 class="text-lg font-bold text-pyc-text mb-4">Previous Uploads</h2>
+        <div class="space-y-3">
+            {% for ss in song.scoresheets.all %}
+            <a href="{% url 'scoresheet_detail' ss.id %}" 
+               class="flex items-center gap-4 bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md hover:border-pyc-purple/30 transition-all group">
+                <div class="w-10 h-10 rounded-full bg-pyc-purple/10 flex items-center justify-center shrink-0">
+                    <i class="fas fa-file-music text-pyc-purple"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-pyc-text truncate group-hover:text-pyc-purple transition-colors">{{ ss.get_file_type_display }} Scoresheet</p>
+                    <p class="text-xs text-pyc-text/50">{{ ss.created_at|date:"M d, Y" }}{% if not ss.processed %} · Processing...{% endif %}</p>
+                </div>
+                {% if ss.processed %}
+                <span class="text-xs px-2.5 py-1 bg-pyc-green/10 text-pyc-green rounded-full font-semibold">Ready</span>
+                {% elif ss.error_message %}
+                <span class="text-xs px-2.5 py-1 bg-red-50 text-red-500 rounded-full font-semibold">Error</span>
+                {% else %}
+                <span class="text-xs px-2.5 py-1 bg-amber-50 text-amber-600 rounded-full font-semibold">Processing</span>
+                {% endif %}
+                <i class="fas fa-chevron-right text-gray-300 group-hover:text-pyc-purple shrink-0 text-xs"></i>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = dropZone.querySelector('input[type="file"]');
+
+    dropZone.addEventListener('click', (e) => {
+        if (e.target !== fileInput) fileInput.click();
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-pyc-purple/60', 'bg-pyc-purple/5');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-pyc-purple/60', 'bg-pyc-purple/5');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-pyc-purple/60', 'bg-pyc-purple/5');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (file) {
+            dropZone.querySelector('p').textContent = file.name;
+        }
+    });
+</script>
+{% endblock %}

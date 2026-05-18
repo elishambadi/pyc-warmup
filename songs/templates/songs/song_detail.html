@@ -484,6 +484,52 @@ App.
                 </div>
                 {% endif %}
             </section>
+
+            <!-- Scoresheet Section -->
+            <section class="song-sidebar-panel p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-pyc-text flex items-center">
+                        <i class="fas fa-file-music text-pyc-purple mr-2"></i>
+                        {% trans "Scoresheet" %}
+                    </h2>
+                    <span class="text-xs font-semibold uppercase tracking-wide text-pyc-text/50">{% trans "Parts" %}</span>
+                </div>
+
+                {% if song.scoresheets.exists %}
+                <div class="space-y-2">
+                    {% for ss in song.scoresheets.all %}
+                    <a href="{% url 'scoresheet_detail' ss.id %}"
+                       class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-pyc-purple/30 hover:bg-pyc-purple/[0.03] transition-all group">
+                        <div class="w-9 h-9 rounded-lg bg-pyc-purple/10 flex items-center justify-center shrink-0">
+                            <i class="fas fa-file-music text-pyc-purple text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-pyc-text truncate group-hover:text-pyc-purple transition-colors">
+                                {{ ss.get_file_type_display }}
+                            </p>
+                            <p class="text-xs text-pyc-text/50">
+                                {% if ss.processed and ss.extracted_data.parts %}
+                                {{ ss.extracted_data.parts|length }} parts
+                                {% elif ss.error_message %}
+                                Error
+                                {% else %}
+                                Processing...
+                                {% endif %}
+                            </p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 group-hover:text-pyc-purple text-xs shrink-0 transition-colors"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-pyc-text/50 text-sm italic mb-4">Upload sheet music to extract voice parts.</p>
+                {% endif %}
+
+                <a href="{% url 'upload_scoresheet' song.slug %}"
+                   class="mt-3 w-full block text-center px-4 py-2.5 bg-pyc-purple/10 text-pyc-purple rounded-xl font-semibold hover:bg-pyc-purple/20 transition-colors text-sm">
+                    <i class="fas fa-upload mr-2"></i>{% if song.scoresheets.exists %}Upload Another{% else %}Upload Scoresheet{% endif %}
+                </a>
+            </section>
         </aside>
     </div>
 

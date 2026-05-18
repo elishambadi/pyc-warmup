@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution
+from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution, ScoreSheet
 from django.contrib.auth.models import Group, User
 
 
@@ -89,3 +89,11 @@ class VoiceNoteRequestAdmin(admin.ModelAdmin):
         if not obj.created_at:
             obj.created_at = timezone.now()  # Set created_at only when it's a new entry
         obj.save()
+
+
+@admin.register(ScoreSheet)
+class ScoreSheetAdmin(admin.ModelAdmin):
+    list_display = ('song', 'file_type', 'processed', 'uploaded_by', 'created_at')
+    list_filter = ('file_type', 'processed')
+    search_fields = ('song__title',)
+    readonly_fields = ('processed', 'extracted_data', 'created_at')

@@ -1,6 +1,6 @@
 from django import forms
 from django_tiptap.widgets import TipTapWidget
-from .models import Song, MP3File, Note, Reference, VoiceNote, VoiceNoteRequest
+from .models import Song, MP3File, Note, Reference, VoiceNote, VoiceNoteRequest, ScoreSheet
 
 class SongForm(forms.ModelForm):
     lyrics = forms.CharField(widget=forms.Textarea, required=False)
@@ -51,3 +51,16 @@ class VoiceNoteRequestForm(forms.ModelForm):
         self.fields['title'].widget.attrs.update({'class': 'form-control mb-3', 'placeholder': 'Name of the ministry'})
         self.fields['songs'].widget.attrs.update({'class': 'form-select mb-3'})
         self.fields['deadline'].widget.attrs.update({'class': 'form-control mb-3'})
+
+
+class ScoreSheetForm(forms.ModelForm):
+    class Meta:
+        model = ScoreSheet
+        fields = ['file']
+
+    file = forms.FileField(
+        widget=forms.ClearableFileInput(attrs={
+            'accept': '.xml,.mxl,.musicxml,.pdf,.png,.jpg,.jpeg,.mid,.midi',
+        }),
+        required=True
+    )
