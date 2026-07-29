@@ -74,7 +74,7 @@
 
     function seekToTime(seconds) {
         const target = Number(seconds);
-        if (!Number.isFinite(target)) return;
+        if (!NumberSoisFinite(target)) return;
 
         if (hasUsableMetadata()) {
             const clamped = Math.max(0, Math.min(target, audioPlayer.duration));

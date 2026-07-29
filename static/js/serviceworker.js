@@ -74,30 +74,30 @@ self.addEventListener('fetch', function(event) {
     }
 
     // Handle MP3 files and media - Cache first for faster playback
-    if (requestUrl.pathname.includes('/media/') && (requestUrl.pathname.endsWith('.mp3') || requestUrl.pathname.endsWith('.mp4'))) {
-        event.respondWith(
-            caches.match(event.request).then(function(response) {
-                if (response) {
-                    console.log('[ServiceWorker] Serving MP3 from cache:', requestUrl.pathname);
-                    return response;
-                }
-                
-                console.log('[ServiceWorker] Fetching and caching MP3:', requestUrl.pathname);
-                return fetch(event.request).then(function(fetchResponse) {
-                    if (fetchResponse && fetchResponse.status === 200) {
-                        return caches.open(dynamicCacheName).then(function(cache) {
-                            cache.put(event.request, fetchResponse.clone());
-                            return fetchResponse;
-                        });
-                    }
-                    return fetchResponse;
-                }).catch(function() {
-                    console.log('[ServiceWorker] MP3 fetch failed:', requestUrl.pathname);
-                });
-            })
-        );
-        return;
-    }
+    // if (requestUrl.pathname.includes('/media/') && (requestUrl.pathname.endsWith('.mp3') || requestUrl.pathname.endsWith('.mp4'))) {
+    //     event.respondWith(
+    //         caches.match(event.request).then(function(response) {
+    //             if (response) {
+    //                 console.log('[ServiceWorker] Serving MP3 from cache:', requestUrl.pathname);
+    //                 return response;
+    //             }
+    //             
+    //             console.log('[ServiceWorker] Fetching and caching MP3:', requestUrl.pathname);
+    //             return fetch(event.request).then(function(fetchResponse) {
+    //                 if (fetchResponse && fetchResponse.status === 200) {
+    //                     return caches.open(dynamicCacheName).then(function(cache) {
+    //                         cache.put(event.request, fetchResponse.clone());
+    //                         return fetchResponse;
+    //                     });
+    //                 }
+    //                 return fetchResponse;
+    //             }).catch(function() {
+    //                 console.log('[ServiceWorker] MP3 fetch failed:', requestUrl.pathname);
+    //             });
+    //         })
+    //     );
+    //     return;
+    // }
 
     // Default: Network first, fallback to cache
     event.respondWith(
