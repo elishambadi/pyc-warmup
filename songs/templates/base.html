@@ -273,7 +273,6 @@
   <!-- Google Translate Widget -->
   <div id="google-translate-wrapper"
        style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;max-width:calc(100vw - 2rem);">
-    <!-- Trigger button -->
     <button id="gt-toggle"
             onclick="document.getElementById('gt-dropdown').classList.toggle('hidden')"
             style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;background:#4B3FA0;color:#fff;border:none;border-radius:9999px;font-size:0.875rem;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.2);margin-left:auto;">
@@ -284,46 +283,54 @@
       </svg>
       Translate
     </button>
-    <!-- Google Translate element -->
     <div id="gt-dropdown"
          class="hidden"
-         style="position:absolute;bottom:3rem;right:0;background:#fff;border-radius:0.75rem;box-shadow:0 8px 30px rgba(0,0,0,0.15);padding:0.75rem;width:220px;max-width:90vw;overflow:hidden;">
-      <p style="font-size:0.7rem;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;font-weight:600;">
+         style="position:absolute;bottom:3rem;right:0;background:#fff;border-radius:0.75rem;box-shadow:0 8px 30px rgba(0,0,0,0.15);padding:0.5rem;width:240px;max-width:90vw;">
+      <p style="font-size:0.7rem;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin:0.25rem 0.5rem 0.5rem;font-weight:600;">
         Powered by Google Translate
       </p>
-      <div id="google_translate_element"></div>
+      <ul id="gt-list" style="list-style:none;margin:0;padding:0;max-height:280px;overflow-y:auto;">
+        <li><button type="button" data-lang="en"    class="gt-lang">English</button></li>
+        <li><button type="button" data-lang="sw"    class="gt-lang">Kiswahili</button></li>
+        <li><button type="button" data-lang="es"    class="gt-lang">Español</button></li>
+        <li><button type="button" data-lang="fr"    class="gt-lang">Français</button></li>
+        <li><button type="button" data-lang="pt"    class="gt-lang">Português</button></li>
+        <li><button type="button" data-lang="de"    class="gt-lang">Deutsch</button></li>
+        <li><button type="button" data-lang="it"    class="gt-lang">Italiano</button></li>
+        <li><button type="button" data-lang="nl"    class="gt-lang">Nederlands</button></li>
+        <li><button type="button" data-lang="ru"    class="gt-lang">Русский</button></li>
+        <li><button type="button" data-lang="ar"    class="gt-lang">العربية</button></li>
+        <li><button type="button" data-lang="hi"    class="gt-lang">हिन्दी</button></li>
+        <li><button type="button" data-lang="zh-CN" class="gt-lang">中文 (简体)</button></li>
+        <li><button type="button" data-lang="ja"    class="gt-lang">日本語</button></li>
+        <li><button type="button" data-lang="ko"    class="gt-lang">한국어</button></li>
+        <li><button type="button" data-lang="tr"    class="gt-lang">Türkçe</button></li>
+      </ul>
     </div>
+    <div id="google_translate_element" style="display:none;"></div>
   </div>
 
   <style>
-    /* Hide the Google banner and attribution bar */
     .goog-te-banner-frame, .goog-te-balloon-frame { display: none !important; }
     body { top: 0 !important; }
-    .goog-te-gadget { font-size: 0 !important; max-width: 100% !important; overflow: hidden !important; }
-    .goog-te-gadget .goog-te-combo {
-      width: 100% !important;
-      max-width: 100% !important;
-      padding: 0.4rem 0.75rem;
-      border: 1.5px solid #e5e7eb;
-      border-radius: 0.5rem;
+    .gt-lang {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border: none;
+      background: transparent;
       font-size: 0.875rem;
       color: #1f2937;
-      background: #f9fafb;
       cursor: pointer;
-      box-sizing: border-box;
+      border-radius: 0.375rem;
+      font-family: inherit;
     }
-    .goog-te-gadget .goog-te-combo:focus {
-      outline: none;
-      border-color: #4B3FA0;
-    }
-    /* Contain Google Translate iframe */
-    #google_translate_element, #google_translate_element > div {
-      max-width: 100% !important;
-      overflow: hidden !important;
-    }
-    #google_translate_element iframe, #google_translate_element .skiptranslate {
-      max-width: 100% !important;
-    }
+    .gt-lang:hover { background: #4B3FA0; color: #fff; }
+    .gt-lang.active { background: #4B3FA0; color: #fff; font-weight: 600; }
+    #gt-list::-webkit-scrollbar { width: 6px; }
+    #gt-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    #gt-list::-webkit-scrollbar-track { background: transparent; }
   </style>
 
   <script>
@@ -335,7 +342,30 @@
       }, 'google_translate_element');
     }
 
-    // Close dropdown when clicking outside
+    function setGtwLang(lang) {
+      if (lang === 'en') {
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      } else {
+        document.cookie = 'googtrans=/en/' + lang + '; path=/';
+      }
+      location.reload();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const list = document.getElementById('gt-list');
+      if (list) {
+        list.addEventListener('click', function(e) {
+          const btn = e.target.closest('.gt-lang');
+          if (btn && btn.dataset.lang) setGtwLang(btn.dataset.lang);
+        });
+      }
+      const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
+      const current = match ? match[1] : 'en';
+      document.querySelectorAll('.gt-lang').forEach(function(btn) {
+        if (btn.dataset.lang === current) btn.classList.add('active');
+      });
+    });
+
     document.addEventListener('click', function(e) {
       const wrapper = document.getElementById('google-translate-wrapper');
       if (wrapper && !wrapper.contains(e.target)) {
