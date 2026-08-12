@@ -18,8 +18,11 @@ def register(request):
 
             if password1 == password2:
                 user = User.objects.create_user(username=username, email=email, password=password1)
-                login(request, user)
-                return redirect("home")
+                user = authenticate(request, username=username, password=password1)
+                if user is not None:
+                    login(request, user)
+                    return redirect("home")
+                form.add_error(None, 'Unable to log in. Please try again.')
             else:
                 form.add_error('password2', 'Passwords do not match')
     else:
