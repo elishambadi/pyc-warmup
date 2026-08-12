@@ -8,6 +8,11 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required, user_passes_test
 
+def is_trainer(user):
+    return bool(user.is_staff or user.groups.filter(name="Trainers").exists())
+
+trainer_required = user_passes_test(is_trainer)
+
 from django.utils import timezone
 from django.urls import reverse
 from django.db.models import Count
@@ -425,7 +430,7 @@ def edit_song(request, song_id):
     })
 
 # 🎵 Delete a Song
-@login_required
+@trainer_required
 @require_http_methods(["DELETE"])
 def delete_song(request, song_id):
     try:
@@ -441,6 +446,7 @@ def delete_song(request, song_id):
 
 # Edit functions via JS
 
+@trainer_required
 def save_lyrics(request, song_id):
     data = json.loads(request.body)
     song = get_object_or_404(Song, id=song_id)
@@ -449,6 +455,7 @@ def save_lyrics(request, song_id):
     return JsonResponse({'success': True})
 
 # 🎵 Edit MP3 File (Update Voice Part)
+@trainer_required
 def save_mp3(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -459,6 +466,7 @@ def save_mp3(request):
     return JsonResponse({'success': False}, status=400)
 
 # 🎵 Add New MP3 File (🔗 Requires song_id)
+@trainer_required
 def add_mp3(request, song_id):
     song = get_object_or_404(Song, id=song_id)
     file = request.FILES.get('file')
@@ -470,6 +478,7 @@ def add_mp3(request, song_id):
     
     return JsonResponse({'success': False}, status=400)
 
+@trainer_required
 @require_http_methods(["DELETE"])
 def delete_mp3(request, mp3_id):
     try:
@@ -481,6 +490,7 @@ def delete_mp3(request, mp3_id):
         return JsonResponse({'status': 'error', 'message': 'MP3 file not found', 'success': False}, status=404)
 
 # 📝 Add a Note (🔗 Requires song_id)
+@trainer_required
 def add_note(request, song_id):
     if request.method == 'POST':
         song = get_object_or_404(Song, id=song_id)
@@ -491,6 +501,7 @@ def add_note(request, song_id):
     return JsonResponse({'success': False}, status=400)
 
 # 🔗 Add a Reference (🔗 Requires song_id)
+@trainer_required
 def add_reference(request, song_id):
     if request.method == 'POST':
         song = get_object_or_404(Song, id=song_id)
@@ -520,6 +531,7 @@ def sync_lyrics(request, mp3_id):
         "timestamps": timestamps,
     })
 
+@trainer_required
 @require_http_methods(["POST"])
 def save_timestamp(request):
     data = json.loads(request.body)
@@ -542,6 +554,7 @@ def save_timestamp(request):
         return JsonResponse({'success': False}, status=404)
     
 
+@trainer_required
 @require_http_methods(["DELETE"])
 def delete_timestamp(request):
     data = json.loads(request.body)
@@ -580,6 +593,7 @@ def generate_lrc(request, song_id):
     response["Content-Disposition"] = f'attachment; filename="{song.voice_part}.lrc"'
     return response
 
+@trainer_required
 @require_http_methods(["DELETE"])
 def delete_lyric(request, lyric_id):
     try:
@@ -589,6 +603,7 @@ def delete_lyric(request, lyric_id):
     except LyricLine.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Lyric line not found'}, status=404)
     
+@login_required
 def add_song_comment(request, song_id):
     song = get_object_or_404(Song, pk=song_id)
     
@@ -601,6 +616,7 @@ def add_song_comment(request, song_id):
         # Create the new comment for the song
         comment = Comment.objects.create(
             song=song,
+            user=request.user,
             text=text
         )
         
@@ -625,6 +641,7 @@ def like_comment(request, comment_id):
     return JsonResponse({'likes': comment.likes})
 
 # Dislike a comment
+@login_required
 def dislike_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
     comment.dislikes += 1
@@ -633,6 +650,7 @@ def dislike_comment(request, comment_id):
     return JsonResponse({'dislikes': comment.dislikes})
 
 # Reply to a comment
+@login_required
 def reply_comment(request, comment_id):
     parent_comment = get_object_or_404(Comment, id=comment_id)
     
