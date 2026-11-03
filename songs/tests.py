@@ -64,3 +64,74 @@ class MusicXMLExtractionTests(TestCase):
 				self.assertEqual(alto_note.step, "E")
 				self.assertEqual(alto_note.alter, -1)
 				self.assertEqual(alto_note.midi, 63)
+
+
+class SongRequestTests(TestCase):
+    def post_request(self, **overrides):
+        data = {
+            'song_title': 'Way Maker',
+            'artist': 'Sinach',
+            'request_type': 'both',
+            'voice_part': 'Soprano',
+            'details': 'The live version please.',
+            'requester_name': 'Ada',
+            'requester_email': 'ada@example.com',
+        }
+        data.update(overrides)
+        return self.client.post(
+            '/request-song/',
+            data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+
+    def test_valid_request_is_stored_and_sent(self):
+        from unittest.mock import patch
+        from .models import SongRequest
+
+        with patch('songs.views.send_song_request', return_value=(True, '')) as sender:
+            response = self.post_request()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+        song_request = SongRequest.objects.get()
+        self.assertEqual(song_request.song_title, 'Way Maker')
+        self.assertTrue(song_request.discord_sent)
+        sender.assert_called_once_with(song_request)
+
+    def test_missing_title_is_rejected(self):
+        from .models import SongRequest
+
+        response = self.post_request(song_title='')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.json()['success'])
+        self.assertIn('song_title', response.json()['errors'])
+        self.assertFalse(SongRequest.objects.exists())
+
+    def test_honeypot_submission_is_ignored(self):
+        from .models import SongRequest
+
+        response = self.post_request(website='https://spam.example')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+        self.assertFalse(SongRequest.objects.exists())
+
+    def test_get_is_not_allowed(self):
+        response = self.client.get('/request-song/')
+
+        self.assertEqual(response.status_code, 405)
+
+    def test_discord_payload_has_no_mention_pings(self):
+        from .discord import build_song_request_payload
+        from .models import SongRequest
+
+        song_request = SongRequest.objects.create(
+            song_title='Test @everyone',
+            request_type='lyrics',
+        )
+        payload = build_song_request_payload(song_request)
+
+        self.assertEqual(payload['allowed_mentions'], {'parse': []})
+        self.assertEqual(payload['embeds'][0]['title'], '🎵 New song request')

@@ -50,4 +50,7 @@ urlpatterns = [
     path('voicenote-request/new/', views.add_voicenote_request, name='add_voicenote_request'),
     path('submit-voicenotes/', views.upload_voicenotes_for_request, name='upload_voicenotes_for_request'),
 
+    # Public song requests (lyrics / voice notes)
+    path('request-song/', views.request_song, name='request_song'),
+
 ]

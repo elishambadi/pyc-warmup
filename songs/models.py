@@ -304,6 +304,52 @@ class VoiceNote(models.Model):
         return f"{self.song.title} - {self.voice_part} ({self.uploader.username})"
 
 
+class SongRequest(models.Model):
+    """A visitor's request for lyrics and/or a voice note for a song."""
+
+    REQUEST_TYPE_CHOICES = [
+        ('lyrics', 'Lyrics'),
+        ('voicenote', 'Voice note'),
+        ('both', 'Lyrics and voice note'),
+    ]
+
+    VOICE_PART_CHOICES = [
+        ('Soprano', 'Soprano'),
+        ('Alto', 'Alto'),
+        ('Tenor', 'Tenor'),
+        ('Bass', 'Bass'),
+        ('Other', 'Other'),
+    ]
+
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('in_progress', 'In progress'),
+        ('done', 'Done'),
+    ]
+
+    song_title = models.CharField(max_length=255)
+    artist = models.CharField(max_length=255, blank=True)
+    request_type = models.CharField(
+        max_length=20, choices=REQUEST_TYPE_CHOICES, default='both'
+    )
+    voice_part = models.CharField(
+        max_length=20, choices=VOICE_PART_CHOICES, blank=True
+    )
+    details = models.TextField(blank=True)
+    requester_name = models.CharField(max_length=120, blank=True)
+    requester_email = models.EmailField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    discord_sent = models.BooleanField(default=False)
+    discord_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.song_title} — {self.get_request_type_display()}"
+
+
 class ScoreSheet(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='scoresheets')
     file = models.FileField(upload_to='scoresheets/')

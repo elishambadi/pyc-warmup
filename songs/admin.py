@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution, ScoreSheet
+from .models import Song, MP3File, Note, Reference, LyricTimestamp, LyricLine, Section, SongStructure, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution, ScoreSheet, SongRequest
+from .discord import send_song_request
 from django.contrib.auth.models import Group, User
 
 
@@ -97,3 +98,32 @@ class ScoreSheetAdmin(admin.ModelAdmin):
     list_filter = ('file_type', 'processed')
     search_fields = ('song__title',)
     readonly_fields = ('processed', 'extracted_data', 'created_at')
+
+
+@admin.register(SongRequest)
+class SongRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        'song_title', 'artist', 'request_type', 'voice_part',
+        'requester_name', 'status', 'discord_sent', 'created_at',
+    )
+    list_filter = ('request_type', 'status', 'discord_sent', 'created_at')
+    search_fields = (
+        'song_title', 'artist', 'requester_name', 'requester_email', 'details',
+    )
+    readonly_fields = ('created_at', 'discord_sent', 'discord_error')
+    actions = ['resend_to_discord']
+
+    @admin.action(description='Resend selected requests to Discord')
+    def resend_to_discord(self, request, queryset):
+        sent_count = 0
+        for song_request in queryset:
+            sent, error = send_song_request(song_request)
+            song_request.discord_sent = sent
+            song_request.discord_error = '' if sent else error
+            song_request.save(update_fields=['discord_sent', 'discord_error'])
+            sent_count += 1 if sent else 0
+
+        self.message_user(
+            request,
+            f'Sent {sent_count} of {queryset.count()} request(s) to Discord.',
+        )

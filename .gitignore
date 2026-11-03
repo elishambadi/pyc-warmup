@@ -5,6 +5,7 @@ db.sqlite3
 pyc_warmup.db
 pycache
 .env
+discord-webhook-link.txt
 
 *.pyc
 __pycache__/
@@ -12,3 +13,5 @@ __pycache__/
 pyc.db
 
 improvements.md
+
+.env

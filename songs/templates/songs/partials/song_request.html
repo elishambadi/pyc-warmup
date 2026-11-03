@@ -1,0 +1,341 @@
+{% load i18n %}
+<!-- Song request section -->
+<section id="request-song" class="mb-6 scroll-mt-24">
+    <div class="relative overflow-hidden rounded-2xl border border-pyc-purple/15 bg-gradient-to-r from-pyc-purple/10 via-white to-pyc-orange/10 p-5 sm:p-6">
+        <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-pyc-orange/10 blur-2xl" aria-hidden="true"></div>
+        <div class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-pyc-purple text-white shadow-lg shadow-pyc-purple/20">
+                <i class="fas fa-microphone text-lg"></i>
+            </div>
+            <div class="flex-1">
+                <h2 class="text-lg font-bold text-pyc-purple">{% trans "Can't find a song?" %}</h2>
+                <p class="mt-0.5 text-sm text-pyc-text/70">
+                    {% trans "Ask us for the lyrics or a voice note and our team will add it to the library." %}
+                </p>
+            </div>
+            <button type="button"
+                    onclick="openSongRequestModal()"
+                    class="inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-pyc-purple px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-pyc-orange">
+                <i class="fas fa-plus-circle"></i>
+                {% trans "Request a song" %}
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Song request modal -->
+<div id="song-request-modal"
+     class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+     role="dialog" aria-modal="true" aria-labelledby="song-request-title">
+    <div id="song-request-dialog"
+         class="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <div>
+                <h3 id="song-request-title" class="flex items-center gap-2 text-lg font-bold text-pyc-purple">
+                    <i class="fas fa-music text-pyc-orange"></i>
+                    {% trans "Request a song" %}
+                </h3>
+                <p class="mt-0.5 text-xs text-pyc-text/60">{% trans "Lyrics, a voice note, or both — tell us what you need." %}</p>
+            </div>
+            <button type="button" onclick="closeSongRequestModal()"
+                    class="text-xl text-gray-400 transition-colors hover:text-gray-600"
+                    aria-label="{% trans 'Close' %}">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="song-request-form" action="{% url 'request_song' %}" method="post" class="flex flex-col overflow-hidden">
+            {% csrf_token %}
+            <div class="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+                <div id="song-request-errors"
+                     class="hidden rounded-lg border-l-4 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-700"
+                     role="alert" aria-live="polite"></div>
+
+                <div id="song-request-fields" class="space-y-4">
+                    <!-- Honeypot: hidden from people, tempting to bots. -->
+                    <input type="text" name="website" tabindex="-1" autocomplete="off"
+                           class="hidden" aria-hidden="true">
+
+                    <div>
+                        <label for="sr-song-title" class="mb-1.5 block text-sm font-semibold text-pyc-text">
+                            {% trans "Song title" %} <span class="text-pyc-orange">*</span>
+                        </label>
+                        <input id="sr-song-title" name="song_title" type="text" required maxlength="255"
+                               placeholder="{% trans 'e.g. Way Maker' %}"
+                               class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-pyc-purple">
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="sr-artist" class="mb-1.5 block text-sm font-semibold text-pyc-text">
+                                {% trans "Artist / composer" %}
+                            </label>
+                            <input id="sr-artist" name="artist" type="text" maxlength="255"
+                                   placeholder="{% trans 'Optional' %}"
+                                   class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-pyc-purple">
+                        </div>
+                        <div>
+                            <label for="sr-request-type" class="mb-1.5 block text-sm font-semibold text-pyc-text">
+                                {% trans "What do you need?" %}
+                            </label>
+                            <select id="sr-request-type" name="request_type"
+                                    class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-pyc-purple">
+                                <option value="both" selected>{% trans "Lyrics and voice note" %}</option>
+                                <option value="lyrics">{% trans "Lyrics only" %}</option>
+                                <option value="voicenote">{% trans "Voice note only" %}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="sr-voice-part" class="mb-1.5 block text-sm font-semibold text-pyc-text">
+                                {% trans "Voice part" %}
+                            </label>
+                            <select id="sr-voice-part" name="voice_part"
+                                    class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-pyc-purple">
+                                <option value="">{% trans "Any / not sure" %}</option>
+                                <option value="Soprano">Soprano</option>
+                                <option value="Alto">Alto</option>
+                                <option value="Tenor">Tenor</option>
+                                <option value="Bass">Bass</option>
+                                <option value="Other">{% trans "Other" %}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="sr-name" class="mb-1.5 block text-sm font-semibold text-pyc-text">
+                                {% trans "Your name" %}
+                            </label>
+                            <input id="sr-name" name="requester_name" type="text" maxlength="120"
+                                   placeholder="{% trans 'Optional' %}"
+                                   class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-pyc-purple">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="sr-email" class="mb-1.5 block text-sm font-semibold text-pyc-text">
+                            {% trans "Email" %} <span class="font-normal text-pyc-text/50">({% trans "optional" %})</span>
+                        </label>
+                        <input id="sr-email" name="requester_email" type="email" maxlength="254"
+                               placeholder="{% trans 'So we can let you know when it is ready' %}"
+                               class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-pyc-purple">
+                    </div>
+
+                    <div>
+                        <label for="sr-details" class="mb-1.5 block text-sm font-semibold text-pyc-text">
+                            {% trans "Anything else?" %}
+                        </label>
+                        <textarea id="sr-details" name="details" rows="3" maxlength="2000"
+                                  placeholder="{% trans 'Links, the version you sing, which sections you need...' %}"
+                                  class="w-full resize-none rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-pyc-purple"></textarea>
+                    </div>
+                </div>
+
+                <div id="song-request-success" class="hidden py-8 text-center" role="status" aria-live="polite">
+                    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-pyc-green/10 text-3xl text-pyc-green">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-pyc-text">{% trans "Request sent!" %}</h4>
+                    <p class="mx-auto mt-2 max-w-sm text-sm text-pyc-text/70">
+                        {% trans "Thank you — the team has been notified and will work on your song." %}
+                    </p>
+                </div>
+            </div>
+
+            <div id="song-request-actions" class="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+                <button type="button" onclick="closeSongRequestModal()"
+                        class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-pyc-text transition-colors hover:bg-gray-200">
+                    {% trans "Cancel" %}
+                </button>
+                <button type="submit" id="song-request-submit"
+                        class="inline-flex items-center gap-2 rounded-lg bg-pyc-purple px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-pyc-orange disabled:cursor-not-allowed disabled:opacity-60">
+                    <i class="fas fa-paper-plane"></i>
+                    <span id="song-request-submit-label">{% trans "Send request" %}</span>
+                </button>
+            </div>
+
+            <div id="song-request-done" class="hidden items-center justify-end border-t border-gray-100 px-6 py-4">
+                <button type="button" onclick="closeSongRequestModal()"
+                        class="rounded-lg bg-pyc-purple px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-pyc-orange">
+                    {% trans "Done" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    {% trans "Send request" as label_send %}
+    {% trans "Sending…" as label_sending %}
+    {% trans "Something went wrong. Please try again." as label_generic_error %}
+    {% trans "We could not reach the server. Please check your connection and try again." as label_network_error %}
+
+    const songRequestLabels = {
+        send: '{{ label_send|escapejs }}',
+        sending: '{{ label_sending|escapejs }}',
+        genericError: '{{ label_generic_error|escapejs }}',
+        networkError: '{{ label_network_error|escapejs }}'
+    };
+
+    function openSongRequestModal() {
+        const modal = document.getElementById('song-request-modal');
+        if (!modal) return;
+
+        resetSongRequestForm();
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+        setTimeout(function () {
+            const firstInput = document.getElementById('sr-song-title');
+            if (firstInput) firstInput.focus();
+        }, 60);
+    }
+
+    function closeSongRequestModal() {
+        const modal = document.getElementById('song-request-modal');
+        if (!modal) return;
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    function resetSongRequestForm() {
+        const form = document.getElementById('song-request-form');
+        const success = document.getElementById('song-request-success');
+        const fields = document.getElementById('song-request-fields');
+        const errors = document.getElementById('song-request-errors');
+        const actions = document.getElementById('song-request-actions');
+        const done = document.getElementById('song-request-done');
+        const submit = document.getElementById('song-request-submit');
+
+        if (form) form.reset();
+        if (success) success.classList.add('hidden');
+        if (fields) fields.classList.remove('hidden');
+        if (actions) actions.classList.remove('hidden');
+        if (done) { done.classList.add('hidden'); done.classList.remove('flex'); }
+        if (errors) { errors.classList.add('hidden'); errors.textContent = ''; }
+        if (submit) {
+            submit.disabled = false;
+            const label = document.getElementById('song-request-submit-label');
+            if (label) label.textContent = songRequestLabels.send;
+        }
+    }
+
+    (function () {
+        const modal = document.getElementById('song-request-modal');
+        const form = document.getElementById('song-request-form');
+        if (!modal || !form) return;
+
+        const errorsBox = document.getElementById('song-request-errors');
+        const successBox = document.getElementById('song-request-success');
+        const fieldsBox = document.getElementById('song-request-fields');
+        const actionsBox = document.getElementById('song-request-actions');
+        const doneBox = document.getElementById('song-request-done');
+        const submitButton = document.getElementById('song-request-submit');
+        const submitLabel = document.getElementById('song-request-submit-label');
+
+        function showError(message) {
+            if (!errorsBox) return;
+            errorsBox.textContent = message;
+            errorsBox.classList.remove('hidden');
+        }
+
+        // Close when the backdrop is clicked.
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) closeSongRequestModal();
+        });
+
+        // Close with Escape and keep focus inside the dialog with Tab.
+        document.addEventListener('keydown', function (event) {
+            if (modal.classList.contains('hidden')) return;
+
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                closeSongRequestModal();
+                return;
+            }
+
+            if (event.key !== 'Tab') return;
+
+            const focusable = Array.prototype.filter.call(
+                modal.querySelectorAll(
+                    'button:not([disabled]), [href], input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                ),
+                function (element) { return element.offsetParent !== null; }
+            );
+            if (!focusable.length) return;
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        });
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                if (submitLabel) submitLabel.textContent = songRequestLabels.sending;
+            }
+            if (errorsBox) errorsBox.classList.add('hidden');
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: new FormData(form)
+                });
+
+                const data = await response.json().catch(function () { return {}; });
+
+                if (response.ok && data.success) {
+                    if (fieldsBox) fieldsBox.classList.add('hidden');
+                    if (actionsBox) actionsBox.classList.add('hidden');
+                    if (successBox) successBox.classList.remove('hidden');
+                    if (doneBox) { doneBox.classList.remove('hidden'); doneBox.classList.add('flex'); }
+                    form.reset();
+                    return;
+                }
+
+                let message = data.error || songRequestLabels.genericError;
+                if (data.errors) {
+                    const details = Object.keys(data.errors).map(function (field) {
+                        return data.errors[field].join(' ');
+                    });
+                    if (details.length) message = details.join(' ');
+                }
+                showError(message);
+            } catch (error) {
+                showError(songRequestLabels.networkError);
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    if (submitLabel) submitLabel.textContent = songRequestLabels.send;
+                }
+            }
+        });
+
+        // Deep link: /songs/#request-song opens the dialog directly.
+        function maybeOpenFromHash() {
+            if (window.location.hash === '#request-song') {
+                openSongRequestModal();
+                const section = document.getElementById('request-song');
+                if (section) section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        window.addEventListener('hashchange', maybeOpenFromHash);
+        document.addEventListener('DOMContentLoaded', maybeOpenFromHash);
+    }());
+</script>

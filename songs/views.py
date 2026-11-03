@@ -1,7 +1,8 @@
 from urllib import request
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, LyricLineComment, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution, ScoreSheet
-from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm, ScoreSheetForm
+from .models import Song, MP3File, Note, Reference, LyricLine, LyricTimestamp, LyricLineComment, Section, Comment, CommentLike, VoiceNote, VoiceNoteRequest, Composer, SongComposerContribution, ScoreSheet, SongRequest
+from .forms import SongForm, MP3FileForm, NoteForm, ReferenceForm, VoiceNoteForm, VoiceNoteRequestForm, ScoreSheetForm, SongRequestForm
+from .discord import send_song_request
 from .utils import generate_lyric_lines
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
@@ -19,8 +20,11 @@ from django.db.models import Count
 from blog.models import BlogPost
 
 import json, re, os
+import logging
 
 from bs4 import BeautifulSoup
+
+logger = logging.getLogger(__name__)
 
 def custom_404(request, exception=None):
     return render(request, "404.html", status=404)
@@ -869,6 +873,76 @@ def upload_voicenotes_for_request(request):
         'latest_request': latest_request,
         'user_voicenotes': user_voicenotes
     })
+
+
+def request_song(request):
+    """Receive a public request for song lyrics and/or a voice note."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+    wants_json = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or 'application/json' in request.headers.get('accept', '')
+    )
+
+    def json_error(message, status=400, errors=None):
+        payload = {'success': False, 'error': message}
+        if errors:
+            payload['errors'] = errors
+        return JsonResponse(payload, status=status)
+
+    form = SongRequestForm(request.POST)
+
+    if not form.is_valid():
+        errors = {
+            field: [error['message'] for error in field_errors]
+            for field, field_errors in form.errors.get_json_data().items()
+        }
+        message = 'Please check the highlighted fields and try again.'
+        if wants_json:
+            return json_error(message, errors=errors)
+        for field_errors in errors.values():
+            for error in field_errors:
+                messages.error(request, error)
+        return redirect(f"{reverse('song_list')}#request-song")
+
+    # Honeypot tripped: pretend everything went fine so bots don't retry.
+    if form.cleaned_data.get('website'):
+        if wants_json:
+            return JsonResponse({'success': True, 'message': 'Thanks! Your request was received.'})
+        messages.success(request, 'Thanks! Your request was received.')
+        return redirect(f"{reverse('song_list')}#request-song")
+
+    # Light session-based throttle to curb repeat submissions.
+    last_submitted = request.session.get('song_request_last')
+    now = timezone.now().timestamp()
+    if last_submitted and now - last_submitted < 30:
+        message = 'You just sent a request. Please wait a moment before sending another.'
+        if wants_json:
+            return json_error(message, status=429)
+        messages.warning(request, message)
+        return redirect(f"{reverse('song_list')}#request-song")
+
+    song_request = form.save()
+    request.session['song_request_last'] = now
+
+    sent, error = send_song_request(song_request)
+    if sent:
+        song_request.discord_sent = True
+        song_request.discord_error = ''
+    else:
+        song_request.discord_error = error
+    song_request.save(update_fields=['discord_sent', 'discord_error'])
+
+    message = 'Thanks! Your song request was sent to the team.'
+    if not sent:
+        # The request is stored, so the team will still see it.
+        logger.warning('Stored song request %s but Discord delivery failed: %s', song_request.pk, error)
+
+    if wants_json:
+        return JsonResponse({'success': True, 'message': message})
+    messages.success(request, message)
+    return redirect(f"{reverse('song_list')}#request-song")
 
 
 def composer_list(request):

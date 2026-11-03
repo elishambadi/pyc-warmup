@@ -1,6 +1,6 @@
 from django import forms
 from django_tiptap.widgets import TipTapWidget
-from .models import Song, MP3File, Note, Reference, VoiceNote, VoiceNoteRequest, ScoreSheet
+from .models import Song, MP3File, Note, Reference, VoiceNote, VoiceNoteRequest, ScoreSheet, SongRequest
 
 class SongForm(forms.ModelForm):
     lyrics = forms.CharField(widget=forms.Textarea, required=False)
@@ -64,3 +64,33 @@ class ScoreSheetForm(forms.ModelForm):
         }),
         required=True
     )
+
+
+class SongRequestForm(forms.ModelForm):
+    # Hidden honeypot: real users never fill this in, bots usually do.
+    website = forms.CharField(required=False)
+
+    class Meta:
+        model = SongRequest
+        fields = [
+            'song_title', 'artist', 'request_type', 'voice_part',
+            'details', 'requester_name', 'requester_email',
+        ]
+
+    def clean_song_title(self):
+        title = (self.cleaned_data.get('song_title') or '').strip()
+        if len(title) < 2:
+            raise forms.ValidationError("Please enter the song title.")
+        return title
+
+    def clean_artist(self):
+        return (self.cleaned_data.get('artist') or '').strip()
+
+    def clean_details(self):
+        details = (self.cleaned_data.get('details') or '').strip()
+        if len(details) > 2000:
+            raise forms.ValidationError("Please keep the message under 2000 characters.")
+        return details
+
+    def clean_requester_name(self):
+        return (self.cleaned_data.get('requester_name') or '').strip()

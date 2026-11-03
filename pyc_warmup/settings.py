@@ -174,6 +174,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Discord webhook for song lyric / voice-note requests.
+# Prefer the environment variable; fall back to the link file so the app works
+# without extra setup.
+DISCORD_WEBHOOK_URL = env('DISCORD_WEBHOOK_URL', default='')
+if not DISCORD_WEBHOOK_URL:
+    _webhook_file = BASE_DIR / 'discord-webhook-link.txt'
+    if _webhook_file.exists():
+        DISCORD_WEBHOOK_URL = _webhook_file.read_text(encoding='utf-8').strip()
+
+
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
