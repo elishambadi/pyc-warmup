@@ -43,8 +43,6 @@
     </div>
     {% endif %}
 
-    {% include 'songs/partials/song_request.html' %}
-
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-pyc-purple">Songs</h1>
@@ -63,7 +61,15 @@
                    class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pyc-purple focus:border-transparent">
             <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
         </div>
-        <p id="search-results-count" class="text-sm text-gray-500 mt-2 hidden"></p>
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <p id="search-results-count" class="text-sm text-gray-500 hidden"></p>
+            <button type="button"
+                    onclick="openSongRequestModal()"
+                    class="ml-auto inline-flex items-center gap-1.5 text-sm font-medium text-pyc-text/60 transition-colors hover:text-pyc-purple">
+                <i class="fas fa-plus-circle text-xs" aria-hidden="true"></i>
+                Can't find a song? Request it
+            </button>
+        </div>
     </div>
 
     <!-- Songs List -->
@@ -109,87 +115,157 @@
     </div>
     {% endif %}
 
+    <!-- Shown only when a live search matches nothing: the one moment a request is genuinely useful. -->
+    <div id="no-search-results" class="hidden rounded-xl border border-dashed border-pyc-purple/25 bg-pyc-purple/[0.03] px-6 py-10 text-center">
+        <i class="fas fa-music text-4xl text-pyc-purple/30" aria-hidden="true"></i>
+        <h3 class="mt-3 font-semibold text-pyc-text">
+            No songs match &ldquo;<span id="no-search-results-query"></span>&rdquo;
+        </h3>
+        <p class="mx-auto mt-1 max-w-sm text-sm text-pyc-text/60">
+            It may not be in the library yet. Ask the team to add the lyrics or a voice note.
+        </p>
+        <button type="button" id="no-search-results-request"
+                class="mt-4 inline-flex items-center gap-2 rounded-lg bg-pyc-purple px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-pyc-orange">
+            <i class="fas fa-plus-circle" aria-hidden="true"></i>
+            Request this song
+        </button>
+    </div>
+
+    {% include 'songs/partials/song_request.html' %}
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('search-input');
             const songsList = document.getElementById('songs-list');
             const resultsCount = document.getElementById('search-results-count');
-            
-            if (searchInput && songsList) {
-                searchInput.addEventListener('input', function() {
-                    const query = this.value.toLowerCase().trim();
-                    const songItems = Array.from(document.querySelectorAll('.song-item'));
-                    
-                    if (!query) {
-                        // Show all songs in original order
-                        songItems.forEach(item => {
-                            item.style.display = '';
-                            item.querySelector('.song-title').innerHTML = item.dataset.title;
-                        });
-                        resultsCount.classList.add('hidden');
-                        return;
-                    }
-                    
-                    // Score and filter songs
-                    const scoredSongs = songItems.map(item => {
-                        const title = item.dataset.title;
-                        const lyrics = item.dataset.lyrics;
-                        let score = 0;
-                        
-                        // Title exact match (highest priority)
-                        if (title === query) {
-                            score = 1000;
-                        }
-                        // Title starts with query
-                        else if (title.startsWith(query)) {
-                            score = 500;
-                        }
-                        // Title contains query
-                        else if (title.includes(query)) {
-                            score = 250;
-                        }
-                        // Lyrics contains query
-                        else if (lyrics.includes(query)) {
-                            score = 100;
-                        }
-                        
-                        return { item, score, title };
-                    });
-                    
-                    // Filter and sort
-                    const matches = scoredSongs.filter(s => s.score > 0);
-                    matches.sort((a, b) => b.score - a.score);
-                    
-                    // Hide non-matches and reorder matches
-                    songItems.forEach(item => item.style.display = 'none');
-                    
-                    matches.forEach((match, index) => {
-                        match.item.style.display = '';
-                        
-                        // Highlight matching text in title
-                        const titleElement = match.item.querySelector('.song-title');
-                        const titleText = match.item.dataset.title;
-                        const regex = new RegExp(`(${query})`, 'gi');
-                        const highlightedTitle = titleText.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
-                        titleElement.innerHTML = highlightedTitle;
-                        
-                        // Reorder in DOM
-                        songsList.appendChild(match.item);
-                    });
-                    
-                    // Update results count
-                    if (matches.length === 0) {
-                        resultsCount.textContent = 'No songs found';
-                        resultsCount.classList.remove('hidden');
-                    } else if (matches.length === 1) {
-                        resultsCount.textContent = '1 song found';
-                        resultsCount.classList.remove('hidden');
-                    } else {
-                        resultsCount.textContent = `${matches.length} songs found`;
-                        resultsCount.classList.remove('hidden');
+            const noResults = document.getElementById('no-search-results');
+            const noResultsQuery = document.getElementById('no-search-results-query');
+            const noResultsRequest = document.getElementById('no-search-results-request');
+
+            if (!searchInput || !songsList || !resultsCount) return;
+
+            const songItems = Array.from(songsList.querySelectorAll('.song-item'));
+            const originalOrder = songItems.slice();
+
+            // Remember the real title so clearing the search restores its original casing.
+            songItems.forEach(item => {
+                const titleElement = item.querySelector('.song-title');
+                if (titleElement) item.dataset.displayTitle = titleElement.textContent.trim();
+            });
+
+            function escapeHtml(value) {
+                return value.replace(/[&<>"']/g, function(char) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+                });
+            }
+
+            function escapeRegExp(value) {
+                return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            function resetTitles() {
+                songItems.forEach(item => {
+                    const titleElement = item.querySelector('.song-title');
+                    if (titleElement && item.dataset.displayTitle) {
+                        titleElement.textContent = item.dataset.displayTitle;
                     }
                 });
             }
+
+            function showNoResults(query) {
+                songsList.classList.add('hidden');
+                if (!noResults) return;
+                if (noResultsQuery) noResultsQuery.textContent = query;
+                noResults.classList.remove('hidden');
+            }
+
+            function hideNoResults() {
+                songsList.classList.remove('hidden');
+                if (noResults) noResults.classList.add('hidden');
+            }
+
+            if (noResultsRequest) {
+                noResultsRequest.addEventListener('click', function() {
+                    if (typeof openSongRequestModal === 'function') {
+                        openSongRequestModal(searchInput.value.trim());
+                    }
+                });
+            }
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                const normalizedQuery = query.toLowerCase();
+
+                if (!normalizedQuery) {
+                    resetTitles();
+                    originalOrder.forEach(item => songsList.appendChild(item));
+                    songItems.forEach(item => { item.style.display = ''; });
+                    resultsCount.classList.add('hidden');
+                    hideNoResults();
+                    return;
+                }
+
+                // Score and filter songs
+                const matches = songItems.map(item => {
+                    const title = item.dataset.title || '';
+                    const lyrics = item.dataset.lyrics || '';
+                    let score = 0;
+
+                    // Title exact match (highest priority)
+                    if (title === normalizedQuery) {
+                        score = 1000;
+                    }
+                    // Title starts with query
+                    else if (title.startsWith(normalizedQuery)) {
+                        score = 500;
+                    }
+                    // Title contains query
+                    else if (title.includes(normalizedQuery)) {
+                        score = 250;
+                    }
+                    // Lyrics contains query
+                    else if (lyrics.includes(normalizedQuery)) {
+                        score = 100;
+                    }
+
+                    return { item, score };
+                }).filter(match => match.score > 0);
+
+                matches.sort((a, b) => b.score - a.score);
+
+                songItems.forEach(item => { item.style.display = 'none'; });
+
+                if (matches.length === 0) {
+                    resultsCount.textContent = 'No songs found';
+                    resultsCount.classList.remove('hidden');
+                    resetTitles();
+                    showNoResults(query);
+                    return;
+                }
+
+                hideNoResults();
+
+                const highlight = new RegExp('(' + escapeRegExp(query) + ')', 'gi');
+                matches.forEach(match => {
+                    match.item.style.display = '';
+
+                    // Highlight the query safely, without injecting raw user input into the page.
+                    const titleElement = match.item.querySelector('.song-title');
+                    if (titleElement) {
+                        const originalTitle = match.item.dataset.displayTitle || titleElement.textContent;
+                        titleElement.innerHTML = escapeHtml(originalTitle)
+                            .replace(highlight, '<mark class="bg-yellow-200">$1</mark>');
+                    }
+
+                    // Reorder in DOM
+                    songsList.appendChild(match.item);
+                });
+
+                resultsCount.textContent = matches.length === 1
+                    ? '1 song found'
+                    : matches.length + ' songs found';
+                resultsCount.classList.remove('hidden');
+            });
         });
     </script>
 {% endblock %}

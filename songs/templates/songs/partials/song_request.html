@@ -1,29 +1,9 @@
 {% load i18n %}
-<!-- Song request section -->
-<section id="request-song" class="mb-6 scroll-mt-24">
-    <div class="relative overflow-hidden rounded-2xl border border-pyc-purple/15 bg-gradient-to-r from-pyc-purple/10 via-white to-pyc-orange/10 p-5 sm:p-6">
-        <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-pyc-orange/10 blur-2xl" aria-hidden="true"></div>
-        <div class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-pyc-purple text-white shadow-lg shadow-pyc-purple/20">
-                <i class="fas fa-microphone text-lg"></i>
-            </div>
-            <div class="flex-1">
-                <h2 class="text-lg font-bold text-pyc-purple">{% trans "Can't find a song?" %}</h2>
-                <p class="mt-0.5 text-sm text-pyc-text/70">
-                    {% trans "Ask us for the lyrics or a voice note and our team will add it to the library." %}
-                </p>
-            </div>
-            <button type="button"
-                    onclick="openSongRequestModal()"
-                    class="inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-pyc-purple px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-pyc-orange">
-                <i class="fas fa-plus-circle"></i>
-                {% trans "Request a song" %}
-            </button>
-        </div>
-    </div>
-</section>
-
-<!-- Song request modal -->
+<!--
+    Song request dialog.
+    Triggers live where they are useful (search bar, empty search results) instead of
+    a permanent banner, so the song list stays the focus of the page.
+-->
 <div id="song-request-modal"
      class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
      role="dialog" aria-modal="true" aria-labelledby="song-request-title">
@@ -177,7 +157,7 @@
         networkError: '{{ label_network_error|escapejs }}'
     };
 
-    function openSongRequestModal() {
+    function openSongRequestModal(prefillTitle) {
         const modal = document.getElementById('song-request-modal');
         if (!modal) return;
 
@@ -187,7 +167,10 @@
         document.body.style.overflow = 'hidden';
         setTimeout(function () {
             const firstInput = document.getElementById('sr-song-title');
-            if (firstInput) firstInput.focus();
+            if (firstInput) {
+                if (prefillTitle) firstInput.value = prefillTitle;
+                firstInput.focus();
+            }
         }, 60);
     }
 
@@ -330,8 +313,6 @@
         function maybeOpenFromHash() {
             if (window.location.hash === '#request-song') {
                 openSongRequestModal();
-                const section = document.getElementById('request-song');
-                if (section) section.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
